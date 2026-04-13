@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!-- ============================================================ -->
+    <!--  ACTION WINDOW — Fiche Non-Conformité                        -->
+    <!-- ============================================================ -->
+    <record model="ir.actions.act_window" id="nc_management.action_nonconformity">
+        <field name="name">Non-Conformités</field>
+        <field name="res_model">nc_management.nonconformity</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!--  ACTION WINDOW — Action Corrective                           -->
+    <!-- ============================================================ -->
+    <record model="ir.actions.act_window" id="nc_management.action_corrective">
+        <field name="name">Actions Correctives</field>
+        <field name="res_model">nc_management.corrective_action</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!--  MENUS                                                        -->
+    <!-- ============================================================ -->
+
+    <!-- Top bar -->
+    <menuitem
+        name="NC Management"
+        id="nc_management.menu_root"
+        sequence="10"/>
+
+    <!-- Sous-menus -->
+    <menuitem
+        name="Non-Conformités"
+        id="nc_management.menu_nonconformity"
+        parent="nc_management.menu_root"
+        action="nc_management.action_nonconformity"
+        sequence="10"/>
+
+    <menuitem
+        name="Actions Correctives"
+        id="nc_management.menu_corrective"
+        parent="nc_management.menu_root"
+        action="nc_management.action_corrective"
+        sequence="20"/>
+
+</data>
+</odoo>

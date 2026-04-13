@@ -2,48 +2,304 @@
 <odoo>
 <data>
 
-    <!-- ============================================================ -->
-    <!--  ACTION WINDOW — Fiche Non-Conformité                        -->
-    <!-- ============================================================ -->
-    <record model="ir.actions.act_window" id="nc_management.action_nonconformity">
-        <field name="name">Non-Conformités</field>
-        <field name="res_model">nc_management.nonconformity</field>
-        <field name="view_mode">tree,form</field>
-    </record>
+<!-- ============================================================ -->
+<!--  VUES FNC                                                     -->
+<!-- ============================================================ -->
 
-    <!-- ============================================================ -->
-    <!--  ACTION WINDOW — Action Corrective                           -->
-    <!-- ============================================================ -->
-    <record model="ir.actions.act_window" id="nc_management.action_corrective">
-        <field name="name">Actions Correctives</field>
-        <field name="res_model">nc_management.corrective_action</field>
-        <field name="view_mode">tree,form</field>
-    </record>
+<!-- Vue Liste FNC -->
+<record model="ir.ui.view" id="view_nonconformity_tree">
+    <field name="name">nc_management.nonconformity.tree</field>
+    <field name="model">nc_management.nonconformity</field>
+    <field name="arch" type="xml">
+        <tree string="Fiches Non-Conformité">
+            <field name="name"/>
+            <field name="date"/>
+            <field name="direction_id"/>
+            <field name="service_dpt"/>
+            <field name="signale_par_id"/>
+            <field name="state"/>
+        </tree>
+    </field>
+</record>
 
-    <!-- ============================================================ -->
-    <!--  MENUS                                                        -->
-    <!-- ============================================================ -->
+<!-- Vue Formulaire FNC -->
+<record model="ir.ui.view" id="view_nonconformity_form">
+    <field name="name">nc_management.nonconformity.form</field>
+    <field name="model">nc_management.nonconformity</field>
+    <field name="arch" type="xml">
+        <form string="Fiche de Non-Conformité">
+            <header>
+                <button name="action_submit"   string="Soumettre"  type="object"
+                        states="draft"       class="oe_highlight"/>
+                <button name="action_progress" string="En cours"   type="object"
+                        states="submitted"/>
+                <button name="action_close"    string="Clôturer"   type="object"
+                        states="in_progress" class="oe_highlight"/>
+                <field name="state" widget="statusbar"
+                       statusbar_visible="draft,submitted,in_progress,closed"/>
+            </header>
+            <sheet>
 
-    <!-- Top bar -->
-    <menuitem
-        name="NC Management"
-        id="nc_management.menu_root"
-        sequence="10"/>
+                <!-- En-tête -->
+                <div class="oe_title">
+                    <h1><field name="name" readonly="1"/></h1>
+                </div>
 
-    <!-- Sous-menus -->
-    <menuitem
-        name="Non-Conformités"
-        id="nc_management.menu_nonconformity"
-        parent="nc_management.menu_root"
-        action="nc_management.action_nonconformity"
-        sequence="10"/>
+                <group string="En-tête">
+                    <group>
+                        <field name="direction_id"/>
+                        <field name="service_dpt"/>
+                    </group>
+                    <group>
+                        <field name="date"/>
+                    </group>
+                </group>
 
-    <menuitem
-        name="Actions Correctives"
-        id="nc_management.menu_corrective"
-        parent="nc_management.menu_root"
-        action="nc_management.action_corrective"
-        sequence="20"/>
+                <!-- Type de Non-Conformité -->
+                <group string="Type de Non-Conformité">
+                    <group>
+                        <field name="type_nc_produit"/>
+                        <field name="type_reclamation"/>
+                        <field name="type_sst"/>
+                        <field name="type_environnement"/>
+                        <field name="type_travaux"/>
+                    </group>
+                    <group>
+                        <field name="type_audit"/>
+                        <field name="type_achat"/>
+                        <field name="type_reception"/>
+                        <field name="type_dysfonctionnement"/>
+                        <field name="type_autre"/>
+                        <field name="type_autre_preciser"
+                               attrs="{'invisible': [('type_autre', '=', False)],
+                                       'required':  [('type_autre', '=', True)]}"/>
+                    </group>
+                </group>
+
+                <!-- Section 1 — Description -->
+                <group string="1- Description de la non-conformité">
+                    <field name="description" nolabel="1"
+                           placeholder="Décrivez la non-conformité..."/>
+                    <group>
+                        <field name="signale_par_id"/>
+                        <field name="date_signalement"/>
+                        <field name="fonction_visa"/>
+                    </group>
+                </group>
+
+                <!-- Traitement -->
+                <group string="Traitement">
+                    <group>
+                        <field name="trait_reprise"/>
+                        <field name="trait_declassement"/>
+                        <field name="trait_retour_fourn"/>
+                    </group>
+                    <group>
+                        <field name="trait_recyclage"/>
+                        <field name="trait_reparation"/>
+                        <field name="trait_autre"/>
+                    </group>
+                </group>
+
+                <!-- Section 2 — Action immédiate -->
+                <group string="2- Action immédiate">
+                    <field name="action_immediate" nolabel="1"
+                           placeholder="Décrivez l'action immédiate..."/>
+                    <group>
+                        <field name="realise_par_id"/>
+                        <field name="date_realisation"/>
+                    </group>
+                </group>
+
+                <!-- Section 3 — Analyse des causes -->
+                <group string="3- Analyse des causes">
+                    <field name="analyse_causes" nolabel="1"
+                           placeholder="Analysez les causes..."/>
+                    <field name="impact"
+                           placeholder="Impact : coût, incidence, risque..."/>
+                </group>
+
+                <!-- Liaison FAC -->
+                <group string="Fiche d'Action Corrective">
+                    <field name="fac_id"/>
+                    <field name="responsable_action_id"/>
+                </group>
+
+                <!-- Validation -->
+                <group string="Validation hiérarchique">
+                    <group>
+                        <field name="superieur_id"/>
+                        <field name="date_validation"/>
+                    </group>
+                    <group>
+                        <field name="signature"/>
+                    </group>
+                </group>
+
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  VUES FAC                                                     -->
+<!-- ============================================================ -->
+
+<!-- Vue Liste FAC -->
+<record model="ir.ui.view" id="view_corrective_action_tree">
+    <field name="name">nc_management.corrective_action.tree</field>
+    <field name="model">nc_management.corrective_action</field>
+    <field name="arch" type="xml">
+        <tree string="Fiches Action Corrective">
+            <field name="name"/>
+            <field name="date"/>
+            <field name="direction_id"/>
+            <field name="fnc_id"/>
+            <field name="qse_nom_id"/>
+            <field name="state"/>
+        </tree>
+    </field>
+</record>
+
+<!-- Vue Formulaire FAC -->
+<record model="ir.ui.view" id="view_corrective_action_form">
+    <field name="name">nc_management.corrective_action.form</field>
+    <field name="model">nc_management.corrective_action</field>
+    <field name="arch" type="xml">
+        <form string="Fiche d'Action Corrective">
+            <header>
+                <button name="action_open"   string="Ouvrir"    type="object"
+                        states="draft"     class="oe_highlight"/>
+                <button name="action_verify" string="Vérifier"  type="object"
+                        states="open"/>
+                <button name="action_close"  string="Clôturer"  type="object"
+                        states="verified"  class="oe_highlight"/>
+                <field name="state" widget="statusbar"
+                       statusbar_visible="draft,open,verified,closed"/>
+            </header>
+            <sheet>
+
+                <!-- En-tête -->
+                <div class="oe_title">
+                    <h1><field name="name" readonly="1"/></h1>
+                </div>
+
+                <group string="En-tête">
+                    <group>
+                        <field name="direction_id"/>
+                        <field name="date"/>
+                    </group>
+                    <group>
+                        <field name="fnc_id"/>
+                        <field name="date_fnc"/>
+                    </group>
+                </group>
+
+                <!-- Section 1 — Rappel NC -->
+                <group string="1- Rappel de la Non-Conformité">
+                    <field name="rappel_nc" nolabel="1"
+                           placeholder="Rappel de la non-conformité..."/>
+                </group>
+
+                <!-- Section 2 — Analyse des causes -->
+                <group string="2- Analyse des causes de la non-conformité">
+                    <field name="analyse_causes" nolabel="1"
+                           placeholder="Analysez les causes..."/>
+                    <group>
+                        <field name="responsable_analyse_id"/>
+                        <field name="date_analyse"/>
+                        <field name="visa_analyse"/>
+                    </group>
+                </group>
+
+                <!-- Section 3 — Actions décidées -->
+                <group string="3- Action(s) décidée(s)">
+                    <field name="action_line_ids" nolabel="1">
+                        <tree editable="bottom">
+                            <field name="action_description"/>
+                            <field name="date_prevue"/>
+                            <field name="date_realisation"/>
+                            <field name="responsable_id"/>
+                        </tree>
+                    </field>
+                    <group>
+                        <field name="responsable_actions_id"/>
+                        <field name="date_actions"/>
+                        <field name="visa_actions"/>
+                    </group>
+                </group>
+
+                <!-- Efficacité -->
+                <group string="Action(s) efficace(s)">
+                    <field name="actions_efficaces"/>
+                    <field name="responsable_efficacite_id"/>
+                </group>
+
+                <!-- Section 4 — Approbation QSE -->
+                <group string="4- Approbation Responsable QSE">
+                    <group>
+                        <field name="qse_nom_id"/>
+                        <field name="qse_date"/>
+                    </group>
+                    <group>
+                        <field name="qse_visa"/>
+                    </group>
+                </group>
+
+                <!-- Section 5 — Vérification -->
+                <group string="5- Vérification de(s) action(s) effectuée(s)">
+                    <field name="verification_efficacite" nolabel="1"
+                           placeholder="Vérification de l'efficacité de l'action..."/>
+                    <field name="extension_possible"/>
+                </group>
+
+                <!-- Clôture -->
+                <group string="Clôture">
+                    <group>
+                        <field name="cloture_par_id"/>
+                        <field name="date_cloture"/>
+                    </group>
+                    <group>
+                        <field name="visa_cloture"/>
+                    </group>
+                </group>
+
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  ACTIONS ET MENUS                                             -->
+<!-- ============================================================ -->
+
+<record model="ir.actions.act_window" id="action_nonconformity">
+    <field name="name">Non-Conformités</field>
+    <field name="res_model">nc_management.nonconformity</field>
+    <field name="view_mode">tree,form</field>
+</record>
+
+<record model="ir.actions.act_window" id="action_corrective">
+    <field name="name">Actions Correctives</field>
+    <field name="res_model">nc_management.corrective_action</field>
+    <field name="view_mode">tree,form</field>
+</record>
+
+<menuitem name="NC Management"
+          id="nc_management.menu_root"
+          sequence="10"/>
+
+<menuitem name="Non-Conformités"
+          id="nc_management.menu_nonconformity"
+          parent="nc_management.menu_root"
+          action="action_nonconformity"
+          sequence="10"/>
+
+<menuitem name="Actions Correctives"
+          id="nc_management.menu_corrective"
+          parent="nc_management.menu_root"
+          action="action_corrective"
+          sequence="20"/>
 
 </data>
 </odoo>

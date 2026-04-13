@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_nonconformity_user,access_nonconformity_user,model_nc_management_nonconformity,,1,1,1,1
-access_corrective_user,access_corrective_user,model_nc_management_corrective_action,,1,1,1,1
+access_nonconformity,access_nonconformity,model_nc_management_nonconformity,,1,1,1,1
+access_corrective_action,access_corrective_action,model_nc_management_corrective_action,,1,1,1,1
+access_action_line,access_action_line,model_nc_management_action_line,,1,1,1,1

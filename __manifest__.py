@@ -5,7 +5,7 @@
     'category': 'Tools',
     'author': 'Your Name',
 
-    'depends': ['base'],
+    'depends': ['base', 'hr', 'mail'],
 
     'data': [
         'security/ir.model.access.csv',

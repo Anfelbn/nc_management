@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!-- Catégorie du module -->
+    <record id="module_nc_management" model="ir.module.category">
+        <field name="name">NC Management</field>
+    </record>
+
+    <!-- Groupe Utilisateur (Département / Service) -->
+    <record id="group_nc_user" model="res.groups">
+        <field name="name">Utilisateur NC</field>
+        <field name="category_id" ref="module_nc_management"/>
+    </record>
+
+    <!-- Groupe Responsable Qualité -->
+    <record id="group_nc_manager" model="res.groups">
+        <field name="name">Responsable Qualité</field>
+        <field name="category_id" ref="module_nc_management"/>
+    </record>
+
+</data>
+</odoo>

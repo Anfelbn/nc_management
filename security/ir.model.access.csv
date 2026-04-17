@@ -1,4 +1,9 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_nonconformity,access_nonconformity,model_nc_management_nonconformity,,1,1,1,1
-access_corrective_action,access_corrective_action,model_nc_management_corrective_action,,1,1,1,1
-access_action_line,access_action_line,model_nc_management_action_line,,1,1,1,1
+access_fnc_user,access_fnc_user,model_nc_management_nonconformity,nc_management.group_nc_user,1,1,1,0
+access_fnc_manager,access_fnc_manager,model_nc_management_nonconformity,nc_management.group_nc_manager,1,1,1,1
+access_fac_user,access_fac_user,model_nc_management_corrective_action,nc_management.group_nc_user,1,1,1,0
+access_fac_manager,access_fac_manager,model_nc_management_corrective_action,nc_management.group_nc_manager,1,1,1,1
+access_line_user,access_line_user,model_nc_management_action_line,nc_management.group_nc_user,1,1,1,0
+access_line_manager,access_line_manager,model_nc_management_action_line,nc_management.group_nc_manager,1,1,1,1
+access_dashboard_user,access_dashboard_user,model_nc_management_dashboard,nc_management.group_nc_user,1,0,0,0
+access_dashboard_manager,access_dashboard_manager,model_nc_management_dashboard,nc_management.group_nc_manager,1,0,0,0

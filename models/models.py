@@ -51,7 +51,11 @@ class Nonconformity(models.Model):
     impact         = fields.Text(string='Impact : coût, incidence, risque')
 
     # ── Liaison FAC ───────────────────────────────────────────
-    fac_id                = fields.Many2one('nc_management.corrective_action', string='N° Fiche d\'action')
+    fac_ids               = fields.One2many(
+        'nc_management.corrective_action',
+        'fnc_id',
+        string='Fiches d\'Action Corrective'
+    )
     responsable_action_id = fields.Many2one('hr.employee', string='Responsable de l\'action(s)')
 
     # ── Validation hiérarchique ───────────────────────────────
@@ -93,8 +97,10 @@ class Nonconformity(models.Model):
     @api.multi
     def action_close(self):
         for rec in self:
-            if not rec.fac_id:
-                raise UserError('Veuillez associer une Fiche d\'Action Corrective avant de clôturer.')
+            if not rec.fac_ids:
+                raise UserError('Veuillez associer au moins une Fiche d\'Action Corrective avant de clôturer.')
+            if any(fac.state != 'closed' for fac in rec.fac_ids):
+                raise UserError('Toutes les Fiches d\'Action Corrective liées doivent être clôturées avant de clôturer la FNC.')
             rec.state = 'closed'
             rec.message_post(body='Fiche FNC clôturée par la Responsable Qualité.')
 
@@ -110,7 +116,12 @@ class CorrectiveAction(models.Model):
         readonly=True, default='New')
     direction_id = fields.Many2one('hr.department', string='Direction')
     date         = fields.Date(string='Date', default=fields.Date.today)
-    fnc_id       = fields.Many2one('nc_management.nonconformity', string='N° FNC ou autre document')
+    fnc_id       = fields.Many2one(
+        'nc_management.nonconformity',
+        string='N° FNC ou autre document',
+        ondelete='restrict',
+        index=True
+    )
     date_fnc     = fields.Date(string='Date FNC')
 
     # ── Section 1 — Rappel NC ─────────────────────────────────
@@ -192,13 +203,43 @@ class CorrectiveAction(models.Model):
             rec.date_cloture = fields.Date.today()
             rec.message_post(body='Fiche FAC clôturée par la Responsable Qualité.')
 
+class NcDashboard(models.Model):
+    _name = 'nc_management.dashboard'
+    _description = 'Dashboard Responsable Qualité'
 
+    @api.model
+    def get_dashboard_data(self):
+        fnc = self.env['nc_management.nonconformity']
+        fac = self.env['nc_management.corrective_action']
+        return {
+            'fnc_draft':       fnc.search_count([('state', '=', 'draft')]),
+            'fnc_submitted':   fnc.search_count([('state', '=', 'submitted')]),
+            'fnc_in_progress': fnc.search_count([('state', '=', 'in_progress')]),
+            'fnc_closed':      fnc.search_count([('state', '=', 'closed')]),
+            'fac_draft':       fac.search_count([('state', '=', 'draft')]),
+            'fac_open':        fac.search_count([('state', '=', 'open')]),
+            'fac_verified':    fac.search_count([('state', '=', 'verified')]),
+            'fac_closed':      fac.search_count([('state', '=', 'closed')]),
+        }
 class ActionLine(models.Model):
     _name = 'nc_management.action_line'
     _description = 'Ligne d\'action corrective'
 
-    fac_id             = fields.Many2one('nc_management.corrective_action', string='FAC')
+    fac_id             = fields.Many2one(
+        'nc_management.corrective_action',
+        string='FAC',
+        required=True,
+        ondelete='cascade',
+        index=True
+    )
+    direction_id       = fields.Many2one(
+        'hr.department',
+        string='Direction',
+        related='fac_id.direction_id',
+        store=True,
+        readonly=True
+    )
     action_description = fields.Char(string='Action(s)')
     date_prevue        = fields.Date(string='Date prévue')
     date_realisation   = fields.Date(string='Date de réalisation')
-    responsable_id     = fields.Many2one('hr.employee', string='Responsable de l\'action')
+    responsable_id     = fields.Many2one('hr.employee', string='Responsable de l\'action')   

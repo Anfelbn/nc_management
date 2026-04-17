@@ -5,15 +5,14 @@
     'category': 'Tools',
     'author': 'Your Name',
 
-    'depends': ['base', 'hr', 'mail'],
+    'depends': ['base', 'hr', 'mail', 'web'],
 
     'data': [
+        'security/quality_groups.xml',
         'security/ir.model.access.csv',
+        'security/nc_rules.xml',
+        'data/sequences.xml',
         'views/views.xml',
-    ],
-
-    'demo': [
-        'demo/demo.xml',
     ],
 
     'installable': True,

@@ -121,7 +121,13 @@
 
                 <!-- Liaison FAC -->
                 <group string="Fiche d'Action Corrective">
-                    <field name="fac_id"/>
+                    <field name="fac_ids" nolabel="1">
+                        <tree>
+                            <field name="name"/>
+                            <field name="date"/>
+                            <field name="state"/>
+                        </tree>
+                    </field>
                     <field name="responsable_action_id"/>
                 </group>
 

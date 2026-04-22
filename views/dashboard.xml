@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!-- Action Dashboard FNC -->
+    <record model="ir.actions.act_window" id="action_nc_dashboard">
+        <field name="name">Dashboard — Fiches Non-Conformité</field>
+        <field name="res_model">nc_management.nonconformity</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'group_by': 'state'}</field>
+    </record>
+
+    <!-- Menu Dashboard -->
+    <menuitem
+        name="Dashboard"
+        id="nc_management.menu_dashboard"
+        parent="nc_management.menu_root"
+        action="action_nc_dashboard"
+        sequence="1"/>
+
+</data>
+</odoo>

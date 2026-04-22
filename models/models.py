@@ -50,13 +50,9 @@ class Nonconformity(models.Model):
     analyse_causes = fields.Text(string='3- Analyse des causes')
     impact         = fields.Text(string='Impact : coût, incidence, risque')
 
-    # ── Liaison FAC ───────────────────────────────────────────
-    fac_ids               = fields.One2many(
-        'nc_management.corrective_action',
-        'fnc_id',
-        string='Fiches d\'Action Corrective'
-    )
-    responsable_action_id = fields.Many2one('hr.employee', string='Responsable de l\'action(s)')
+    # ── Référence FAC (Char — pas de dépendance circulaire) ──
+    fac_reference         = fields.Char(string="N° Fiche d'action")
+    responsable_action_id = fields.Many2one('hr.employee', string="Responsable de l'action(s)")
 
     # ── Validation hiérarchique ───────────────────────────────
     superieur_id    = fields.Many2one('hr.employee', string='Le supérieur hiérarchique')
@@ -97,17 +93,13 @@ class Nonconformity(models.Model):
     @api.multi
     def action_close(self):
         for rec in self:
-            if not rec.fac_ids:
-                raise UserError('Veuillez associer au moins une Fiche d\'Action Corrective avant de clôturer.')
-            if any(fac.state != 'closed' for fac in rec.fac_ids):
-                raise UserError('Toutes les Fiches d\'Action Corrective liées doivent être clôturées avant de clôturer la FNC.')
             rec.state = 'closed'
             rec.message_post(body='Fiche FNC clôturée par la Responsable Qualité.')
 
 
 class CorrectiveAction(models.Model):
     _name = 'nc_management.corrective_action'
-    _description = 'Fiche d\'Action Corrective'
+    _description = "Fiche d'Action Corrective"
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     # ── En-tête ───────────────────────────────────────────────
@@ -151,10 +143,10 @@ class CorrectiveAction(models.Model):
     qse_visa   = fields.Char(string='Visa QSE')
 
     # ── Section 5 — Vérification ─────────────────────────────
-    verification_efficacite = fields.Text(string='Vérification de l\'efficacité de l\'action')
+    verification_efficacite = fields.Text(string="Vérification de l'efficacité de l'action")
     extension_possible      = fields.Selection([
         ('non', 'Non'), ('oui', 'Oui'),
-    ], string='Extension possible de l\'action')
+    ], string="Extension possible de l'action")
 
     # ── Clôture ───────────────────────────────────────────────
     cloture_par_id = fields.Many2one('hr.employee', string='Clôturée par')
@@ -203,6 +195,7 @@ class CorrectiveAction(models.Model):
             rec.date_cloture = fields.Date.today()
             rec.message_post(body='Fiche FAC clôturée par la Responsable Qualité.')
 
+
 class NcDashboard(models.Model):
     _name = 'nc_management.dashboard'
     _description = 'Dashboard Responsable Qualité'
@@ -221,9 +214,11 @@ class NcDashboard(models.Model):
             'fac_verified':    fac.search_count([('state', '=', 'verified')]),
             'fac_closed':      fac.search_count([('state', '=', 'closed')]),
         }
+
+
 class ActionLine(models.Model):
     _name = 'nc_management.action_line'
-    _description = 'Ligne d\'action corrective'
+    _description = "Ligne d'action corrective"
 
     fac_id             = fields.Many2one(
         'nc_management.corrective_action',
@@ -242,4 +237,4 @@ class ActionLine(models.Model):
     action_description = fields.Char(string='Action(s)')
     date_prevue        = fields.Date(string='Date prévue')
     date_realisation   = fields.Date(string='Date de réalisation')
-    responsable_id     = fields.Many2one('hr.employee', string='Responsable de l\'action')   
+    responsable_id     = fields.Many2one('hr.employee', string="Responsable de l'action")

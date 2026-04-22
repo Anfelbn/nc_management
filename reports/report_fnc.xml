@@ -1,0 +1,279 @@
+<odoo>
+<data>
+
+    <report
+        id="action_report_fnc"
+        model="nc_management.nonconformity"
+        string="Fiche Non-Conformite"
+        report_type="qweb-pdf"
+        name="nc_management.report_fnc_template"
+        file="nc_management.report_fnc_template"
+        attachment_use="False"
+    />
+
+    <template id="report_fnc_template">
+        <t t-call="web.html_container">
+            <t t-call="web.basic_layout">
+                <style>
+                    @page {
+                        margin: 10mm;
+                        size: A4;
+                    }
+                    .page {
+                        width: 100%;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        font-family: Arial, sans-serif;
+                        font-weight: bold;
+                        font-size: 11px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        table-layout: fixed;
+                        border: 1px solid black;
+                    }
+                    td {
+                        border: 1px solid black;
+                        padding: 4px;
+                        word-wrap: break-word;
+                    }
+                    .bg-blue {
+                        background-color: #d9e1f2;
+                    }
+                </style>
+                <t t-foreach="docs" t-as="doc">
+
+                    <div class="page" style="page-break-after: always;">
+
+                        <!-- HEADER -->
+                        <table style="height: 130px;">
+                            <tr style="height: 50px;">
+                                <td rowspan="3" style="width:20%; text-align:center; vertical-align:middle;">
+                                    <img t-if="env.user.company_id.logo"
+                                         t-att-src="'data:image/png;base64,' + env.user.company_id.logo.decode('utf-8')"
+                                         style="max-width:130px; max-height:70px;"/>
+                                </td>
+
+                                <td rowspan="2" style="text-align:center; vertical-align:middle;">
+                                    <span style="font-size:13px;">شركة أسمنت عين الكبيرة</span><br/>
+                                    <span>SOCIETE DES CIMENTS DE AIN EL KEBIRA</span><br/>
+                                    <span>CEMENT COMPANY OF AIN EL KEBIRA</span>
+                                </td>
+
+                                <td style="width:25%; vertical-align:middle; height: 30px;">
+                                    <span>Reference : FNC 002/700</span>
+                                </td>
+                            </tr>
+                            <tr style="height: 30px;">
+                                <td style="vertical-align:middle;">
+                                    <span>Revision N 03</span>
+                                </td>
+                            </tr>
+                            <tr style="height: 40px;">
+                                <td style="text-align:center; vertical-align:middle;" class="bg-blue">
+                                    <i><span>FICHE DE NON-CONFORMITE</span></i><br/>
+                                    <i><span>NON-CONFORMITY SHEET</span></i>
+                                </td>
+                                <td style="vertical-align:middle;">
+                                    <span>Date de revision : 03/02/2025</span>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div style="height: 10px;"></div>
+
+                        <!-- INFOS -->
+                        <table>
+                            <tr>
+                                <td style="width:50%;">
+                                    <span>Emetteur Direction :</span>
+                                    <t t-esc="doc.direction_id.name or ''"/>
+                                </td>
+                                <td colspan="2" style="width:50%;">
+                                    <span>Date :</span>
+                                    <t t-esc="doc.date or ''"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <span>Sce /DPT :</span>
+                                    <t t-esc="doc.service_dpt or ''"/>
+                                </td>
+                                <td colspan="2">
+                                    <span>N FNC :</span>
+                                    <t t-esc="doc.name or ''"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="3" class="bg-blue">
+                                    <span>Type de Non-Conformite</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div><t t-if="doc.type_nc_produit">&#9745;</t><t t-else="">&#9744;</t> NC Produit</div>
+                                    <div><t t-if="doc.type_reclamation">&#9745;</t><t t-else="">&#9744;</t> Reclamation clients/PI</div>
+                                    <div><t t-if="doc.type_sst">&#9745;</t><t t-else="">&#9744;</t> SST Accident</div>
+                                    <div><t t-if="doc.type_environnement">&#9745;</t><t t-else="">&#9744;</t> Environnement</div>
+                                    <div><t t-if="doc.type_travaux">&#9745;</t><t t-else="">&#9744;</t> Travaux</div>
+                                </td>
+
+                                <td colspan="2">
+                                    <div><t t-if="doc.type_audit">&#9745;</t><t t-else="">&#9744;</t> Audit interne/Externe</div>
+                                    <div><t t-if="doc.type_achat">&#9745;</t><t t-else="">&#9744;</t> Achat</div>
+                                    <div><t t-if="doc.type_reception">&#9745;</t><t t-else="">&#9744;</t> Reception</div>
+                                    <div><t t-if="doc.type_dysfonctionnement">&#9745;</t><t t-else="">&#9744;</t> Dysfonctionnement</div>
+                                    <div><t t-if="doc.type_autre">&#9745;</t><t t-else="">&#9744;</t> Autre : <t t-esc="doc.type_autre_preciser or ''"/></div>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="3" class="bg-blue">
+                                    <span>1- Description de la non-conformite :</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="3" style="height:140px; vertical-align:top;">
+                                    <t t-esc="doc.description or ''"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="width:33%;">
+                                    <span>Nom de la personne qui signale :</span><br/>
+                                    <t t-esc="doc.signale_par_id.name or ''"/>
+                                </td>
+                                <td style="width:33%;">
+                                    <span>Date :</span><br/>
+                                    <t t-esc="doc.date_signalement or ''"/>
+                                </td>
+                                <td style="width:34%;">
+                                    <span>Fonction et visa :</span><br/>
+                                    <t t-esc="doc.fonction_visa or ''"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="3" class="bg-blue">
+                                    <span>Traitement :</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <t t-if="doc.trait_reprise">&#9745;</t><t t-else="">&#9744;</t>
+                                    <span>Reprise pour mise en conformite</span>
+                                </td>
+                                <td>
+                                    <t t-if="doc.trait_declassement">&#9745;</t><t t-else="">&#9744;</t>
+                                    <span>Declassement pour autre utilisation</span>
+                                </td>
+                                <td>
+                                    <t t-if="doc.trait_retour_fourn">&#9745;</t><t t-else="">&#9744;</t>
+                                    <span>Retour au fournisseur</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <t t-if="doc.trait_recyclage">&#9745;</t><t t-else="">&#9744;</t>
+                                    <span>Recyclage</span>
+                                </td>
+                                <td>
+                                    <t t-if="doc.trait_reparation">&#9745;</t><t t-else="">&#9744;</t>
+                                    <span>Reparation</span>
+                                </td>
+                                <td>
+                                    <t t-if="doc.trait_autre">&#9745;</t><t t-else="">&#9744;</t>
+                                    <span>Autre</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="3" class="bg-blue">
+                                    <span>2- Action immediate :</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="3" style="height:100px; vertical-align:top;">
+                                    <t t-esc="doc.action_immediate or ''"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <span>Realise par :</span>
+                                    <t t-esc="doc.realise_par_id.name or ''"/>
+                                </td>
+                                <td colspan="2">
+                                    <span>Date :</span>
+                                    <t t-esc="doc.date_realisation or ''"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="3" class="bg-blue">
+                                    <span>3- Analyse des causes</span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="3" style="height:100px; vertical-align:top;">
+                                    <t t-esc="doc.analyse_causes or ''"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="3">
+                                    <span>Impact : cout, incidence, risque :</span>
+                                    <t t-esc="doc.impact or ''"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <span>N Fiche d action :</span>
+                                    <t t-esc="doc.fac_reference or ''"/>
+                                </td>
+                                <td colspan="2">
+                                    <span>Responsable de l action(s) :</span>
+                                    <t t-esc="doc.responsable_action_id.name or ''"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <span>Le superieur hierarchique :</span>
+                                    <t t-esc="doc.superieur_id.name or ''"/>
+                                </td>
+                                <td>
+                                    <span>Date :</span>
+                                    <t t-esc="doc.date_validation or ''"/>
+                                </td>
+                                <td>
+                                    <span>Signature :</span>
+                                    <t t-esc="doc.signature or ''"/>
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <div style="text-align:right; font-size:10px; padding-top: 5px;">
+                            <span>FNC 002/700</span>
+                        </div>
+
+                    </div>
+
+                </t>
+            </t>
+        </t>
+    </template>
+
+</data>
+</odoo>

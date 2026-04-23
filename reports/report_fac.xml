@@ -9,6 +9,7 @@
         name="nc_management.report_fac_template"
         file="nc_management.report_fac_template"
         attachment_use="False"
+        menu="True"
     />
 
     <template id="report_fac_template">

@@ -98,6 +98,9 @@
                         <field name="trait_recyclage"/>
                         <field name="trait_reparation"/>
                         <field name="trait_autre"/>
+                        <field name="trait_autre_preciser"
+                               attrs="{'invisible': [('trait_autre', '=', False)],
+                                       'required':  [('trait_autre', '=', True)]}"/>
                     </group>
                 </group>
 

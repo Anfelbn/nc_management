@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 
@@ -34,12 +35,13 @@ class Nonconformity(models.Model):
     fonction_visa      = fields.Char(string='Fonction et visa')
 
     # ── Traitement ────────────────────────────────────────────
-    trait_reprise      = fields.Boolean(string='Reprise pour mise en conformité')
-    trait_declassement = fields.Boolean(string='Déclassement pour autre utilisation')
-    trait_retour_fourn = fields.Boolean(string='Retour au fournisseur')
-    trait_recyclage    = fields.Boolean(string='Recyclage')
-    trait_reparation   = fields.Boolean(string='Réparation')
-    trait_autre        = fields.Boolean(string='Autre')
+    trait_reprise          = fields.Boolean(string='Reprise pour mise en conformité')
+    trait_declassement     = fields.Boolean(string='Déclassement pour autre utilisation')
+    trait_retour_fourn     = fields.Boolean(string='Retour au fournisseur')
+    trait_recyclage        = fields.Boolean(string='Recyclage')
+    trait_reparation       = fields.Boolean(string='Réparation')
+    trait_autre            = fields.Boolean(string='Autre')
+    trait_autre_preciser   = fields.Char(string='Préciser (Traitement)')
 
     # ── Section 2 — Action immédiate ─────────────────────────
     action_immediate = fields.Text(string='2- Action immédiate')
@@ -50,7 +52,8 @@ class Nonconformity(models.Model):
     analyse_causes = fields.Text(string='3- Analyse des causes')
     impact         = fields.Text(string='Impact : coût, incidence, risque')
 
-    # ── Référence FAC (Char — pas de dépendance circulaire) ──
+    # ── Références FAC ───────────────────────────────────────
+    fac_ids               = fields.One2many('nc_management.corrective_action', 'fnc_id', string="Fiches d'action liées")
     fac_reference         = fields.Char(string="N° Fiche d'action")
     responsable_action_id = fields.Many2one('hr.employee', string="Responsable de l'action(s)")
 
@@ -67,13 +70,64 @@ class Nonconformity(models.Model):
         ('closed',      'Clôturée'),
     ], string='Statut', default='draft', track_visibility='onchange')
 
-    # ── Numérotation automatique ──────────────────────────────
+    # ── Numérotation automatique et création FAC ──────────────
     @api.model
     def create(self, vals):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'nc_management.nonconformity') or 'New'
-        return super(Nonconformity, self).create(vals)
+        
+        res = super(Nonconformity, self).create(vals)
+        
+        # Création automatique de la première FAC liée
+        self.env['nc_management.corrective_action'].create({
+            'fnc_id': res.id,
+            'direction_id': res.direction_id.id,
+            'rappel_nc': res.description,
+            'analyse_causes': res.analyse_causes,
+            'date_fnc': res.date,
+        })
+        return res
+
+    @api.multi
+    def write(self, vals):
+        # On mémorise les valeurs actuelles pour la comparaison "smart sync"
+        records_data = {}
+        if any(field in vals for field in ['description', 'analyse_causes', 'direction_id']):
+            for rec in self:
+                records_data[rec.id] = {
+                    'description': rec.description,
+                    'analyse_causes': rec.analyse_causes,
+                    'direction_id': rec.direction_id.id,
+                }
+
+        res = super(Nonconformity, self).write(vals)
+
+        # Mise à jour intelligente de TOUTES les FAC liées
+        if records_data:
+            for rec in self:
+                for fac in rec.fac_ids:
+                    updates = {}
+                    old_data = records_data.get(rec.id, {})
+                    
+                    # Sync Description -> Rappel NC
+                    if 'description' in vals:
+                        if not fac.rappel_nc or fac.rappel_nc == old_data.get('description'):
+                            updates['rappel_nc'] = vals['description']
+                    
+                    # Sync Analyse Causes
+                    if 'analyse_causes' in vals:
+                        if not fac.analyse_causes or fac.analyse_causes == old_data.get('analyse_causes'):
+                            updates['analyse_causes'] = vals['analyse_causes']
+
+                    # Sync Direction
+                    if 'direction_id' in vals:
+                        if not fac.direction_id or fac.direction_id.id == old_data.get('direction_id'):
+                            updates['direction_id'] = vals['direction_id']
+                    
+                    if updates:
+                        fac.write(updates)
+        return res
 
     # ── Boutons workflow ──────────────────────────────────────
     @api.multi
@@ -161,6 +215,15 @@ class CorrectiveAction(models.Model):
         ('closed',   'Clôturée'),
     ], string='Statut', default='draft', track_visibility='onchange')
 
+    # ── Remplissage auto via FNC ──────────────────────────────
+    @api.onchange('fnc_id')
+    def _onchange_fnc_id(self):
+        if self.fnc_id:
+            self.rappel_nc = self.fnc_id.description
+            self.analyse_causes = self.fnc_id.analyse_causes
+            self.direction_id = self.fnc_id.direction_id
+            self.date_fnc = self.fnc_id.date
+
     # ── Numérotation automatique ──────────────────────────────
     @api.model
     def create(self, vals):
@@ -196,26 +259,6 @@ class CorrectiveAction(models.Model):
             rec.message_post(body='Fiche FAC clôturée par la Responsable Qualité.')
 
 
-class NcDashboard(models.Model):
-    _name = 'nc_management.dashboard'
-    _description = 'Dashboard Responsable Qualité'
-
-    @api.model
-    def get_dashboard_data(self):
-        fnc = self.env['nc_management.nonconformity']
-        fac = self.env['nc_management.corrective_action']
-        return {
-            'fnc_draft':       fnc.search_count([('state', '=', 'draft')]),
-            'fnc_submitted':   fnc.search_count([('state', '=', 'submitted')]),
-            'fnc_in_progress': fnc.search_count([('state', '=', 'in_progress')]),
-            'fnc_closed':      fnc.search_count([('state', '=', 'closed')]),
-            'fac_draft':       fac.search_count([('state', '=', 'draft')]),
-            'fac_open':        fac.search_count([('state', '=', 'open')]),
-            'fac_verified':    fac.search_count([('state', '=', 'verified')]),
-            'fac_closed':      fac.search_count([('state', '=', 'closed')]),
-        }
-
-
 class ActionLine(models.Model):
     _name = 'nc_management.action_line'
     _description = "Ligne d'action corrective"
@@ -238,3 +281,51 @@ class ActionLine(models.Model):
     date_prevue        = fields.Date(string='Date prévue')
     date_realisation   = fields.Date(string='Date de réalisation')
     responsable_id     = fields.Many2one('hr.employee', string="Responsable de l'action")
+
+
+class NcDashboard(models.Model):
+    _name = 'nc_management.dashboard'
+    _description = 'Dashboard'
+
+    @api.model
+    def get_stats(self):
+        from dateutil.relativedelta import relativedelta
+        fnc = self.env['nc_management.nonconformity']
+        fac = self.env['nc_management.corrective_action']
+        total_fnc = fnc.search_count([])
+        closed_fnc = fnc.search_count([('state', '=', 'closed')])
+        taux = round((closed_fnc / total_fnc * 100) if total_fnc else 0, 1)
+
+        limit = str(date.today() - timedelta(days=7))
+        urgent = fnc.search_read(
+            [('state', '=', 'in_progress'), ('date', '<=', limit)],
+            ['name', 'direction_id', 'date', 'service_dpt'], limit=10)
+
+        months = []
+        for i in range(5, -1, -1):
+            d = date.today() - relativedelta(months=i)
+            m_start = d.replace(day=1)
+            if i > 0:
+                m_end = (d + relativedelta(months=1)).replace(day=1)
+            else:
+                m_end = date.today()
+            count = fnc.search_count([
+                ('date', '>=', str(m_start)),
+                ('date', '<', str(m_end)),
+            ])
+            months.append({'month': m_start.strftime('%b %Y'), 'count': count})
+
+        return {
+            'fnc_draft':       fnc.search_count([('state', '=', 'draft')]),
+            'fnc_submitted':   fnc.search_count([('state', '=', 'submitted')]),
+            'fnc_in_progress': fnc.search_count([('state', '=', 'in_progress')]),
+            'fnc_closed':      closed_fnc,
+            'fnc_total':       total_fnc,
+            'fac_draft':       fac.search_count([('state', '=', 'draft')]),
+            'fac_open':        fac.search_count([('state', '=', 'open')]),
+            'fac_verified':    fac.search_count([('state', '=', 'verified')]),
+            'fac_closed':      fac.search_count([('state', '=', 'closed')]),
+            'taux_cloture':    taux,
+            'urgent':          urgent,
+            'monthly':         months,
+        }

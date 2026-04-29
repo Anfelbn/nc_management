@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ============================================================ -->
+<!--  PLAN ACTION SMI — TREE VIEW                                  -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_plan_action_smi_tree">
+    <field name="name">nc_management.plan_action_smi.tree</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="arch" type="xml">
+        <tree string="Plan Action SMI"
+              decoration-success="avancement == 100"
+              decoration-danger="efficacite == 'non'"
+              decoration-muted="state == 'draft'">
+            <field name="name"/>
+            <field name="nature"/>
+            <field name="fnc_id"/>
+            <field name="description"/>
+            <field name="responsable_id"/>
+            <field name="date_prevue"/>
+            <field name="avancement" string="Avancement %"/>
+            <field name="efficacite"/>
+            <field name="state"/>
+        </tree>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  PLAN ACTION SMI — FORM VIEW                                  -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_plan_action_smi_form">
+    <field name="name">nc_management.plan_action_smi.form</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="arch" type="xml">
+        <form string="Plan d'Action Amélioration SMI">
+            <header>
+                <button name="action_done"
+                        string="Marquer Réalisé"
+                        type="object"
+                        states="draft"
+                        class="oe_highlight"/>
+                <button name="action_verify"
+                        string="Vérifier Efficacité"
+                        type="object"
+                        states="done"
+                        class="oe_highlight"/>
+                <field name="state" widget="statusbar"
+                       statusbar_visible="draft,done,verified"/>
+            </header>
+            <sheet>
+
+                <div class="oe_title">
+                    <h1><field name="name" readonly="1"/></h1>
+                </div>
+
+                <!-- Row 1: nature | fnc_id -->
+                <group string="Identification">
+                    <group>
+                        <field name="nature"/>
+                        <field name="fnc_id"
+                               options="{'no_create': True, 'no_create_edit': True}"/>
+                    </group>
+                    <group/>
+                </group>
+
+                <!-- Row 2: description (full width) -->
+                <group string="Brève description / Objectif d'amélioration">
+                    <field name="description" nolabel="1" colspan="2"
+                           placeholder="Décrivez l'objectif d'amélioration..."/>
+                </group>
+
+                <!-- Row 3: causes | action -->
+                <group>
+                    <group string="Causes">
+                        <field name="causes" nolabel="1"
+                               placeholder="Analysez les causes..."/>
+                    </group>
+                    <group string="Action">
+                        <field name="action" nolabel="1"
+                               placeholder="Décrivez l'action à mener..."/>
+                    </group>
+                </group>
+
+                <!-- Row 4: responsable | moyens | duree_estimee -->
+                <group string="Ressources">
+                    <group>
+                        <field name="responsable_id"
+                               options="{'no_create': True, 'no_create_edit': True}"/>
+                        <field name="duree_estimee"/>
+                    </group>
+                    <group>
+                        <field name="moyens"/>
+                    </group>
+                </group>
+
+                <!-- Row 5: date_prevue | date_lancement | date_realisation -->
+                <group string="Dates">
+                    <group>
+                        <field name="date_prevue"/>
+                        <field name="date_lancement"/>
+                    </group>
+                    <group>
+                        <field name="date_realisation"/>
+                    </group>
+                </group>
+
+                <!-- Row 6: avancement | duree_reelle -->
+                <group string="Avancement">
+                    <group>
+                        <field name="avancement" widget="percentpie"/>
+                    </group>
+                    <group>
+                        <field name="duree_reelle"/>
+                    </group>
+                </group>
+
+                <!-- Row 7: critere_efficacite (full width) -->
+                <group string="Critère d'Efficacité">
+                    <field name="critere_efficacite" nolabel="1" colspan="2"
+                           placeholder="Définissez le critère d'efficacité..."/>
+                </group>
+
+                <!-- Row 8: efficacite | remarque -->
+                <group string="Résultat">
+                    <group>
+                        <field name="efficacite"/>
+                    </group>
+                    <group>
+                        <field name="remarque"
+                               attrs="{'invisible': [('efficacite', '!=', 'non')]}"
+                               placeholder="Précisez la raison..."/>
+                    </group>
+                </group>
+
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  PLAN ACTION SMI — SEARCH VIEW                               -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_plan_action_smi_search">
+    <field name="name">nc_management.plan_action_smi.search</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="arch" type="xml">
+        <search string="Rechercher Plan Action SMI">
+            <field name="name" string="Référence"/>
+            <field name="responsable_id"/>
+            <field name="fnc_id"/>
+            <separator/>
+            <filter string="Efficace"     name="efficace"
+                    domain="[('efficacite', '=', 'oui')]"/>
+            <filter string="Non Efficace" name="non_efficace"
+                    domain="[('efficacite', '=', 'non')]"/>
+            <separator/>
+            <filter string="En Cours"  name="en_cours"
+                    domain="[('state', '=', 'draft')]"/>
+            <filter string="Réalisé"   name="realise"
+                    domain="[('state', '=', 'done')]"/>
+            <filter string="Vérifié"   name="verifie"
+                    domain="[('state', '=', 'verified')]"/>
+            <group expand="0" string="Grouper par">
+                <filter string="Nature"     name="group_nature"
+                        context="{'group_by': 'nature'}"/>
+                <filter string="État"       name="group_state"
+                        context="{'group_by': 'state'}"/>
+                <filter string="Efficacité" name="group_efficacite"
+                        context="{'group_by': 'efficacite'}"/>
+                <filter string="Responsable" name="group_responsable"
+                        context="{'group_by': 'responsable_id'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  PLAN ACTION SMI — GRAPH VIEW                                -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_plan_action_smi_graph">
+    <field name="name">nc_management.plan_action_smi.graph</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="arch" type="xml">
+        <graph string="Plan SMI par Nature" type="bar">
+            <field name="nature" type="row"/>
+            <field name="efficacite" type="col"/>
+        </graph>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  PLAN ACTION SMI — PIVOT VIEW                                -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_plan_action_smi_pivot">
+    <field name="name">nc_management.plan_action_smi.pivot</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="arch" type="xml">
+        <pivot string="Analyse Efficacité SMI">
+            <field name="nature"     type="row"/>
+            <field name="efficacite" type="col"/>
+        </pivot>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  ACTION + MENU                                               -->
+<!-- ============================================================ -->
+<record model="ir.actions.act_window" id="action_plan_action_smi">
+    <field name="name">Plan Action SMI</field>
+    <field name="res_model">nc_management.plan_action_smi</field>
+    <field name="view_mode">tree,form,graph,pivot</field>
+    <field name="context">{}</field>
+</record>
+
+<menuitem
+    name="Plan Action SMI"
+    id="nc_management.menu_plan_smi"
+    parent="nc_management.menu_root"
+    action="action_plan_action_smi"
+    groups="nc_management.group_nc_user,nc_management.group_nc_manager"
+    sequence="2"/>
+
+</data>
+</odoo>

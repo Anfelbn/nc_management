@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record model="ir.ui.view" id="view_send_fnc_wizard">
+        <field name="name">nc_management.send_fnc_wizard.form</field>
+        <field name="model">nc_management.send_fnc_wizard</field>
+        <field name="arch" type="xml">
+            <form string="Envoyer la Fiche NC">
+                <group>
+                    <field name="fnc_id" invisible="1"/>
+                    <field name="recipient_id"
+                           options="{'no_create': True, 'no_create_edit': True}"
+                           string="Destinataire"/>
+                    <field name="note"
+                           placeholder="Message optionnel pour le destinataire..."/>
+                </group>
+                <footer>
+                    <button name="action_send"
+                            string="Envoyer"
+                            type="object"
+                            class="oe_highlight"/>
+                    <button string="Annuler"
+                            class="oe_link"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_send_fnc_wizard">
+        <field name="name">Envoyer la FNC</field>
+        <field name="res_model">nc_management.send_fnc_wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_send_fnc_wizard"/>
+        <field name="target">new</field>
+        <field name="context">{'default_fnc_id': active_id}</field>
+    </record>
+
+</data>
+</odoo>

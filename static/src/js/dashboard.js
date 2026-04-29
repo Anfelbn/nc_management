@@ -1,12 +1,11 @@
 odoo.define('nc_management.dashboard', function (require) {
     'use strict';
 
-    var AbstractAction = require('web.AbstractAction');
+    var Widget = require('web.Widget');
     var core = require('web.core');
     var rpc = require('web.rpc');
-    var QWeb = core.qweb;
 
-    var NcDashboard = AbstractAction.extend({
+    var NcDashboard = Widget.extend({
         template: 'NcDashboard',
         events: {},
 
@@ -66,6 +65,33 @@ odoo.define('nc_management.dashboard', function (require) {
                         );
                     });
                 }
+
+                var ae = d.analyse_efficacite;
+                var categories = [
+                    { key: 'reclamation_pi',  label: 'Réclamation PI',  color: '#e67e22' },
+                    { key: 'nc_produit',      label: 'NC Produit',           color: '#e74c3c' },
+                    { key: 'environnement',   label: 'Environnement',        color: '#27ae60' },
+                    { key: 'sst',             label: 'SST',                  color: '#2980b9' },
+                ];
+
+                var efficacite_tbody = self.$('#efficacite_body');
+                efficacite_tbody.empty();
+                categories.forEach(function (cat) {
+                    var data = ae[cat.key];
+                    var taux_color = data.taux >= 70 ? '#27ae60' : data.taux >= 50 ? '#e67e22' : '#e74c3c';
+                    efficacite_tbody.append(
+                        '<tr>' +
+                        '<td style="padding:8px;border:1px solid #dee2e6;font-weight:bold;color:' + cat.color + '">' + cat.label + '</td>' +
+                        '<td style="padding:8px;border:1px solid #dee2e6;text-align:center;">' + data.total + '</td>' +
+                        '<td style="padding:8px;border:1px solid #dee2e6;text-align:center;color:#27ae60;font-weight:bold;">' + data.efficace + '</td>' +
+                        '<td style="padding:8px;border:1px solid #dee2e6;text-align:center;color:#e74c3c;font-weight:bold;">' + data.non_efficace + '</td>' +
+                        '<td style="padding:8px;border:1px solid #dee2e6;text-align:center;">' +
+                            '<span style="background:' + taux_color + ';color:white;padding:3px 10px;border-radius:99px;font-weight:bold;">' +
+                            data.taux + '%</span>' +
+                        '</td>' +
+                        '</tr>'
+                    );
+                });
             });
             return sup;
         },

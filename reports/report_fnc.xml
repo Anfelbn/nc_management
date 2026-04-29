@@ -172,7 +172,7 @@
                                 </td>
                                 <td>
                                     <t t-if="doc.trait_declassement">&#9745;</t><t t-else="">&#9744;</t>
-                                    <span>Declassement pour autre utilisation</span>
+                                    <span>Declassement for autre utilisation</span>
                                 </td>
                                 <td>
                                     <t t-if="doc.trait_retour_fourn">&#9745;</t><t t-else="">&#9744;</t>

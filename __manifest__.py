@@ -9,10 +9,13 @@
     'data': [
         'security/quality_groups.xml',
         'security/ir.model.access.csv',
+        'security/quality_rules.xml',
         'data/sequences.xml',
+        'wizard/send_fnc_wizard.xml',
         'reports/report_fnc.xml',
         'reports/report_fac.xml',
         'views/views.xml',
+        'views/plan_action_smi.xml',
         'views/dashboard.xml',
     ],
     'qweb': [

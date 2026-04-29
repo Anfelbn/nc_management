@@ -11,7 +11,8 @@ class Nonconformity(models.Model):
     name = fields.Char(
         string='N° FNC', required=True, copy=False,
         readonly=True, default='New')
-    direction_id  = fields.Many2one('hr.department', string='Direction / Emetteur')
+    direction_id  = fields.Many2one('hr.department', string='Direction / Emetteur',
+                      context={'no_create': True, 'no_create_edit': True})
     service_dpt   = fields.Char(string='Sce / DPT')
     date          = fields.Date(string='Date', default=fields.Date.today)
 
@@ -30,7 +31,8 @@ class Nonconformity(models.Model):
 
     # ── Section 1 — Description ───────────────────────────────
     description        = fields.Text(string='1- Description de la non-conformité')
-    signale_par_id     = fields.Many2one('hr.employee', string='Nom de la personne qui signale')
+    signale_par_id     = fields.Many2one('hr.employee', string='Nom de la personne qui signale',
+                           context={'no_create': True, 'no_create_edit': True})
     date_signalement   = fields.Date(string='Date de signalement')
     fonction_visa      = fields.Char(string='Fonction et visa')
 
@@ -45,7 +47,8 @@ class Nonconformity(models.Model):
 
     # ── Section 2 — Action immédiate ─────────────────────────
     action_immediate = fields.Text(string='2- Action immédiate')
-    realise_par_id   = fields.Many2one('hr.employee', string='Réalisé par')
+    realise_par_id   = fields.Many2one('hr.employee', string='Réalisé par',
+                         context={'no_create': True, 'no_create_edit': True})
     date_realisation = fields.Date(string='Date de réalisation')
 
     # ── Section 3 — Analyse des causes ───────────────────────
@@ -55,18 +58,33 @@ class Nonconformity(models.Model):
     # ── Références FAC ───────────────────────────────────────
     fac_ids               = fields.One2many('nc_management.corrective_action', 'fnc_id', string="Fiches d'action liées")
     fac_reference         = fields.Char(string="N° Fiche d'action")
-    responsable_action_id = fields.Many2one('hr.employee', string="Responsable de l'action(s)")
+    responsable_action_id = fields.Many2one('hr.employee', string="Responsable de l'action(s)",
+                              context={'no_create': True, 'no_create_edit': True})
 
     # ── Validation hiérarchique ───────────────────────────────
-    superieur_id    = fields.Many2one('hr.employee', string='Le supérieur hiérarchique')
+    superieur_id    = fields.Many2one('hr.employee', string='Le supérieur hiérarchique',
+                      context={'no_create': True, 'no_create_edit': True})
     date_validation = fields.Date(string='Date validation')
     signature       = fields.Char(string='Signature')
+
+    # ── Routing ───────────────────────────────────────────────
+    assigned_to_id  = fields.Many2one(
+        'hr.employee', string="Responsable de l'action",
+        context={'no_create': True, 'no_create_edit': True},
+        track_visibility='onchange')
+    submitted_by_id = fields.Many2one(
+        'res.users', string='Soumis par',
+        readonly=True)
+    validated_by_id = fields.Many2one(
+        'hr.employee', string='Validé par (Sup. Hiérarchique)',
+        context={'no_create': True, 'no_create_edit': True})
 
     # ── Statut ────────────────────────────────────────────────
     state = fields.Selection([
         ('draft',       'Brouillon'),
-        ('submitted',   'Soumise'),
-        ('in_progress', 'En cours'),
+        ('submitted',   'Soumise — En attente traitement'),
+        ('in_progress', 'En cours — En attente validation'),
+        ('validated',   'Validée — En attente clôture'),
         ('closed',      'Clôturée'),
     ], string='Statut', default='draft', track_visibility='onchange')
 
@@ -131,24 +149,32 @@ class Nonconformity(models.Model):
 
     # ── Boutons workflow ──────────────────────────────────────
     @api.multi
-    def action_submit(self):
-        for rec in self:
-            if not rec.description:
-                raise UserError('Veuillez remplir la description de la non-conformité.')
-            rec.state = 'submitted'
-            rec.message_post(body='Fiche FNC soumise.')
-
-    @api.multi
-    def action_progress(self):
-        for rec in self:
-            rec.state = 'in_progress'
-            rec.message_post(body='Fiche FNC prise en charge.')
+    def action_open_send_wizard(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Envoyer la FNC',
+            'res_model': 'nc_management.send_fnc_wizard',
+            'view_mode': 'form',
+            'view_id': self.env.ref('nc_management.view_send_fnc_wizard').id,
+            'target': 'new',
+            'context': {'default_fnc_id': self.id},
+        }
 
     @api.multi
     def action_close(self):
         for rec in self:
-            rec.state = 'closed'
-            rec.message_post(body='Fiche FNC clôturée par la Responsable Qualité.')
+            rec.write({'state': 'closed'})
+            rec.message_post(
+                body='FNC clôturée par la Responsable Qualité.')
+
+    def _is_creator(self):
+        return self.submitted_by_id == self.env.user
+
+    def _is_assigned(self):
+        emp = self.env['hr.employee'].search(
+            [('user_id', '=', self.env.uid)], limit=1)
+        return emp and emp.id == self.assigned_to_id.id
 
 
 class CorrectiveAction(models.Model):
@@ -160,12 +186,13 @@ class CorrectiveAction(models.Model):
     name         = fields.Char(
         string='N° FAC', required=True, copy=False,
         readonly=True, default='New')
-    direction_id = fields.Many2one('hr.department', string='Direction')
+    direction_id = fields.Many2one('hr.department', string='Direction',
+                     context={'no_create': True, 'no_create_edit': True})
     date         = fields.Date(string='Date', default=fields.Date.today)
     fnc_id       = fields.Many2one(
         'nc_management.nonconformity',
         string='N° FNC ou autre document',
-        ondelete='restrict',
+        ondelete='set null',
         index=True
     )
     date_fnc     = fields.Date(string='Date FNC')
@@ -175,13 +202,15 @@ class CorrectiveAction(models.Model):
 
     # ── Section 2 — Analyse des causes ───────────────────────
     analyse_causes         = fields.Text(string='2- Analyse des causes de la non-conformité')
-    responsable_analyse_id = fields.Many2one('hr.employee', string='Responsable analyse')
+    responsable_analyse_id = fields.Many2one('hr.employee', string='Responsable analyse',
+                               context={'no_create': True, 'no_create_edit': True})
     date_analyse           = fields.Date(string='Date analyse')
     visa_analyse           = fields.Char(string='Visa analyse')
 
     # ── Section 3 — Actions décidées ─────────────────────────
     action_line_ids        = fields.One2many('nc_management.action_line', 'fac_id', string='Actions décidées')
-    responsable_actions_id = fields.Many2one('hr.employee', string='Responsable actions')
+    responsable_actions_id = fields.Many2one('hr.employee', string='Responsable actions',
+                               context={'no_create': True, 'no_create_edit': True})
     date_actions           = fields.Date(string='Date actions')
     visa_actions           = fields.Char(string='Visa actions')
 
@@ -189,10 +218,12 @@ class CorrectiveAction(models.Model):
     actions_efficaces         = fields.Selection([
         ('oui', 'Oui'), ('non', 'Non'),
     ], string='Action(s) efficace(s)')
-    responsable_efficacite_id = fields.Many2one('hr.employee', string='Responsable efficacité')
+    responsable_efficacite_id = fields.Many2one('hr.employee', string='Responsable efficacité',
+                                  context={'no_create': True, 'no_create_edit': True})
 
     # ── Section 4 — Approbation QSE ──────────────────────────
-    qse_nom_id = fields.Many2one('hr.employee', string='Nom Responsable QSE')
+    qse_nom_id = fields.Many2one('hr.employee', string='Nom Responsable QSE',
+                   context={'no_create': True, 'no_create_edit': True})
     qse_date   = fields.Date(string='Date approbation QSE')
     qse_visa   = fields.Char(string='Visa QSE')
 
@@ -203,7 +234,8 @@ class CorrectiveAction(models.Model):
     ], string="Extension possible de l'action")
 
     # ── Clôture ───────────────────────────────────────────────
-    cloture_par_id = fields.Many2one('hr.employee', string='Clôturée par')
+    cloture_par_id = fields.Many2one('hr.employee', string='Clôturée par',
+                       context={'no_create': True, 'no_create_edit': True})
     date_cloture   = fields.Date(string='Date clôture')
     visa_cloture   = fields.Char(string='Visa clôture')
 
@@ -280,12 +312,162 @@ class ActionLine(models.Model):
     action_description = fields.Char(string='Action(s)')
     date_prevue        = fields.Date(string='Date prévue')
     date_realisation   = fields.Date(string='Date de réalisation')
-    responsable_id     = fields.Many2one('hr.employee', string="Responsable de l'action")
+    responsable_id     = fields.Many2one('hr.employee', string="Responsable de l'action",
+                           context={'no_create': True, 'no_create_edit': True})
+
+
+class PlanActionSmi(models.Model):
+    _name = 'nc_management.plan_action_smi'
+    _description = 'Plan Action Amelioration SMI'
+    _order = 'name asc'
+
+    name = fields.Char(string='Référence', required=True, copy=False,
+                       readonly=True, default='New')
+    nature = fields.Selection([
+        ('nc_produit',     'NC Produit'),
+        ('reclamation_pi', 'Réclamation Client ou PI'),
+        ('environnement',  'Environnement'),
+        ('sst',            'SST'),
+    ], string='Nature', required=True)
+    fnc_id = fields.Many2one('nc_management.nonconformity', string='FNC Liée')
+    description = fields.Text(string='Brève description / Objectif amélioration')
+    causes = fields.Text(string='Causes')
+    action = fields.Text(string='Action')
+    responsable_id = fields.Many2one('hr.employee', string='Responsable',
+                       context={'no_create': True, 'no_create_edit': True})
+    moyens = fields.Char(string='Moyens Nécessaires (matériels, financiers, humains)')
+    duree_estimee = fields.Char(string='Durée Estimée')
+    date_prevue = fields.Date(string='Date Prévue')
+    date_lancement = fields.Date(string='Date de Lancement')
+    date_realisation = fields.Date(string='Date de Réalisation')
+    avancement = fields.Integer(string='État Avancement (%)', default=0)
+    duree_reelle = fields.Char(string='Durée Réelle')
+    critere_efficacite = fields.Text(string="Critère d'Efficacité")
+    efficacite = fields.Selection([
+        ('oui', 'OUI'),
+        ('non', 'NON'),
+    ], string='Efficacité')
+    remarque = fields.Text(string='Remarque (si non efficace)')
+    state = fields.Selection([
+        ('draft',    'En cours'),
+        ('done',     'Réalisé'),
+        ('verified', 'Vérifié'),
+    ], string='État', default='draft')
+
+    @api.model
+    def create(self, vals):
+        if vals.get('name', 'New') == 'New':
+            vals['name'] = self.env['ir.sequence'].next_by_code(
+                'nc_management.plan_action_smi') or 'New'
+        return super(PlanActionSmi, self).create(vals)
+
+    @api.onchange('nature')
+    def _onchange_nature(self):
+        self.fnc_id = False
+
+    @api.multi
+    def action_done(self):
+        self.state = 'done'
+
+    @api.multi
+    def action_verify(self):
+        self.state = 'verified'
 
 
 class NcDashboard(models.Model):
     _name = 'nc_management.dashboard'
     _description = 'Dashboard'
+
+    @api.model
+    def get_plan_smi_stats(self):
+        plan = self.env['nc_management.plan_action_smi']
+
+        def get_cat(nature_val):
+            recs = plan.search([('nature', '=', nature_val)])
+            total = len(recs)
+            if total == 0:
+                return {'total': 0, 'efficace': 0, 'non_efficace': 0,
+                        'realise_100': 0, 'realise_50plus': 0,
+                        'realise_50moins': 0, 'taux': 0}
+            efficace        = len(recs.filtered(lambda r: r.efficacite == 'oui'))
+            non_efficace    = len(recs.filtered(lambda r: r.efficacite == 'non'))
+            realise_100     = len(recs.filtered(lambda r: r.avancement == 100))
+            realise_50plus  = len(recs.filtered(lambda r: 50 <= r.avancement < 100))
+            realise_50moins = len(recs.filtered(lambda r: r.avancement < 50))
+            taux = round(efficace / total * 100, 1)
+            return {
+                'total': total,
+                'efficace': efficace,
+                'non_efficace': non_efficace,
+                'realise_100': realise_100,
+                'realise_50plus': realise_50plus,
+                'realise_50moins': realise_50moins,
+                'taux': taux,
+            }
+
+        categories = [
+            {'key': 'nc_produit',     'label': 'NC Produit',
+             'data': get_cat('nc_produit')},
+            {'key': 'reclamation_pi', 'label': 'Réclamation Client ou PI',
+             'data': get_cat('reclamation_pi')},
+            {'key': 'environnement',  'label': 'Environnement',
+             'data': get_cat('environnement')},
+            {'key': 'sst',            'label': 'SST',
+             'data': get_cat('sst')},
+        ]
+
+        all_recs = plan.search([])
+        total_all = len(all_recs)
+
+        def proc_taux(nature_val):
+            recs = plan.search([('nature', '=', nature_val)])
+            if not recs:
+                return 0
+            return round(sum(r.avancement for r in recs) / len(recs), 1)
+
+        processus = [
+            {'label': 'Analyse et amélioration',
+             'taux': round(sum(r.avancement for r in all_recs) / max(total_all, 1), 1)},
+            {'label': 'Santé Sécurité Environnement',
+             'taux': proc_taux('sst')},
+            {'label': 'Process contrôle qualité',
+             'taux': proc_taux('nc_produit')},
+            {'label': 'Commercialisation / Réclamation',
+             'taux': proc_taux('reclamation_pi')},
+        ]
+
+        return {
+            'categories': categories,
+            'processus': processus,
+        }
+
+    @api.model
+    def get_efficacite_categorie(self, field_name):
+        fnc = self.env['nc_management.nonconformity']
+        fac = self.env['nc_management.corrective_action']
+
+        fnc_ids = fnc.search([(field_name, '=', True)]).ids
+        total = len(fnc_ids)
+
+        if total == 0:
+            return {'total': 0, 'efficace': 0, 'non_efficace': 0, 'taux': 0}
+
+        efficace = fac.search_count([
+            ('fnc_id', 'in', fnc_ids),
+            ('actions_efficaces', '=', 'oui')
+        ])
+        non_efficace = fac.search_count([
+            ('fnc_id', 'in', fnc_ids),
+            ('actions_efficaces', '=', 'non')
+        ])
+        taux = round((efficace / total * 100), 1) if total > 0 else 0
+
+        return {
+            'total': total,
+            'efficace': efficace,
+            'non_efficace': non_efficace,
+            'taux': taux,
+        }
 
     @api.model
     def get_stats(self):
@@ -328,4 +510,10 @@ class NcDashboard(models.Model):
             'taux_cloture':    taux,
             'urgent':          urgent,
             'monthly':         months,
+            'analyse_efficacite': {
+                'reclamation_pi': self.get_efficacite_categorie('type_reclamation'),
+                'nc_produit':     self.get_efficacite_categorie('type_nc_produit'),
+                'environnement':  self.get_efficacite_categorie('type_environnement'),
+                'sst':            self.get_efficacite_categorie('type_sst'),
+            },
         }

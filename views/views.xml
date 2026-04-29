@@ -17,6 +17,7 @@
             <field name="direction_id"/>
             <field name="service_dpt"/>
             <field name="signale_par_id"/>
+            <field name="assigned_to_id"/>
             <field name="state"/>
         </tree>
     </field>
@@ -29,113 +30,161 @@
     <field name="arch" type="xml">
         <form string="Fiche de Non-Conformité">
             <header>
-                <button name="action_submit"   string="Soumettre"  type="object"
-                        states="draft"       class="oe_highlight"/>
-                <button name="action_progress" string="En cours"   type="object"
-                        states="submitted"/>
-                <button name="action_close"    string="Clôturer"   type="object"
-                        states="in_progress" class="oe_highlight"/>
+                <button name="action_open_send_wizard"
+                        string="Envoyer"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('state','in',['validated','closed'])]}"/>
+                <button name="action_close"
+                        string="Clôturer"
+                        type="object"
+                        states="validated"
+                        class="oe_highlight"
+                        groups="nc_management.group_nc_manager"/>
                 <field name="state" widget="statusbar"
-                       statusbar_visible="draft,submitted,in_progress,closed"/>
+                       statusbar_visible="draft,submitted,in_progress,validated,closed"/>
             </header>
             <sheet>
 
-                <!-- En-tête -->
                 <div class="oe_title">
                     <h1><field name="name" readonly="1"/></h1>
                 </div>
 
+                <!-- ── En-tête (Step 1) ─────────────────────── -->
                 <group string="En-tête">
                     <group>
-                        <field name="direction_id"/>
-                        <field name="service_dpt"/>
+                        <field name="direction_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="service_dpt"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
                     </group>
                     <group>
-                        <field name="date"/>
+                        <field name="date"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
                     </group>
                 </group>
 
-                <!-- Type de Non-Conformité -->
+                <!-- ── Type de Non-Conformité (Step 1) ─────────── -->
                 <group string="Type de Non-Conformité">
                     <group>
-                        <field name="type_nc_produit"/>
-                        <field name="type_reclamation"/>
-                        <field name="type_sst"/>
-                        <field name="type_environnement"/>
-                        <field name="type_travaux"/>
+                        <field name="type_nc_produit"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="type_reclamation"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="type_sst"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="type_environnement"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="type_travaux"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
                     </group>
                     <group>
-                        <field name="type_audit"/>
-                        <field name="type_achat"/>
-                        <field name="type_reception"/>
-                        <field name="type_dysfonctionnement"/>
-                        <field name="type_autre"/>
+                        <field name="type_audit"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="type_achat"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="type_reception"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="type_dysfonctionnement"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="type_autre"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
                         <field name="type_autre_preciser"
-                               attrs="{'invisible': [('type_autre', '=', False)],
-                                       'required':  [('type_autre', '=', True)]}"/>
+                               attrs="{'invisible': [('type_autre','=',False)],
+                                       'required':  [('type_autre','=',True)],
+                                       'readonly':  [('state','!=','draft')]}"/>
                     </group>
                 </group>
 
-                <!-- Section 1 — Description -->
+                <!-- ── Section 1 — Description (Step 1) ──────── -->
                 <group string="1- Description de la non-conformité">
                     <field name="description" nolabel="1"
-                           placeholder="Décrivez la non-conformité..."/>
+                           placeholder="Décrivez la non-conformité..."
+                           attrs="{'readonly': [('state','!=','draft')]}"/>
                     <group>
-                        <field name="signale_par_id"/>
-                        <field name="date_signalement"/>
-                        <field name="fonction_visa"/>
+                        <field name="signale_par_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="date_signalement"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="fonction_visa"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
                     </group>
                 </group>
 
-                <!-- Traitement -->
+                <!-- ── Traitement (Step 2) ───────────────────── -->
                 <group string="Traitement">
                     <group>
-                        <field name="trait_reprise"/>
-                        <field name="trait_declassement"/>
-                        <field name="trait_retour_fourn"/>
+                        <field name="trait_reprise"
+                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                        <field name="trait_declassement"
+                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                        <field name="trait_retour_fourn"
+                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
                     </group>
                     <group>
-                        <field name="trait_recyclage"/>
-                        <field name="trait_reparation"/>
-                        <field name="trait_autre"/>
+                        <field name="trait_recyclage"
+                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                        <field name="trait_reparation"
+                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                        <field name="trait_autre"
+                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
                         <field name="trait_autre_preciser"
-                               attrs="{'invisible': [('trait_autre', '=', False)],
-                                       'required':  [('trait_autre', '=', True)]}"/>
+                               attrs="{'invisible': [('trait_autre','=',False)],
+                                       'required':  [('trait_autre','=',True)],
+                                       'readonly':  [('state','not in',['submitted'])]}"/>
                     </group>
                 </group>
 
-                <!-- Section 2 — Action immédiate -->
+                <!-- ── Section 2 — Action immédiate (Step 2) ─── -->
                 <group string="2- Action immédiate">
                     <field name="action_immediate" nolabel="1"
-                           placeholder="Décrivez l'action immédiate..."/>
+                           placeholder="Décrivez l'action immédiate..."
+                           attrs="{'readonly': [('state','not in',['submitted'])]}"/>
                     <group>
-                        <field name="realise_par_id"/>
-                        <field name="date_realisation"/>
+                        <field name="realise_par_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                        <field name="date_realisation"
+                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
                     </group>
                 </group>
 
-                <!-- Section 3 — Analyse des causes -->
+                <!-- ── Section 3 — Analyse des causes (Step 2) ─ -->
                 <group string="3- Analyse des causes">
                     <field name="analyse_causes" nolabel="1"
-                           placeholder="Analysez les causes..."/>
+                           placeholder="Analysez les causes..."
+                           attrs="{'readonly': [('state','not in',['submitted'])]}"/>
                     <field name="impact"
-                           placeholder="Impact : coût, incidence, risque..."/>
+                           placeholder="Impact : coût, incidence, risque..."
+                           attrs="{'readonly': [('state','not in',['submitted'])]}"/>
                 </group>
 
-                <!-- Liaison FAC -->
+                <!-- ── Liaison FAC / Responsable (Step 1) ──────  -->
                 <group string="Fiche d'Action Corrective">
-                    <field name="fac_reference"/>
-                    <field name="responsable_action_id"/>
+                    <field name="assigned_to_id"
+                           options="{'no_create': True, 'no_create_edit': True}"
+                           attrs="{'readonly': [('state','!=','draft')]}"/>
+                    <field name="fac_reference"
+                           attrs="{'readonly': [('state','not in',['validated'])]}"/>
+                    <field name="responsable_action_id"
+                           options="{'no_create': True, 'no_create_edit': True}"
+                           attrs="{'readonly': [('state','not in',['validated'])]}"/>
                 </group>
 
-                <!-- Validation -->
+                <!-- ── Validation hiérarchique (Step 3) ─────────  -->
                 <group string="Validation hiérarchique">
                     <group>
-                        <field name="superieur_id"/>
-                        <field name="date_validation"/>
+                        <field name="superieur_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state','not in',['in_progress'])]}"/>
+                        <field name="date_validation"
+                               attrs="{'readonly': [('state','not in',['in_progress'])]}"/>
                     </group>
                     <group>
-                        <field name="signature"/>
+                        <field name="signature"
+                               attrs="{'readonly': [('state','not in',['in_progress'])]}"/>
                     </group>
                 </group>
 
@@ -182,14 +231,13 @@
             </header>
             <sheet>
 
-                <!-- En-tête -->
                 <div class="oe_title">
                     <h1><field name="name" readonly="1"/></h1>
                 </div>
 
                 <group string="En-tête">
                     <group>
-                        <field name="direction_id"/>
+                        <field name="direction_id" options="{'no_create': True, 'no_create_edit': True}"/>
                         <field name="date"/>
                     </group>
                     <group>
@@ -198,50 +246,45 @@
                     </group>
                 </group>
 
-                <!-- Section 1 — Rappel NC -->
                 <group string="1- Rappel de la Non-Conformité">
                     <field name="rappel_nc" nolabel="1"
                            placeholder="Rappel de la non-conformité..."/>
                 </group>
 
-                <!-- Section 2 — Analyse des causes -->
                 <group string="2- Analyse des causes de la non-conformité">
                     <field name="analyse_causes" nolabel="1"
                            placeholder="Analysez les causes..."/>
                     <group>
-                        <field name="responsable_analyse_id"/>
+                        <field name="responsable_analyse_id" options="{'no_create': True, 'no_create_edit': True}"/>
                         <field name="date_analyse"/>
                         <field name="visa_analyse"/>
                     </group>
                 </group>
 
-                <!-- Section 3 — Actions décidées -->
                 <group string="3- Action(s) décidée(s)">
                     <field name="action_line_ids" nolabel="1">
                         <tree editable="bottom">
                             <field name="action_description"/>
                             <field name="date_prevue"/>
                             <field name="date_realisation"/>
-                            <field name="responsable_id"/>
+                            <field name="responsable_id" options="{'no_create': True, 'no_create_edit': True}"/>
                         </tree>
                     </field>
                     <group>
-                        <field name="responsable_actions_id"/>
+                        <field name="responsable_actions_id" options="{'no_create': True, 'no_create_edit': True}"/>
                         <field name="date_actions"/>
                         <field name="visa_actions"/>
                     </group>
                 </group>
 
-                <!-- Efficacité -->
                 <group string="Action(s) efficace(s)">
                     <field name="actions_efficaces"/>
-                    <field name="responsable_efficacite_id"/>
+                    <field name="responsable_efficacite_id" options="{'no_create': True, 'no_create_edit': True}"/>
                 </group>
 
-                <!-- Section 4 — Approbation QSE -->
                 <group string="4- Approbation Responsable QSE">
                     <group>
-                        <field name="qse_nom_id"/>
+                        <field name="qse_nom_id" options="{'no_create': True, 'no_create_edit': True}"/>
                         <field name="qse_date"/>
                     </group>
                     <group>
@@ -249,17 +292,15 @@
                     </group>
                 </group>
 
-                <!-- Section 5 — Vérification -->
                 <group string="5- Vérification de(s) action(s) effectuée(s)">
                     <field name="verification_efficacite" nolabel="1"
                            placeholder="Vérification de l'efficacité de l'action..."/>
                     <field name="extension_possible"/>
                 </group>
 
-                <!-- Clôture -->
                 <group string="Clôture">
                     <group>
-                        <field name="cloture_par_id"/>
+                        <field name="cloture_par_id" options="{'no_create': True, 'no_create_edit': True}"/>
                         <field name="date_cloture"/>
                     </group>
                     <group>

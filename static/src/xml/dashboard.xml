@@ -73,6 +73,89 @@
     </table>
   </div>
 
+  <!-- Analyse Efficacité SMI -->
+  <div style="background:white;border-radius:8px;padding:16px;margin-top:20px;">
+    <p style="font-weight:bold;color:#2c3e50;margin:0 0 4px;">
+      Analyse de l'Efficacité — Plan SMI
+    </p>
+    <p style="font-size:12px;color:#888;margin:0 0 12px;">
+      Catégories : Réclamation PI · NC Produit · Environnement · SST
+    </p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#f8f9fa;">
+          <th style="text-align:left;padding:8px;border:1px solid #dee2e6;">Catégorie</th>
+          <th style="text-align:center;padding:8px;border:1px solid #dee2e6;">Total FNC</th>
+          <th style="text-align:center;padding:8px;border:1px solid #dee2e6;color:#27ae60;">Efficace</th>
+          <th style="text-align:center;padding:8px;border:1px solid #dee2e6;color:#e74c3c;">Non efficace</th>
+          <th style="text-align:center;padding:8px;border:1px solid #dee2e6;">Taux %</th>
+        </tr>
+      </thead>
+      <tbody id="efficacite_body"></tbody>
+    </table>
+  </div>
+
+</div>
+</t>
+
+<t t-name="NcPlanSmi">
+<div style="padding:20px;background:#f5f5f5;min-height:100vh;font-family:Arial,sans-serif;">
+
+  <h3 style="margin:0 0 6px;color:#2c3e50;">Plan d'Action SMI — Analyse Efficacité</h3>
+  <p style="font-size:12px;color:#888;margin:0 0 20px;">
+    Cimenterie de Sétif · Catégories liées aux FNC
+  </p>
+
+  <!-- Table Analyse Efficacité -->
+  <div style="background:white;border-radius:8px;padding:16px;margin-bottom:20px;">
+    <p style="font-weight:bold;color:#2c3e50;margin:0 0 12px;">
+      Analyse de l'Efficacité Globale
+    </p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#2c3e50;color:white;">
+          <th style="padding:10px;border:1px solid #444;text-align:left;">Catégorie</th>
+          <th style="padding:10px;border:1px solid #444;text-align:center;">Efficace</th>
+          <th style="padding:10px;border:1px solid #444;text-align:center;">Non efficace</th>
+          <th style="padding:10px;border:1px solid #444;text-align:center;">Réalisé 100%</th>
+          <th style="padding:10px;border:1px solid #444;text-align:center;">Réalisé + 50%</th>
+          <th style="padding:10px;border:1px solid #444;text-align:center;">Réalisé - 50%</th>
+          <th style="padding:10px;border:1px solid #444;text-align:center;">Taux Efficacité%</th>
+          <th style="padding:10px;border:1px solid #444;text-align:center;">Total</th>
+        </tr>
+      </thead>
+      <tbody id="smi_body"></tbody>
+    </table>
+  </div>
+
+  <!-- Graphe efficacité -->
+  <div style="background:white;border-radius:8px;padding:16px;margin-bottom:20px;">
+    <p style="font-weight:bold;color:#2c3e50;margin:0 0 12px;">
+      Graphe Efficacité par Catégorie
+    </p>
+    <canvas id="smi_chart" height="80"></canvas>
+  </div>
+
+  <!-- Taux de réalisation processus -->
+  <div style="background:white;border-radius:8px;padding:16px;">
+    <p style="font-weight:bold;color:#2c3e50;margin:0 0 4px;">
+      Taux de Réalisation — Processus liés aux FNC
+    </p>
+    <p style="font-size:12px;color:#888;margin:0 0 12px;">
+      Revue processus basée sur les FNC clôturées
+    </p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#f8f9fa;">
+          <th style="text-align:left;padding:8px;border:1px solid #dee2e6;">Processus</th>
+          <th style="text-align:left;padding:8px;border:1px solid #dee2e6;">Progression</th>
+          <th style="text-align:center;padding:8px;border:1px solid #dee2e6;">Taux</th>
+        </tr>
+      </thead>
+      <tbody id="proc_body"></tbody>
+    </table>
+  </div>
+
 </div>
 </t>
 </templates>

@@ -176,40 +176,12 @@
 </record>
 
 <!-- ============================================================ -->
-<!--  PLAN ACTION SMI — GRAPH VIEW                                -->
-<!-- ============================================================ -->
-<record model="ir.ui.view" id="view_plan_action_smi_graph">
-    <field name="name">nc_management.plan_action_smi.graph</field>
-    <field name="model">nc_management.plan_action_smi</field>
-    <field name="arch" type="xml">
-        <graph string="Plan SMI par Nature" type="bar">
-            <field name="nature" type="row"/>
-            <field name="efficacite" type="col"/>
-        </graph>
-    </field>
-</record>
-
-<!-- ============================================================ -->
-<!--  PLAN ACTION SMI — PIVOT VIEW                                -->
-<!-- ============================================================ -->
-<record model="ir.ui.view" id="view_plan_action_smi_pivot">
-    <field name="name">nc_management.plan_action_smi.pivot</field>
-    <field name="model">nc_management.plan_action_smi</field>
-    <field name="arch" type="xml">
-        <pivot string="Analyse Efficacité SMI">
-            <field name="nature"     type="row"/>
-            <field name="efficacite" type="col"/>
-        </pivot>
-    </field>
-</record>
-
-<!-- ============================================================ -->
 <!--  ACTION + MENU                                               -->
 <!-- ============================================================ -->
 <record model="ir.actions.act_window" id="action_plan_action_smi">
     <field name="name">Plan Action SMI</field>
     <field name="res_model">nc_management.plan_action_smi</field>
-    <field name="view_mode">tree,form,graph,pivot</field>
+    <field name="view_mode">tree,form</field>
     <field name="context">{}</field>
 </record>
 
@@ -220,6 +192,14 @@
     action="action_plan_action_smi"
     groups="nc_management.group_nc_user,nc_management.group_nc_manager"
     sequence="2"/>
+
+<menuitem
+    name="Analyse de l'efficacité"
+    id="nc_management.menu_plan_smi_analyse"
+    parent="nc_management.menu_root"
+    action="nc_management.action_nc_plan_smi"
+    groups="nc_management.group_nc_user,nc_management.group_nc_manager"
+    sequence="3"/>
 
 </data>
 </odoo>

@@ -30,6 +30,11 @@
     <field name="arch" type="xml">
         <form string="Fiche de Non-Conformité">
             <header>
+                <button name="action_open_number_wizard"
+                        string="Générer Numéro"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('name','!=','New')]}"/>
                 <button name="action_open_send_wizard"
                         string="Envoyer"
                         type="object"
@@ -47,7 +52,7 @@
             <sheet>
 
                 <div class="oe_title">
-                    <h1><field name="name" readonly="1"/></h1>
+                    <h1><field name="name" attrs="{'readonly': [('name','!=','New')]}"/></h1>
                 </div>
 
                 <!-- ── En-tête (Step 1) ─────────────────────── -->

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_number_generator_wizard_form" model="ir.ui.view">
+        <field name="name">nc_management.number_generator_wizard.form</field>
+        <field name="model">nc_management.number_generator_wizard</field>
+        <field name="arch" type="xml">
+            <form string="Générer Numéro FNC">
+                <group>
+                    <field name="fnc_id" invisible="1"/>
+                    <field name="category"/>
+                    <field name="nc_type_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" string="Générer" type="object" class="oe_highlight"/>
+                    <button string="Annuler" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_number_generator_wizard" model="ir.actions.act_window">
+        <field name="name">Générer Numéro</field>
+        <field name="res_model">nc_management.number_generator_wizard</field>
+        <field name="view_mode" eval="'form'"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

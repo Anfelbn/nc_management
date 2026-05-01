@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- NC Produit -->
+        <record id="nc_type_clyncaire" model="nc_management.nc_type">
+            <field name="name">Clyncaire</field>
+            <field name="code">CLYC</field>
+            <field name="category">type_nc_produit</field>
+        </record>
+        <record id="nc_type_ciment" model="nc_management.nc_type">
+            <field name="name">Ciment</field>
+            <field name="code">CIM</field>
+            <field name="category">type_nc_produit</field>
+        </record>
+
+        <!-- Réclamation -->
+        <record id="nc_type_reclamation" model="nc_management.nc_type">
+            <field name="name">Réclamation Client</field>
+            <field name="code">REC</field>
+            <field name="category">type_reclamation</field>
+        </record>
+
+        <!-- SST -->
+        <record id="nc_type_sst" model="nc_management.nc_type">
+            <field name="name">SST</field>
+            <field name="code">SST</field>
+            <field name="category">type_sst</field>
+        </record>
+    </data>
+</odoo>

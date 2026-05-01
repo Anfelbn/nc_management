@@ -2,6 +2,29 @@ from datetime import date, timedelta
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 
+class NcType(models.Model):
+    _name = 'nc_management.nc_type'
+    _description = 'Type de Non-Conformité (Abréviation)'
+
+    name = fields.Char(string='Produit/Abréviation', required=True)
+    code = fields.Char(string='Code (Abréviation)', required=True)
+    category = fields.Selection([
+        ('type_nc_produit', 'NC Produit'),
+        ('type_reclamation', 'Réclamation clients / PI'),
+        ('type_sst', 'SST Accident'),
+        ('type_environnement', 'Environnement'),
+        ('type_audit', 'Audit interne/Externe'),
+        ('type_achat', 'Achat'),
+        ('type_reception', 'Réception'),
+        ('type_dysfonctionnement', 'Dysfonctionnement'),
+        ('type_travaux', 'Travaux'),
+        ('type_autre', 'Autre'),
+    ], string='Catégorie', required=True)
+
+    _sql_constraints = [
+        ('code_unique', 'unique(code)', 'Le code de l\'abréviation doit être unique !'),
+    ]
+
 class Nonconformity(models.Model):
     _name = 'nc_management.nonconformity'
     _description = 'Fiche de Non-Conformité'
@@ -10,7 +33,7 @@ class Nonconformity(models.Model):
     # ── En-tête ──────────────────────────────────────────────
     name = fields.Char(
         string='N° FNC', required=True, copy=False,
-        readonly=True, default='New')
+        default='New')
     direction_id  = fields.Many2one('hr.department', string='Direction / Emetteur',
                       context={'no_create': True, 'no_create_edit': True})
     service_dpt   = fields.Char(string='Sce / DPT')
@@ -157,6 +180,18 @@ class Nonconformity(models.Model):
             'res_model': 'nc_management.send_fnc_wizard',
             'view_mode': 'form',
             'view_id': self.env.ref('nc_management.view_send_fnc_wizard').id,
+            'target': 'new',
+            'context': {'default_fnc_id': self.id},
+        }
+
+    @api.multi
+    def action_open_number_wizard(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Générer Numéro',
+            'res_model': 'nc_management.number_generator_wizard',
+            'view_mode': 'form',
             'target': 'new',
             'context': {'default_fnc_id': self.id},
         }
@@ -380,21 +415,30 @@ class NcDashboard(models.Model):
 
     @api.model
     def get_plan_smi_stats(self):
-        plan = self.env['nc_management.plan_action_smi']
+        fnc = self.env['nc_management.nonconformity']
+        fac = self.env['nc_management.corrective_action']
 
-        def get_cat(nature_val):
-            recs = plan.search([('nature', '=', nature_val)])
-            total = len(recs)
+        def get_categorie(field_name):
+            fnc_ids = fnc.search([(field_name, '=', True)]).ids
+            total = len(fnc_ids)
             if total == 0:
-                return {'total': 0, 'efficace': 0, 'non_efficace': 0,
-                        'realise_100': 0, 'realise_50plus': 0,
-                        'realise_50moins': 0, 'taux': 0}
-            efficace        = len(recs.filtered(lambda r: r.efficacite == 'oui'))
-            non_efficace    = len(recs.filtered(lambda r: r.efficacite == 'non'))
-            realise_100     = len(recs.filtered(lambda r: r.avancement == 100))
-            realise_50plus  = len(recs.filtered(lambda r: 50 <= r.avancement < 100))
-            realise_50moins = len(recs.filtered(lambda r: r.avancement < 50))
-            taux = round(efficace / total * 100, 1)
+                return {
+                    'total': 0, 'efficace': 0, 'non_efficace': 0,
+                    'realise_100': 0, 'realise_50plus': 0,
+                    'realise_50moins': 0, 'taux': 0
+                }
+            fac_recs = fac.search([('fnc_id', 'in', fnc_ids)])
+            efficace = len(fac_recs.filtered(
+                lambda f: f.actions_efficaces == 'oui'))
+            non_efficace = len(fac_recs.filtered(
+                lambda f: f.actions_efficaces == 'non'))
+            realise_100 = len(fac_recs.filtered(
+                lambda f: f.state == 'closed'))
+            realise_50plus = len(fac_recs.filtered(
+                lambda f: f.state in ['verified', 'open']))
+            realise_50moins = len(fac_recs.filtered(
+                lambda f: f.state == 'draft'))
+            taux = round((efficace / total * 100), 1) if total > 0 else 0
             return {
                 'total': total,
                 'efficace': efficace,
@@ -402,38 +446,48 @@ class NcDashboard(models.Model):
                 'realise_100': realise_100,
                 'realise_50plus': realise_50plus,
                 'realise_50moins': realise_50moins,
-                'taux': taux,
+                'taux': taux
             }
 
         categories = [
-            {'key': 'nc_produit',     'label': 'NC Produit',
-             'data': get_cat('nc_produit')},
-            {'key': 'reclamation_pi', 'label': 'Réclamation Client ou PI',
-             'data': get_cat('reclamation_pi')},
-            {'key': 'environnement',  'label': 'Environnement',
-             'data': get_cat('environnement')},
-            {'key': 'sst',            'label': 'SST',
-             'data': get_cat('sst')},
+            {'label': 'Réclamation PI',
+             'data': get_categorie('type_reclamation')},
+            {'label': 'NC produit',
+             'data': get_categorie('type_nc_produit')},
+            {'label': 'Environnement',
+             'data': get_categorie('type_environnement')},
+            {'label': 'SST',
+             'data': get_categorie('type_sst')},
         ]
 
-        all_recs = plan.search([])
-        total_all = len(all_recs)
+        total_fac = fac.search_count([]) or 1
+        closed_fac = fac.search_count([('state', '=', 'closed')])
 
-        def proc_taux(nature_val):
-            recs = plan.search([('nature', '=', nature_val)])
-            if not recs:
-                return 0
-            return round(sum(r.avancement for r in recs) / len(recs), 1)
+        def taux_proc(field_name):
+            t = fnc.search_count([(field_name, '=', True)]) or 1
+            c = fnc.search_count([
+                (field_name, '=', True),
+                ('state', '=', 'closed')])
+            return round(c / t * 100, 0)
+
+        def taux_multi(fields_list):
+            domain = ['|'] * (len(fields_list) - 1)
+            for f in fields_list:
+                domain.append((f, '=', True))
+            t = fnc.search_count(domain) or 1
+            d2 = domain + [('state', '=', 'closed')]
+            c = fnc.search_count(d2)
+            return round(c / t * 100, 0)
 
         processus = [
             {'label': 'Analyse et amélioration',
-             'taux': round(sum(r.avancement for r in all_recs) / max(total_all, 1), 1)},
-            {'label': 'Santé Sécurité Environnement',
-             'taux': proc_taux('sst')},
+             'taux': round(closed_fac / total_fac * 100, 0)},
             {'label': 'Process contrôle qualité',
-             'taux': proc_taux('nc_produit')},
+             'taux': taux_proc('type_nc_produit')},
+            {'label': 'Santé sécurité environnement',
+             'taux': taux_multi(['type_sst', 'type_environnement'])},
             {'label': 'Commercialisation / Réclamation',
-             'taux': proc_taux('reclamation_pi')},
+             'taux': taux_proc('type_reclamation')},
         ]
 
         return {

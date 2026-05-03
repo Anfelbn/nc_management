@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 <data>
 
@@ -17,191 +18,307 @@
             <t t-call="web.basic_layout">
                 <style>
                     @page {
-                        margin: 10mm;
-                        size: A4;
+                        size: A4 portrait;
+                        margin: 0mm;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 0;
                     }
                     .page {
                         width: 100%;
-                        margin: 0 !important;
-                        padding: 0 !important;
+                        min-height: 281mm;
                         font-family: Arial, sans-serif;
                         font-weight: bold;
                         font-size: 11px;
+                        position: relative;
+                        padding: 8mm 4mm 5mm 4mm;
+                        box-sizing: border-box;
                     }
                     table {
                         width: 100%;
                         border-collapse: collapse;
                         table-layout: fixed;
-                        border: 1px solid black;
-                        margin-bottom: -1px; /* Évite les doubles bordures entre tables */
+                        border: 2px solid black;
                     }
                     td {
-                        border: 1px solid black;
-                        padding: 4px;
+                        border: 2px solid black;
+                        padding: 4px 6px;
                         word-wrap: break-word;
+                        vertical-align: middle;
+                        font-size: 11px;
                     }
                     .bg-blue {
-                        background-color: #d9e1f2;
+                        background-color: #d6e3f8;
+                        text-align: center;
+                        font-weight: bold;
                     }
-                    .text-center { text-align: center; }
-                    .v-middle { vertical-align: middle; }
+                    .section-title {
+                        background-color: #d6e3f8;
+                        font-weight: bold;
+                        text-align: left;
+                        padding: 5px 6px;
+                        height: 25px;
+                    }
+                    .header-cell {
+                        text-align: center;
+                        vertical-align: middle;
+                    }
+                    .checkbox {
+                        font-size: 13px;
+                        display: inline;
+                    }
+                    .cell-sm { height: 32px; }
+                    .cell-md { height: 80px; vertical-align: top; padding: 6px; }
+                    .cell-lg { height: 100px; vertical-align: top; padding: 6px; }
+                    .footer-ref {
+                        text-align: right;
+                        font-size: 12px;
+                        font-weight: bold;
+                        margin-top: 18mm;
+                        padding-right: 5px;
+                    }
                 </style>
 
                 <t t-foreach="docs" t-as="doc">
-                    <div class="page" style="page-break-after: always;">
+                    <div class="page">
 
-                        <table>
-                            <tr style="height: 60px;">
-                                <td rowspan="3" style="width:20%;" class="text-center v-middle">
+                        <!-- ===== HEADER ===== -->
+                        <table style="margin-bottom: 6px;">
+                            <tr style="height: 70px;">
+                                <td rowspan="3" style="width:18%; text-align:center; vertical-align:middle;">
                                     <img t-if="env.user.company_id.logo"
                                          t-att-src="'data:image/png;base64,' + env.user.company_id.logo.decode('utf-8')"
-                                         style="max-width:130px; max-height:70px;"/>
+                                         style="max-width:110px; max-height:55px;"/>
                                 </td>
-                                <td rowspan="2" class="text-center v-middle">
-                                    <span style="font-size:13px;">شركة أسمنت عين الكبيرة</span><br/>
-                                    <span>SOCIETE DES CIMENTS DE AIN EL KEBIRA</span><br/>
-                                    <span>CEMENT COMPANY OF AIN EL KEBIRA</span>
+                                <td rowspan="2" class="header-cell" style="width:52%;">
+                                    <div style="font-size:13px; margin-bottom:2px;">شركة الإسمنت عين الكبيرة</div>
+                                    <div style="font-size:11px;">SOCIETE DES CIMENTS DE AIN EL KEBIRA</div>
+                                    <div style="font-size:10px;">CEMENT COMPANY OF AIN EL KEBIRA</div>
                                 </td>
-                                <td style="width:25%;" class="v-middle">
+                                <td style="width:30%; vertical-align:middle;">
                                     <span>Référence : FAC 003/700</span>
                                 </td>
                             </tr>
-                            <tr style="height: 30px;">
-                                <td class="v-middle">
+                            <tr style="height: 25px;">
+                                <td style="vertical-align:middle;">
                                     <span>Révision N° : 02</span>
                                 </td>
                             </tr>
                             <tr style="height: 45px;">
-                                <td class="bg-blue text-center v-middle">
-                                    <i><span style="font-size: 14px;">FICHE D'ACTION CORRECTIVE</span></i><br/>
-                                    <i><span>CORRECTIVE ACTION SHEET</span></i>
+                                <td class="bg-blue" style="text-align:center; vertical-align:middle;">
+                                    <div style="font-size:12px; font-style:italic;">FICHE D'ACTION CORRECTIVE</div>
+                                    <div style="font-size:10px; font-style:italic;">CORRECTIVE ACTION SHEET</div>
                                 </td>
-                                <td class="v-middle">
+                                <td style="vertical-align:middle;">
                                     <span>Date de révision : 30/01/2025</span>
                                 </td>
                             </tr>
                         </table>
 
-                        <table>
-                            <tr>
-                                <td style="width:35%;"><span>Direction : </span> <t t-esc="doc.direction_id.name"/></td>
-                                <td style="width:30%;"><span>Date : </span> <t t-esc="doc.date"/></td>
-                                <td style="width:35%;"><span>N°FAC : </span> <t t-esc="doc.name"/></td>
-                            </tr>
-                            <tr>
-                                <td style="width:50%;"><span>N°FNC ou autre document : </span> <t t-esc="doc.fnc_id.name"/></td>
-                                <td colspan="2"><span>Date : </span> <t t-esc="doc.date_fnc"/></td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="bg-blue">1- Rappel de la Non-Conformité</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" style="height:80px; vertical-align:top;">
-                                    <t t-esc="doc.rappel_nc"/>
+                        <!-- ===== INFOS GÉNÉRALES ===== -->
+                        <table style="margin-bottom: 6px;">
+                            <tr class="cell-sm">
+                                <td style="width:35%;">
+                                    <span>Direction : </span>
+                                    <t t-esc="doc.direction_id.name or ''"/>
+                                </td>
+                                <td style="width:30%;">
+                                    <span>Date : </span>
+                                    <t t-esc="doc.date or ''"/>
+                                </td>
+                                <td style="width:35%;">
+                                    <span>N° FAC : </span>
+                                    <t t-esc="doc.name or ''"/>
                                 </td>
                             </tr>
-                            <tr>
-                                <td colspan="3" class="bg-blue">2- Analyse des causes de la non-conformité</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" style="height:80px; vertical-align:top;">
-                                    <t t-esc="doc.analyse_causes"/>
+                            <tr class="cell-sm">
+                                <td colspan="2">
+                                    <span>N° FNC ou autre document : </span>
+                                    <t t-esc="doc.fnc_id.name or ''"/>
+                                </td>
+                                <td>
+                                    <span>Date : </span>
+                                    <t t-esc="doc.date_fnc or ''"/>
                                 </td>
                             </tr>
                         </table>
 
-                        <table>
+                        <!-- ===== 1- RAPPEL NC ===== -->
+                        <table style="margin-bottom: 6px;">
                             <tr>
-                                <td style="width:50%;"><span>Responsable : </span> <t t-esc="doc.responsable_analyse_id.name"/></td>
-                                <td style="width:25%;"><span>Date : <t t-esc="doc.date_analyse"/></span></td>
-                                <td style="width:25%;"><span>Visa : <t t-esc="doc.visa_analyse"/></span></td>
+                                <td colspan="3" class="section-title">1- Rappel de la Non-Conformité</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="cell-lg">
+                                    <t t-esc="doc.rappel_nc or ''"/>
+                                </td>
                             </tr>
                         </table>
 
-                        <table>
+                        <!-- ===== 2- ANALYSE DES CAUSES ===== -->
+                        <table style="margin-bottom: 6px;">
                             <tr>
-                                <td colspan="4" class="bg-blue">3- Action (s) décidée :</td>
+                                <td colspan="3" class="section-title">2- Analyse des causes de la non-conformité</td>
                             </tr>
-                            <tr class="text-center">
+                            <tr>
+                                <td colspan="3" class="cell-lg">
+                                    <t t-esc="doc.analyse_causes or ''"/>
+                                </td>
+                            </tr>
+                            <tr class="cell-sm">
+                                <td style="width:50%;">
+                                    <span>Responsable : </span>
+                                    <t t-esc="doc.responsable_analyse_id.name or ''"/>
+                                </td>
+                                <td style="width:25%;">
+                                    <span>Date : </span>
+                                    <t t-esc="doc.date_analyse or ''"/>
+                                </td>
+                                <td style="width:25%;">
+                                    <span>Visa : </span>
+                                    <t t-esc="doc.visa_analyse or ''"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- ===== 3- ACTIONS DÉCIDÉES ===== -->
+                        <table style="margin-bottom: 6px;">
+                            <tr>
+                                <td colspan="4" class="section-title">3- Action (s) décidée :</td>
+                            </tr>
+                            <tr style="height: 25px; text-align: center;">
                                 <td style="width:35%;">Action (s)</td>
                                 <td style="width:15%;">Date prévue</td>
                                 <td style="width:15%;">Date de réalisation</td>
                                 <td style="width:35%;">Responsable de l'action</td>
                             </tr>
                             <t t-foreach="doc.action_line_ids" t-as="line">
-                                <tr style="height:25px;">
-                                    <td><t t-esc="line.action_description"/></td>
-                                    <td class="text-center"><t t-esc="line.date_prevue"/></td>
-                                    <td class="text-center"><t t-esc="line.date_realisation"/></td>
-                                    <td><t t-esc="line.responsable_id.name"/></td>
+                                <tr class="cell-sm">
+                                    <td><t t-esc="line.action_description or ''"/></td>
+                                    <td style="text-align: center;"><t t-esc="line.date_prevue or ''"/></td>
+                                    <td style="text-align: center;"><t t-esc="line.date_realisation or ''"/></td>
+                                    <td><t t-esc="line.responsable_id.name or ''"/></td>
                                 </tr>
                             </t>
-                            <!-- Lignes vides pour compléter si nécessaire -->
+                            <!-- Lignes vides pour compléter -->
                             <t t-if="len(doc.action_line_ids) == 0">
-                                <tr style="height:25px;"><td>1-</td><td></td><td></td><td></td></tr>
-                                <tr style="height:25px;"><td>2-</td><td></td><td></td><td></td></tr>
+                                <tr class="cell-sm"><td>1-</td><td></td><td></td><td></td></tr>
+                                <tr class="cell-sm"><td>2-</td><td></td><td></td><td></td></tr>
                             </t>
                             <t t-if="len(doc.action_line_ids) == 1">
-                                <tr style="height:25px;"><td>2-</td><td></td><td></td><td></td></tr>
+                                <tr class="cell-sm"><td>2-</td><td></td><td></td><td></td></tr>
                             </t>
                         </table>
 
-                        <table>
-                            <tr>
-                                <td style="width:50%;"><span>Responsable : <t t-esc="doc.responsable_actions_id.name"/></span></td>
-                                <td style="width:25%;"><span>Date : <t t-esc="doc.date_actions"/></span></td>
-                                <td style="width:25%;"><span>Visa : <t t-esc="doc.visa_actions"/></span></td>
+                        <!-- ===== RESPONSABLE + EFFICACITÉ ===== -->
+                        <table style="margin-bottom: 6px;">
+                            <tr class="cell-sm">
+                                <td style="width:50%;">
+                                    <span>Responsable : </span>
+                                    <t t-esc="doc.responsable_actions_id.name or ''"/>
+                                </td>
+                                <td style="width:25%;">
+                                    <span>Date : </span>
+                                    <t t-esc="doc.date_actions or ''"/>
+                                </td>
+                                <td style="width:25%;">
+                                    <span>Visa : </span>
+                                    <t t-esc="doc.visa_actions or ''"/>
+                                </td>
                             </tr>
                             <tr>
-                                <td style="width:50%;">
-                                    <span>Action(s) efficace(s)</span><br/>
-                                    <span><t t-if="doc.actions_efficaces == 'oui'">&#9745;</t><t t-else="">&#9744;</t> Oui</span><br/>
-                                    <span><t t-if="doc.actions_efficaces == 'non'">&#9745;</t><t t-else="">&#9744;</t> Non</span>
+                                <td style="width:50%; vertical-align: top; padding: 6px;">
+                                    <div style="margin-bottom: 4px;"><span>Action(s) efficace(s)</span></div>
+                                    <div>
+                                        <t t-if="doc.actions_efficaces == 'oui'"><span class="checkbox">&#9745;</span></t>
+                                        <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                        <span>Oui</span>
+                                    </div>
+                                    <div>
+                                        <t t-if="doc.actions_efficaces == 'non'"><span class="checkbox">&#9745;</span></t>
+                                        <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                        <span>Non</span>
+                                    </div>
                                 </td>
-                                <td colspan="2" style="vertical-align:top;">
-                                    <span>Responsable : <t t-esc="doc.responsable_efficacite_id.name"/></span>
+                                <td colspan="2" style="vertical-align: top; padding: 6px;">
+                                    <span>Responsable : </span>
+                                    <t t-esc="doc.responsable_efficacite_id.name or ''"/>
                                 </td>
                             </tr>
                         </table>
 
-                        <table>
-                            <tr><td colspan="3" class="bg-blue">4- Approbation Responsable QSE :</td></tr>
+                        <!-- ===== 4- APPROBATION QSE ===== -->
+                        <table style="margin-bottom: 6px;">
                             <tr>
-                                <td style="width:35%;">Nom : <t t-esc="doc.qse_nom_id.name"/></td>
-                                <td style="width:30%;">Date : <t t-esc="doc.qse_date"/></td>
-                                <td style="width:35%;">Visa : <t t-esc="doc.qse_visa"/></td>
+                                <td colspan="3" class="section-title">4- Approbation Responsable QSE :</td>
                             </tr>
-                            <tr><td colspan="3" class="bg-blue">5- Vérification de (s) de(s) action(s) effectuée(s) :</td></tr>
-                            <tr>
-                                <td colspan="3" style="height:60px; vertical-align:top;">
-                                    <span>- Vérification de l'efficacité de l'action :</span><br/>
-                                    <t t-esc="doc.verification_efficacite"/>
+                            <tr class="cell-sm">
+                                <td style="width:35%;">
+                                    <span>Nom : </span>
+                                    <t t-esc="doc.qse_nom_id.name or ''"/>
+                                </td>
+                                <td style="width:30%;">
+                                    <span>Date : </span>
+                                    <t t-esc="doc.qse_date or ''"/>
+                                </td>
+                                <td style="width:35%;">
+                                    <span>Visa : </span>
+                                    <t t-esc="doc.qse_visa or ''"/>
                                 </td>
                             </tr>
+                        </table>
+
+                        <!-- ===== 5- VÉRIFICATION ===== -->
+                        <table style="margin-bottom: 0px;">
                             <tr>
+                                <td colspan="3" class="section-title">5- Vérification de (s) de(s) action(s) effectuée(s) :</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="cell-md">
+                                    <div style="margin-bottom: 3px; font-weight: bold;">- Vérification de l'efficacité de l'action :</div>
+                                    <t t-esc="doc.verification_efficacite or ''"/>
+                                </td>
+                            </tr>
+                            <tr class="cell-sm">
                                 <td colspan="3">
                                     <span>- Extension possible de l'action : </span>
-                                    <span><t t-if="doc.extension_possible == 'non'">&#9745;</t><t t-else="">&#9744;</t> Non</span> 
-                                    <span style="margin-left:20px;"><t t-if="doc.extension_possible == 'oui'">&#9745;</t><t t-else="">&#9744;</t> Oui</span>
+                                    <t t-if="doc.extension_possible == 'non'"><span class="checkbox">&#9745;</span></t>
+                                    <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                    <span>Non</span>
+                                    <span style="margin-left: 20px;">
+                                        <t t-if="doc.extension_possible == 'oui'"><span class="checkbox">&#9745;</span></t>
+                                        <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                        <span>Oui</span>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr class="cell-sm">
+                                <td style="width:50%;">
+                                    <span>Clôturée par : </span>
+                                    <t t-esc="doc.cloture_par_id.name or ''"/>
+                                </td>
+                                <td style="width:25%;">
+                                    <span>Date : </span>
+                                    <t t-esc="doc.date_cloture or ''"/>
+                                </td>
+                                <td style="width:25%;">
+                                    <span>Visa : </span>
+                                    <t t-esc="doc.visa_cloture or ''"/>
                                 </td>
                             </tr>
                         </table>
 
-                        <table>
-                            <tr>
-                                <td style="width:50%; height:40px;"><span>Clôturée par : <t t-esc="doc.cloture_par_id.name"/></span></td>
-                                <td style="width:25%;"><span>Date : <t t-esc="doc.date_cloture"/></span></td>
-                                <td style="width:25%;"><span>Visa : <t t-esc="doc.visa_cloture"/></span></td>
-                            </tr>
-                        </table>
-
-                        <div style="text-align:right; font-size:10px; padding-top: 5px;">
+                        <!-- ===== FAC 003/700 À 6mm SOUS LE DERNIER TABLEAU ===== -->
+                        <div class="footer-ref">
                             <span>FAC 003/700</span>
                         </div>
+
                     </div>
                 </t>
             </t>
         </t>
     </template>
+
 </data>
 </odoo>

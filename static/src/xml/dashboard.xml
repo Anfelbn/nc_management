@@ -1,92 +1,268 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates>
 <t t-name="NcDashboard">
-<div style="padding:20px;background:#f5f5f5;min-height:100vh;font-family:Arial,sans-serif;">
+<div style="padding:20px;background:#F3F4F6;
+            min-height:100vh;font-family:Arial,sans-serif;">
 
-  <h3 style="margin:0 0 20px;color:#2c3e50;">Dashboard Qualite — Cimenterie de Setif</h3>
-
-  <!-- FNC Cards -->
-  <p style="font-weight:bold;color:#534AB7;margin:0 0 8px;">Fiches Non-Conformite (FNC)</p>
-  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-    <div style="flex:1;min-width:120px;background:white;border-radius:8px;padding:16px;text-align:center;border-top:4px solid #95a5a6;">
-      <div id="fnc_draft" style="font-size:36px;font-weight:bold;color:#95a5a6;">0</div>
-      <div style="font-size:12px;color:#666;">Brouillon</div>
-    </div>
-    <div style="flex:1;min-width:120px;background:white;border-radius:8px;padding:16px;text-align:center;border-top:4px solid #3498db;">
-      <div id="fnc_submitted" style="font-size:36px;font-weight:bold;color:#3498db;">0</div>
-      <div style="font-size:12px;color:#666;">Soumises</div>
-    </div>
-    <div style="flex:1;min-width:120px;background:white;border-radius:8px;padding:16px;text-align:center;border-top:4px solid #e67e22;">
-      <div id="fnc_in_progress" style="font-size:36px;font-weight:bold;color:#e67e22;">0</div>
-      <div style="font-size:12px;color:#666;">En cours</div>
-    </div>
-    <div style="flex:1;min-width:120px;background:white;border-radius:8px;padding:16px;text-align:center;border-top:4px solid #27ae60;">
-      <div id="fnc_closed" style="font-size:36px;font-weight:bold;color:#27ae60;">0</div>
-      <div style="font-size:12px;color:#666;">Cloturees</div>
-    </div>
-    <div style="flex:1;min-width:120px;background:white;border-radius:8px;padding:16px;text-align:center;border-top:4px solid #534AB7;">
-      <div id="taux" style="font-size:36px;font-weight:bold;color:#534AB7;">0%</div>
-      <div style="font-size:12px;color:#666;">Taux cloture</div>
+  <!-- Top bar -->
+  <div style="display:flex;justify-content:space-between;
+              align-items:center;margin-bottom:18px;">
+    <div>
+      <div style="font-size:11px;color:#6B7280;margin-bottom:2px;">
+          CIMENTERIE DE SÉTIF — GICA</div>
+      <div style="font-size:16px;font-weight:600;color:#111827;">Dashboard RMQE</div>
+      <div style="font-size:11px;color:#6B7280;">
+          Fiches Non-Conformité &amp; Actions Correctives</div>
     </div>
   </div>
 
-  <!-- FAC Cards -->
-  <p style="font-weight:bold;color:#0F6E56;margin:0 0 8px;">Fiches Action Corrective (FAC)</p>
-  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-    <div style="flex:1;min-width:120px;background:white;border-radius:8px;padding:16px;text-align:center;border-top:4px solid #95a5a6;">
-      <div id="fac_draft" style="font-size:36px;font-weight:bold;color:#95a5a6;">0</div>
-      <div style="font-size:12px;color:#666;">Brouillon</div>
+  <!-- Section FNC -->
+  <div style="font-size:11px;font-weight:600;letter-spacing:.5px;
+              color:#374151;text-transform:uppercase;
+              margin-bottom:10px;">Fiches Non-Conformité (FNC)</div>
+
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);
+              gap:10px;margin-bottom:10px;">
+    <div style="background:#EBF5FF;border:1px solid #BFDBFE;
+                border-top:4px solid #2196F3;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Total FNC</div>
+      <div id="fnc_total" style="font-size:26px;font-weight:500;color:#1565C0;">0</div>
     </div>
-    <div style="flex:1;min-width:120px;background:white;border-radius:8px;padding:16px;text-align:center;border-top:4px solid #3498db;">
-      <div id="fac_open" style="font-size:36px;font-weight:bold;color:#3498db;">0</div>
-      <div style="font-size:12px;color:#666;">Ouvertes</div>
+    <div style="background:#FFF8E8;border:1px solid #FDE68A;
+                border-top:4px solid #FF9800;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">En cours</div>
+      <div id="fnc_cours" style="font-size:26px;font-weight:500;color:#E65100;">0</div>
     </div>
-    <div style="flex:1;min-width:120px;background:white;border-radius:8px;padding:16px;text-align:center;border-top:4px solid #e67e22;">
-      <div id="fac_verified" style="font-size:36px;font-weight:bold;color:#e67e22;">0</div>
-      <div style="font-size:12px;color:#666;">Verifiees</div>
+    <div style="background:#F3EEFF;border:1px solid #DDD6FE;
+                border-top:4px solid #7C3AED;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Envoyées dép.</div>
+      <div id="fnc_envoyes" style="font-size:26px;font-weight:500;color:#5B21B6;">0</div>
     </div>
-    <div style="flex:1;min-width:120px;background:white;border-radius:8px;padding:16px;text-align:center;border-top:4px solid #27ae60;">
-      <div id="fac_closed" style="font-size:36px;font-weight:bold;color:#27ae60;">0</div>
-      <div style="font-size:12px;color:#666;">Cloturees</div>
+    <div style="background:#E8F8F1;border:1px solid #A7F3D0;
+                border-top:4px solid #10B981;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Clôturées</div>
+      <div id="fnc_closed" style="font-size:26px;font-weight:500;color:#065F46;">0</div>
+    </div>
+    <div style="background:#FEF2F2;border:1px solid #FECACA;
+                border-top:4px solid #EF4444;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">En retard</div>
+      <div id="fnc_retard" style="font-size:26px;font-weight:500;color:#991B1B;">0</div>
+      <div style="font-size:10px;color:#9CA3AF;margin-top:3px;">&gt; 7 jours</div>
     </div>
   </div>
 
-  <!-- Chart -->
-  <div style="background:white;border-radius:8px;padding:16px;margin-bottom:20px;">
-    <p style="font-weight:bold;color:#2c3e50;margin:0 0 12px;">Evolution mensuelle des FNC (6 derniers mois)</p>
-    <canvas id="nc_chart" height="80"></canvas>
+  <div style="display:grid;grid-template-columns:2fr 3fr;
+              gap:10px;margin-bottom:14px;">
+    <div style="background:#E8F8F1;border:1px solid #A7F3D0;
+                border-top:4px solid #10B981;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Taux clôture</div>
+      <div id="taux_cloture" style="font-size:28px;font-weight:500;color:#065F46;">0%</div>
+    </div>
+    <div style="background:#EBF5FF;border:1px solid #BFDBFE;
+                border-top:4px solid #2196F3;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">
+          FNC reçues des autres services / départements</div>
+      <div id="fnc_recues" style="font-size:28px;font-weight:500;color:#1565C0;">0</div>
+    </div>
   </div>
 
-  <!-- Revisions List -->
-  <div style="background:white;border-radius:8px;padding:16px;margin-bottom:20px;">
-    <p style="font-weight:bold;color:#534AB7;margin:0 0 12px;">Historique des Revisions (FNC / FAC)</p>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-      <thead>
-        <tr style="background:#f8f9fa;">
-          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">Type</th>
-          <th style="text-align:center;padding:8px;border-bottom:2px solid #dee2e6;">N Revision</th>
-          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">Date</th>
-          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">Modification</th>
-        </tr>
-      </thead>
-      <tbody id="revision_body"></tbody>
-    </table>
+  <!-- Section FAC -->
+  <div style="font-size:11px;font-weight:600;letter-spacing:.5px;
+              color:#374151;text-transform:uppercase;
+              margin-bottom:10px;">Fiches Action Corrective (FAC)</div>
+
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);
+              gap:10px;margin-bottom:10px;">
+    <div style="background:#EBF5FF;border:1px solid #BFDBFE;
+                border-top:4px solid #2196F3;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Total FAC</div>
+      <div id="fac_total" style="font-size:26px;font-weight:500;color:#1565C0;">0</div>
+    </div>
+    <div style="background:#FFF8E8;border:1px solid #FDE68A;
+                border-top:4px solid #FF9800;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Ouvertes</div>
+      <div id="fac_open" style="font-size:26px;font-weight:500;color:#E65100;">0</div>
+    </div>
+    <div style="background:#F3EEFF;border:1px solid #DDD6FE;
+                border-top:4px solid #7C3AED;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Vérifiées</div>
+      <div id="fac_verif" style="font-size:26px;font-weight:500;color:#5B21B6;">0</div>
+    </div>
+    <div style="background:#E8F8F1;border:1px solid #A7F3D0;
+                border-top:4px solid #10B981;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Clôturées</div>
+      <div id="fac_closed" style="font-size:26px;font-weight:500;color:#065F46;">0</div>
+    </div>
+    <div style="background:#FEF2F2;border:1px solid #FECACA;
+                border-top:4px solid #EF4444;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">En retard</div>
+      <div id="fac_retard" style="font-size:26px;font-weight:500;color:#991B1B;">0</div>
+    </div>
   </div>
 
-  <!-- Urgent list -->
-  <div style="background:white;border-radius:8px;padding:16px;">
-    <p style="font-weight:bold;color:#c0392b;margin:0 0 12px;">Fiches en retard (en cours depuis plus de 7 jours)</p>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-      <thead>
-        <tr style="background:#f8f9fa;">
-          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">N FNC</th>
-          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">Direction</th>
-          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">Service</th>
-          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">Date</th>
-        </tr>
-      </thead>
-      <tbody id="urgent_body"></tbody>
-    </table>
+  <div style="display:grid;grid-template-columns:2fr 3fr;
+              gap:10px;margin-bottom:20px;">
+    <div style="background:#E8F8F1;border:1px solid #A7F3D0;
+                border-top:4px solid #10B981;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Taux efficacité</div>
+      <div id="taux_eff" style="font-size:28px;font-weight:500;color:#065F46;">0%</div>
+    </div>
+    <div style="background:#FFF8E8;border:1px solid #FDE68A;
+                border-top:4px solid #FF9800;border-radius:10px;
+                padding:14px;text-align:center;">
+      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">
+          FAC à clôturer reçues (en attente approbation RMQE)</div>
+      <div id="fac_recues" style="font-size:28px;font-weight:500;color:#E65100;">0</div>
+    </div>
+  </div>
+
+  <!-- Graphes ligne 1 -->
+  <div style="display:grid;grid-template-columns:1.3fr 1fr;
+              gap:14px;margin-bottom:14px;">
+
+    <div style="background:white;border:1px solid #E5E7EB;
+                border-left:4px solid #2196F3;border-radius:12px;padding:16px;">
+      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:2px;">
+          Évolution FNC &amp; FAC</div>
+      <div style="font-size:11px;color:#6B7280;margin-bottom:12px;">6 derniers mois</div>
+      <canvas id="evo_chart" height="110"></canvas>
+    </div>
+
+    <div style="background:white;border:1px solid #E5E7EB;
+                border-left:4px solid #7C3AED;border-radius:12px;padding:16px;">
+      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:2px;">
+          FNC par type</div>
+      <div style="font-size:11px;color:#6B7280;margin-bottom:12px;">
+          Répartition par catégorie</div>
+      <canvas id="type_chart" height="110"></canvas>
+    </div>
+
+  </div>
+
+  <!-- Graphes ligne 2 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;
+              gap:14px;margin-bottom:14px;">
+
+    <div style="background:white;border:1px solid #E5E7EB;
+                border-left:4px solid #2196F3;border-radius:12px;padding:16px;">
+      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:2px;">
+          FNC par département</div>
+      <div style="font-size:11px;color:#6B7280;margin-bottom:12px;">
+          Reçues des autres services</div>
+      <canvas id="dept_chart" height="110"></canvas>
+    </div>
+
+    <div style="background:white;border:1px solid #E5E7EB;
+                border-left:4px solid #10B981;border-radius:12px;padding:16px;">
+      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:8px;">
+          États FNC &amp; FAC</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  padding:7px 0;border-bottom:1px solid #F3F4F6;">
+        <div style="font-size:12px;color:#4B5563;">FNC clôturées</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:120px;height:6px;background:#E5E7EB;
+                      border-radius:3px;overflow:hidden;">
+            <div id="s_fnc_closed_bar" style="height:100%;border-radius:3px;
+                 width:0%;"></div></div>
+          <div id="s_fnc_closed_pct" style="font-size:12px;font-weight:500;
+               min-width:34px;text-align:right;color:#065F46;">0%</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  padding:7px 0;border-bottom:1px solid #F3F4F6;">
+        <div style="font-size:12px;color:#4B5563;">FNC en cours</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:120px;height:6px;background:#E5E7EB;
+                      border-radius:3px;overflow:hidden;">
+            <div id="s_fnc_cours_bar" style="height:100%;border-radius:3px;
+                 width:0%;"></div></div>
+          <div id="s_fnc_cours_pct" style="font-size:12px;font-weight:500;
+               min-width:34px;text-align:right;color:#1565C0;">0%</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  padding:7px 0;border-bottom:1px solid #F3F4F6;">
+        <div style="font-size:12px;color:#4B5563;">FAC efficaces</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:120px;height:6px;background:#E5E7EB;
+                      border-radius:3px;overflow:hidden;">
+            <div id="s_fac_eff_bar" style="height:100%;border-radius:3px;
+                 width:0%;"></div></div>
+          <div id="s_fac_eff_pct" style="font-size:12px;font-weight:500;
+               min-width:34px;text-align:right;color:#065F46;">0%</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  padding:7px 0;border-bottom:1px solid #F3F4F6;">
+        <div style="font-size:12px;color:#4B5563;">FAC en retard</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:120px;height:6px;background:#E5E7EB;
+                      border-radius:3px;overflow:hidden;">
+            <div id="s_fac_retard_bar" style="height:100%;border-radius:3px;
+                 width:0%;"></div></div>
+          <div id="s_fac_retard_pct" style="font-size:12px;font-weight:500;
+               min-width:34px;text-align:right;color:#991B1B;">0%</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  padding:7px 0;">
+        <div style="font-size:12px;color:#4B5563;">FNC en retard</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:120px;height:6px;background:#E5E7EB;
+                      border-radius:3px;overflow:hidden;">
+            <div id="s_fnc_retard_bar" style="height:100%;border-radius:3px;
+                 width:0%;"></div></div>
+          <div id="s_fnc_retard_pct" style="font-size:12px;font-weight:500;
+               min-width:34px;text-align:right;color:#991B1B;">0%</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Alertes ligne 3 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;
+              gap:14px;margin-bottom:14px;">
+
+    <div style="background:white;border:1px solid #E5E7EB;
+                border-radius:12px;padding:16px;">
+      <div style="display:flex;justify-content:space-between;
+                  align-items:center;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:500;color:#1F2937;">FAC à clôturer</div>
+        <span id="fac_retard_badge" style="font-size:10px;padding:2px 8px;
+              border-radius:99px;background:#FEF2F2;color:#991B1B;">urgentes</span>
+      </div>
+      <div id="fac_cloturer_list"></div>
+    </div>
+
+    <div style="background:white;border:1px solid #E5E7EB;
+                border-radius:12px;padding:16px;">
+      <div style="display:flex;justify-content:space-between;
+                  align-items:center;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:500;color:#1F2937;">FNC en retard</div>
+        <span style="font-size:10px;padding:2px 8px;border-radius:99px;
+              background:#FEF2F2;color:#991B1B;">fiches</span>
+      </div>
+      <div id="fnc_retard_list"></div>
+      <div style="height:1px;background:#F3F4F6;margin:12px 0;"></div>
+      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:10px;">
+          FNC reçues des départements</div>
+      <div id="dept_mini_list"></div>
+    </div>
+
   </div>
 
 </div>

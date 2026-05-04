@@ -547,55 +547,146 @@ class NcDashboard(models.Model):
 
     @api.model
     def get_stats(self):
+        from datetime import date, timedelta
         from dateutil.relativedelta import relativedelta
+
         fnc = self.env['nc_management.nonconformity']
         fac = self.env['nc_management.corrective_action']
-        rev = self.env['nc_management.document_revision']
-        
-        total_fnc = fnc.search_count([])
-        closed_fnc = fnc.search_count([('state', '=', 'closed')])
-        taux = round((closed_fnc / total_fnc * 100) if total_fnc else 0, 1)
 
-        limit = str(date.today() - timedelta(days=7))
-        urgent = fnc.search_read(
-            [('state', '=', 'in_progress'), ('date', '<=', limit)],
-            ['name', 'direction_id', 'date', 'service_dpt'], limit=10)
+        # ── FNC counters ──
+        total_fnc    = fnc.search_count([])
+        fnc_cours    = fnc.search_count([('state','=','in_progress')])
+        fnc_envoyes  = fnc.search_count([('state','=','submitted')])
+        fnc_closed   = fnc.search_count([('state','=','closed')])
+        taux_cloture = round(fnc_closed / total_fnc * 100, 1) if total_fnc else 0
 
-        months = []
+        # FNC en retard > 7 jours
+        limit7 = str(date.today() - timedelta(days=7))
+        fnc_retard_recs = fnc.search_read(
+            [('state','=','in_progress'), ('date','<=',limit7)],
+            ['name','direction_id','service_dpt','date'], limit=10)
+        fnc_retard = len(fnc_retard_recs)
+
+        # FNC reçues des autres services (submitted_by != current user dept)
+        fnc_recues = fnc.search_count([('state','not in',['draft'])])
+
+        # FNC par département
+        dept_counts = {}
+        fnc_all = fnc.search([('state','not in',['draft'])])
+        for rec in fnc_all:
+            dept = rec.direction_id.name if rec.direction_id else 'Autres'
+            dept_counts[dept] = dept_counts.get(dept, 0) + 1
+        dept_list = sorted(dept_counts.items(), key=lambda x: x[1], reverse=True)[:6]
+
+        # FNC par type
+        type_counts = {
+            'NC Produit':   fnc.search_count([('type_nc_produit','=',True)]),
+            'Réclamation':  fnc.search_count([('type_reclamation','=',True)]),
+            'SST':          fnc.search_count([('type_sst','=',True)]),
+            'Environnement':fnc.search_count([('type_environnement','=',True)]),
+            'Audit':        fnc.search_count([('type_audit','=',True)]),
+            'Autres':       fnc.search_count([('type_autre','=',True)]),
+        }
+
+        # ── FAC counters ──
+        total_fac   = fac.search_count([])
+        fac_open    = fac.search_count([('state','=','open')])
+        fac_verif   = fac.search_count([('state','=','verified')])
+        fac_closed  = fac.search_count([('state','=','closed')])
+        fac_efficace = fac.search_count([('actions_efficaces','=','oui')])
+        taux_eff    = round(fac_efficace / total_fac * 100, 1) if total_fac else 0
+
+        # FAC en retard (open > 7 jours)
+        fac_retard_recs = fac.search_read(
+            [('state','in',['open','verified']),
+             ('date','<=',limit7)],
+            ['name','direction_id','date_cloture','state'], limit=10)
+        fac_retard = len(fac_retard_recs)
+
+        # FAC à clôturer avec urgence
+        fac_a_cloturer = []
+        for f in fac.search([('state','in',['open','verified'])],
+                            order='date asc', limit=8):
+            if f.date:
+                from datetime import datetime as dt
+                f_date = dt.strptime(str(f.date), '%Y-%m-%d').date()
+                days_open = (date.today() - f_date).days
+            else:
+                days_open = 0
+            if days_open > 7:
+                badge = 'red'
+                label = 'Retard %dj' % days_open
+            elif days_open > 3:
+                badge = 'orange'
+                label = 'Echeance proche'
+            else:
+                badge = 'green'
+                label = 'Dans %dj' % (7 - days_open)
+            fac_a_cloturer.append({
+                'name': f.name,
+                'dept': f.direction_id.name if f.direction_id else '',
+                'date': str(f.date) if f.date else '',
+                'days': days_open,
+                'badge': badge,
+                'label': label,
+            })
+
+        # FAC à approuver reçues
+        fac_recues_count = fac.search_count([('state','=','verified')])
+
+        # ── Evolution mensuelle 6 mois ──
+        monthly_fnc = []
+        monthly_fac = []
         for i in range(5, -1, -1):
             d = date.today() - relativedelta(months=i)
             m_start = d.replace(day=1)
-            if i > 0:
-                m_end = (d + relativedelta(months=1)).replace(day=1)
-            else:
-                m_end = date.today()
-            count = fnc.search_count([
-                ('date', '>=', str(m_start)),
-                ('date', '<', str(m_end)),
-            ])
-            months.append({'month': m_start.strftime('%b %Y'), 'count': count})
+            m_end = (d + relativedelta(months=1)).replace(day=1)
+            count_fnc = fnc.search_count([
+                ('date','>=',str(m_start)),
+                ('date','<',str(m_end))])
+            count_fac = fac.search_count([
+                ('date','>=',str(m_start)),
+                ('date','<',str(m_end))])
+            monthly_fnc.append({
+                'month': m_start.strftime('%b %Y'),
+                'short': m_start.strftime('%b'),
+                'count': count_fnc})
+            monthly_fac.append({
+                'month': m_start.strftime('%b %Y'),
+                'short': m_start.strftime('%b'),
+                'count': count_fac})
 
-        # Get revisions
-        revisions = rev.search_read([], ['id', 'doc_type', 'revision_number', 'revision_date', 'description'], limit=10)
+        # ── Etat global pourcentages ──
+        pct_fnc_closed  = taux_cloture
+        pct_fnc_cours   = round(fnc_cours / total_fnc * 100, 1) if total_fnc else 0
+        pct_fac_eff     = taux_eff
+        pct_fac_retard  = round(fac_retard / total_fac * 100, 1) if total_fac else 0
+        pct_fnc_retard  = round(fnc_retard / total_fnc * 100, 1) if total_fnc else 0
 
         return {
-            'fnc_draft':       fnc.search_count([('state', '=', 'draft')]),
-            'fnc_submitted':   fnc.search_count([('state', '=', 'submitted')]),
-            'fnc_in_progress': fnc.search_count([('state', '=', 'in_progress')]),
-            'fnc_closed':      closed_fnc,
-            'fnc_total':       total_fnc,
-            'fac_draft':       fac.search_count([('state', '=', 'draft')]),
-            'fac_open':        fac.search_count([('state', '=', 'open')]),
-            'fac_verified':    fac.search_count([('state', '=', 'verified')]),
-            'fac_closed':      fac.search_count([('state', '=', 'closed')]),
-            'taux_cloture':    taux,
-            'urgent':          urgent,
-            'monthly':         months,
-            'revisions':       revisions,
-            'analyse_efficacite': {
-                'reclamation_pi': self.get_efficacite_categorie('type_reclamation'),
-                'nc_produit':     self.get_efficacite_categorie('type_nc_produit'),
-                'environnement':  self.get_efficacite_categorie('type_environnement'),
-                'sst':            self.get_efficacite_categorie('type_sst'),
-            },
+            'fnc_total':      total_fnc,
+            'fnc_cours':      fnc_cours,
+            'fnc_envoyes':    fnc_envoyes,
+            'fnc_closed':     fnc_closed,
+            'fnc_retard':     fnc_retard,
+            'fnc_retard_list': fnc_retard_recs,
+            'fnc_recues':     fnc_recues,
+            'taux_cloture':   taux_cloture,
+            'dept_list':      dept_list,
+            'type_counts':    type_counts,
+            'fac_total':      total_fac,
+            'fac_open':       fac_open,
+            'fac_verif':      fac_verif,
+            'fac_closed':     fac_closed,
+            'fac_retard':     fac_retard,
+            'fac_recues':     fac_recues_count,
+            'taux_efficacite': taux_eff,
+            'fac_a_cloturer': fac_a_cloturer,
+            'monthly_fnc':    monthly_fnc,
+            'monthly_fac':    monthly_fac,
+            'pct_fnc_closed': pct_fnc_closed,
+            'pct_fnc_cours':  pct_fnc_cours,
+            'pct_fac_eff':    pct_fac_eff,
+            'pct_fac_retard': pct_fac_retard,
+            'pct_fnc_retard': pct_fnc_retard,
         }

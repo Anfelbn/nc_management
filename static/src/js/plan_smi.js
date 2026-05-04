@@ -6,6 +6,13 @@ odoo.define('nc_management.plan_smi', function(require) {
 
     var PlanSmi = Widget.extend({
         template: 'NcPlanSmi',
+        events: {
+            'click .o_export_smi': '_onExportSmi',
+        },
+
+        _onExportSmi: function() {
+            this.do_action('nc_management.action_export_smi_analysis_wizard');
+        },
 
         start: function() {
             var self = this;

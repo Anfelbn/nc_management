@@ -14,6 +14,8 @@
         'data/nc_types.xml',
         'wizard/send_fnc_wizard.xml',
         'wizard/number_generator_wizard.xml',
+        'wizard/export_plan_wizard.xml',
+        'wizard/export_smi_analysis_wizard.xml',
         'reports/report_fnc.xml',
         'reports/report_fac.xml',
         'views/views.xml',

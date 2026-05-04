@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_export_smi_analysis_wizard_form" model="ir.ui.view">
+        <field name="name">nc_management.export_smi_analysis_wizard.form</field>
+        <field name="model">nc_management.export_smi_analysis_wizard</field>
+        <field name="arch" type="xml">
+            <form string="Exporter l'Analyse SMI">
+                <p class="oe_grey" attrs="{'invisible': [('excel_file', '!=', False)]}">
+                    Cliquez sur Export pour générer le fichier Excel de l'analyse globale.
+                </p>
+                <group attrs="{'invisible': [('excel_file', '=', False)]}">
+                    <field name="file_name" invisible="1"/>
+                    <field name="excel_file" filename="file_name"/>
+                </group>
+                <footer>
+                    <button name="action_export" string="Export" type="object" class="btn-primary" attrs="{'invisible': [('excel_file', '!=', False)]}"/>
+                    <button string="Fermer" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_export_smi_analysis_wizard" model="ir.actions.act_window">
+        <field name="name">Export Analyse SMI</field>
+        <field name="res_model">nc_management.export_smi_analysis_wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target:">new</field>
+    </record>
+</odoo>

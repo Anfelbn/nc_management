@@ -65,6 +65,33 @@ odoo.define('nc_management.dashboard', function (require) {
                         );
                     });
                 }
+
+                var rev_body = self.$('#revision_body');
+                rev_body.empty();
+                if (d.revisions.length === 0) {
+                    rev_body.append('<tr><td colspan="4" style="text-align:center;color:#888;">Aucune revision enregistree</td></tr>');
+                } else {
+                    d.revisions.forEach(function (r) {
+                        var type_lbl = r.doc_type === 'fnc' ? 'FNC' : 'FAC';
+                        var row = $(
+                            '<tr>' +
+                            '<td>' + type_lbl + '</td>' +
+                            '<td style="text-align:center;"><a href="#" class="o_rev_link" data-id="' + r.id + '" style="font-weight:bold;color:#534AB7;">Rev ' + (r.revision_number < 10 ? '0' + r.revision_number : r.revision_number) + '</a></td>' +
+                            '<td>' + r.revision_date + '</td>' +
+                            '<td>' + (r.description || '') + '</td>' +
+                            '</tr>'
+                        );
+                        row.find('.o_rev_link').on('click', function (e) {
+                            e.preventDefault();
+                            self.do_action('nc_management.action_report_revision', {
+                                additional_context: {
+                                    active_ids: [r.id],
+                                },
+                            });
+                        });
+                        rev_body.append(row);
+                    });
+                }
             });
             return sup;
         },

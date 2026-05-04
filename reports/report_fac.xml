@@ -97,23 +97,25 @@
                                     <div style="font-size:10px;">CEMENT COMPANY OF AIN EL KEBIRA</div>
                                 </td>
                                 <td style="width:30%; vertical-align:middle;">
-                                    <span>Référence : FAC 003/700</span>
+                                   <span>Référence : FAC 003/700</span>
                                 </td>
-                            </tr>
-                            <tr style="height: 25px;">
+                                </tr>
+                                <tr style="height: 25px;">
                                 <td style="vertical-align:middle;">
-                                    <span>Révision N° : 02</span>
+                                   <t t-set="latest_rev" t-value="env['nc_management.document_revision'].search([('doc_type', '=', 'fac')], limit=1)"/>
+                                   <span>Révision N° : <t t-if="latest_rev" t-esc="'%02d' % latest_rev.revision_number"/><t t-else="">00</t></span>
                                 </td>
-                            </tr>
-                            <tr style="height: 45px;">
+                                </tr>
+                                <tr style="height: 45px;">
                                 <td class="bg-blue" style="text-align:center; vertical-align:middle;">
-                                    <div style="font-size:12px; font-style:italic;">FICHE D'ACTION CORRECTIVE</div>
-                                    <div style="font-size:10px; font-style:italic;">CORRECTIVE ACTION SHEET</div>
+                                   <div style="font-size:12px; font-style:italic;">FICHE D'ACTION CORRECTIVE</div>
+                                   <div style="font-size:10px; font-style:italic;">CORRECTIVE ACTION SHEET</div>
                                 </td>
                                 <td style="vertical-align:middle;">
-                                    <span>Date de révision : 30/01/2025</span>
+                                   <span>Date de révision : <t t-if="latest_rev" t-esc="latest_rev.revision_date"/><t t-else="">/</t></span>
                                 </td>
-                            </tr>
+                                </tr>
+
                         </table>
 
                         <!-- ===== INFOS GÉNÉRALES ===== -->

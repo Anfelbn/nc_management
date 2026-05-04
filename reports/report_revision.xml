@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+<data>
+
+    <report
+        id="action_report_revision"
+        model="nc_management.document_revision"
+        string="Révision de Document"
+        report_type="qweb-pdf"
+        name="nc_management.report_revision_template"
+        file="nc_management.report_revision_template"
+        attachment_use="False"
+        menu="True"
+    />
+
+    <template id="report_revision_template">
+        <t t-call="web.html_container">
+            <t t-call="web.basic_layout">
+                <t t-foreach="docs" t-as="rev">
+                    <t t-if="rev.doc_type == 'fnc'">
+                        <t t-call="nc_management.report_fnc_revision_content">
+                            <t t-set="doc_rev" t-value="rev"/>
+                        </t>
+                    </t>
+                    <t t-if="rev.doc_type == 'fac'">
+                        <t t-call="nc_management.report_fac_revision_content">
+                            <t t-set="doc_rev" t-value="rev"/>
+                        </t>
+                    </t>
+                    <!-- Force page break between revisions if multiple -->
+                    <p style="page-break-after:always;"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_fnc_revision_content">
+        <style>
+            .page { width: 100%; min-height: 281mm; font-family: Arial, sans-serif; font-weight: bold; font-size: 11px; position: relative; padding: 8mm 4mm 5mm 4mm; box-sizing: border-box; }
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid black; }
+            td { border: 2px solid black; padding: 4px 6px; word-wrap: break-word; vertical-align: middle; font-size: 11px; }
+            .bg-blue { background-color: #d6e3f8; text-align: center; font-weight: bold; }
+            .section-title { background-color: #d6e3f8; font-weight: bold; text-align: left; padding: 5px 6px; height: 25px; }
+            .header-cell { text-align: center; vertical-align: middle; }
+            .cell-sm { height: 32px; }
+            .cell-md { height: 100px; vertical-align: top; padding: 6px; }
+            .cell-lg { height: 140px; vertical-align: top; padding: 6px; }
+            .cell-type { height: 110px; vertical-align: top; padding: 0; }
+            .type-row { border-bottom: 2px solid #666; height: 22px; line-height: 22px; padding: 0 6px; box-sizing: border-box; overflow: hidden; }
+            .type-row:last-child { border-bottom: none; }
+            .footer-ref { text-align: right; font-size: 12px; font-weight: bold; margin-top: 18mm; padding-right: 5px; }
+            .checkbox { font-size: 13px; display: inline; }
+        </style>
+        <div class="page">
+            <!-- HEADER -->
+            <table style="margin-bottom: 6px;">
+                <tr style="height: 70px;">
+                    <td rowspan="3" style="width:18%; text-align:center; vertical-align:middle;">
+                        <img t-if="env.user.company_id.logo" t-att-src="'data:image/png;base64,' + env.user.company_id.logo.decode('utf-8')" style="max-width:110px; max-height:55px;"/>
+                    </td>
+                    <td rowspan="2" class="header-cell" style="width:52%;">
+                        <div style="font-size:13px; margin-bottom:2px;">شركة الإسمنت عين الكبيرة</div>
+                        <div style="font-size:11px;">SOCIETE DES CIMENTS DE AIN EL KEBIRA</div>
+                        <div style="font-size:10px;">CEMENT COMPANY OF AIN EL KEBIRA</div>
+                    </td>
+                    <td style="width:30%; vertical-align:middle;">
+                        <span>Référence : FNC 002/700</span>
+                    </td>
+                </tr>
+                <tr style="height: 25px;">
+                    <td style="vertical-align:middle;">
+                        <span>Révision N° : <t t-esc="'%02d' % doc_rev.revision_number"/></span>
+                    </td>
+                </tr>
+                <tr style="height: 45px;">
+                    <td class="bg-blue" style="text-align:center; vertical-align:middle;">
+                        <div style="font-size:12px; font-style:italic;">FICHE DE NON-CONFORMITE</div>
+                        <div style="font-size:10px; font-style:italic;">NON-CONFORMITY SHEET</div>
+                    </td>
+                    <td style="vertical-align:middle;">
+                        <span>Date de révision : <t t-esc="doc_rev.revision_date"/></span>
+                    </td>
+                </tr>
+            </table>
+            <!-- BLANK FORM -->
+            <table style="margin-bottom: 6px;">
+                <tr class="cell-sm"><td style="width:50%;">Emetteur Direction :</td><td colspan="2" style="width:50%;">Date :</td></tr>
+                <tr class="cell-sm"><td>Sce /DPT :</td><td colspan="2">N° FNC :</td></tr>
+            </table>
+            <table style="margin-bottom: 6px;">
+                <tr><td colspan="2" class="section-title">Type de Non-Conformité</td></tr>
+                <tr>
+                    <td class="cell-type" style="width:50%;">
+                        <div class="type-row"><span class="checkbox">&#9744;</span> NC Produit</div>
+                        <div class="type-row"><span class="checkbox">&#9744;</span> Réclamation clients/PI</div>
+                        <div class="type-row"><span class="checkbox">&#9744;</span> SST Accident</div>
+                        <div class="type-row"><span class="checkbox">&#9744;</span> Environnement</div>
+                        <div class="type-row"><span class="checkbox">&#9744;</span> Travaux</div>
+                    </td>
+                    <td class="cell-type" style="width:50%;">
+                        <div class="type-row"><span class="checkbox">&#9744;</span> Audit interne/Externe</div>
+                        <div class="type-row"><span class="checkbox">&#9744;</span> Achat</div>
+                        <div class="type-row"><span class="checkbox">&#9744;</span> Réception</div>
+                        <div class="type-row"><span class="checkbox">&#9744;</span> Dysfonctionnement</div>
+                        <div class="type-row"><span class="checkbox">&#9744;</span> Autre (préciser) :</div>
+                    </td>
+                </tr>
+            </table>
+            <table style="margin-bottom: 6px;">
+                <tr><td colspan="3" class="section-title">1- Description de la non-conformité :</td></tr>
+                <tr><td colspan="3" class="cell-lg"></td></tr>
+                <tr class="cell-sm"><td style="width:33%;">Nom de la personne qui signale :</td><td style="width:33%;">Date :</td><td style="width:34%;">Fonction et visa :</td></tr>
+            </table>
+            <table style="margin-bottom: 6px;">
+                <tr><td colspan="3" class="section-title">Traitement :</td></tr>
+                <tr class="cell-sm">
+                    <td style="width:33%;"><span class="checkbox">&#9744;</span> Reprise pour mise en conformité</td>
+                    <td style="width:33%;"><span class="checkbox">&#9744;</span> Déclassement pour autre utilisation</td>
+                    <td style="width:34%;"><span class="checkbox">&#9744;</span> Retour au fournisseur</td>
+                </tr>
+                <tr class="cell-sm">
+                    <td><span class="checkbox">&#9744;</span> Recyclage</td>
+                    <td><span class="checkbox">&#9744;</span> Réparation</td>
+                    <td><span class="checkbox">&#9744;</span> Autre ;.......</td>
+                </tr>
+            </table>
+            <table style="margin-bottom: 6px;">
+                <tr><td colspan="2" class="section-title">2- Action immédiate :</td></tr>
+                <tr><td colspan="2" class="cell-md"></td></tr>
+                <tr class="cell-sm"><td style="width:50%;">Réalisé par :</td><td style="width:50%;">Date :</td></tr>
+            </table>
+            <table style="margin-bottom: 0px;">
+                <tr><td colspan="3" class="section-title">3- Analyse des causes</td></tr>
+                <tr><td colspan="3" class="cell-md"></td></tr>
+                <tr><td colspan="3" style="padding:6px;"><div style="margin-bottom:3px; font-weight:bold;">-Impact : coût, incidence, risque :</div><div style="min-height: 50px;"></div></td></tr>
+                <tr class="cell-sm"><td style="width:50%;">N° Fiche d'action :</td><td colspan="2" style="width:50%;">Responsable de l'action(s) :</td></tr>
+                <tr class="cell-sm"><td>Le supérieur hiérarchique :</td><td>Date :</td><td>Signature :</td></tr>
+            </table>
+            <div class="footer-ref"><span>FNC 002/700</span></div>
+        </div>
+    </template>
+
+    <template id="report_fac_revision_content">
+        <style>
+            .page { width: 100%; min-height: 281mm; font-family: Arial, sans-serif; font-weight: bold; font-size: 11px; position: relative; padding: 8mm 4mm 5mm 4mm; box-sizing: border-box; }
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid black; }
+            td { border: 2px solid black; padding: 4px 6px; word-wrap: break-word; vertical-align: middle; font-size: 11px; }
+            .bg-blue { background-color: #d6e3f8; text-align: center; font-weight: bold; }
+            .section-title { background-color: #d6e3f8; font-weight: bold; text-align: left; padding: 5px 6px; height: 25px; }
+            .header-cell { text-align: center; vertical-align: middle; }
+            .cell-sm { height: 32px; }
+            .cell-md { height: 80px; vertical-align: top; padding: 6px; }
+            .cell-lg { height: 100px; vertical-align: top; padding: 6px; }
+            .footer-ref { text-align: right; font-size: 12px; font-weight: bold; margin-top: 18mm; padding-right: 5px; }
+            .checkbox { font-size: 13px; display: inline; }
+        </style>
+        <div class="page">
+            <!-- HEADER -->
+            <table style="margin-bottom: 6px;">
+                <tr style="height: 70px;">
+                    <td rowspan="3" style="width:18%; text-align:center; vertical-align:middle;">
+                        <img t-if="env.user.company_id.logo" t-att-src="'data:image/png;base64,' + env.user.company_id.logo.decode('utf-8')" style="max-width:110px; max-height:55px;"/>
+                    </td>
+                    <td rowspan="2" class="header-cell" style="width:52%;">
+                        <div style="font-size:13px; margin-bottom:2px;">شركة الإسمنت عين الكبيرة</div>
+                        <div style="font-size:11px;">SOCIETE DES CIMENTS DE AIN EL KEBIRA</div>
+                        <div style="font-size:10px;">CEMENT COMPANY OF AIN EL KEBIRA</div>
+                    </td>
+                    <td style="width:30%; vertical-align:middle;">
+                        <span>Référence : FAC 003/700</span>
+                    </td>
+                </tr>
+                <tr style="height: 25px;">
+                    <td style="vertical-align:middle;">
+                        <span>Révision N° : <t t-esc="'%02d' % doc_rev.revision_number"/></span>
+                    </td>
+                </tr>
+                <tr style="height: 45px;">
+                    <td class="bg-blue" style="text-align:center; vertical-align:middle;">
+                        <div style="font-size:12px; font-style:italic;">FICHE D'ACTION CORRECTIVE</div>
+                        <div style="font-size:10px; font-style:italic;">CORRECTIVE ACTION SHEET</div>
+                    </td>
+                    <td style="vertical-align:middle;">
+                        <span>Date de révision : <t t-esc="doc_rev.revision_date"/></span>
+                    </td>
+                </tr>
+            </table>
+            <!-- BLANK FORM -->
+            <table style="margin-bottom: 6px;">
+                <tr class="cell-sm"><td style="width:35%;">Direction :</td><td style="width:30%;">Date :</td><td style="width:35%;">N° FAC :</td></tr>
+                <tr class="cell-sm"><td colspan="2">N° FNC ou autre document :</td><td>Date :</td></tr>
+            </table>
+            <table style="margin-bottom: 6px;">
+                <tr><td colspan="3" class="section-title">1- Rappel de la Non-Conformité</td></tr>
+                <tr><td colspan="3" class="cell-lg"></td></tr>
+            </table>
+            <table style="margin-bottom: 6px;">
+                <tr><td colspan="3" class="section-title">2- Analyse des causes de la non-conformité</td></tr>
+                <tr><td colspan="3" class="cell-lg"></td></tr>
+                <tr class="cell-sm"><td style="width:50%;">Responsable :</td><td style="width:25%;">Date :</td><td style="width:25%;">Visa :</td></tr>
+            </table>
+            <table style="margin-bottom: 6px;">
+                <tr><td colspan="4" class="section-title">3- Action (s) décidée :</td></tr>
+                <tr style="height: 25px; text-align: center;">
+                    <td style="width:35%;">Action (s)</td><td style="width:15%;">Date prévue</td><td style="width:15%;">Date de réalisation</td><td style="width:35%;">Responsable de l'action</td>
+                </tr>
+                <tr class="cell-sm"><td>1-</td><td></td><td></td><td></td></tr>
+                <tr class="cell-sm"><td>2-</td><td></td><td></td><td></td></tr>
+            </table>
+            <table style="margin-bottom: 6px;">
+                <tr class="cell-sm"><td style="width:50%;">Responsable :</td><td style="width:25%;">Date :</td><td style="width:25%;">Visa :</td></tr>
+                <tr>
+                    <td style="width:50%; vertical-align: top; padding: 6px;"><div style="margin-bottom: 4px;"><span>Action(s) efficace(s)</span></div><div><span class="checkbox">&#9744;</span> Oui</div><div><span class="checkbox">&#9744;</span> Non</div></td>
+                    <td colspan="2" style="vertical-align: top; padding: 6px;">Responsable :</td>
+                </tr>
+            </table>
+            <table style="margin-bottom: 6px;">
+                <tr><td colspan="3" class="section-title">4- Approbation Responsable QSE :</td></tr>
+                <tr class="cell-sm"><td style="width:35%;">Nom :</td><td style="width:30%;">Date :</td><td style="width:35%;">Visa :</td></tr>
+            </table>
+            <table style="margin-bottom: 0px;">
+                <tr><td colspan="3" class="section-title">5- Vérification de (s) de(s) action(s) effectuée(s) :</td></tr>
+                <tr><td colspan="3" class="cell-md"><div style="margin-bottom: 3px; font-weight: bold;">- Vérification de l'efficacité de l'action :</div></td></tr>
+                <tr class="cell-sm"><td colspan="3">- Extension possible de l'action : <span class="checkbox">&#9744;</span> Non <span style="margin-left: 20px;"><span class="checkbox">&#9744;</span> Oui</span></td></tr>
+                <tr class="cell-sm"><td style="width:50%;">Clôturée par :</td><td style="width:25%;">Date :</td><td style="width:25%;">Visa :</td></tr>
+            </table>
+            <div class="footer-ref"><span>FAC 003/700</span></div>
+        </div>
+    </template>
+
+</data>
+</odoo>

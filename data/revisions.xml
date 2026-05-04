@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Révision FNC N° 3 -->
+        <record id="rev_fnc_03" model="nc_management.document_revision">
+            <field name="doc_type">fnc</field>
+            <field name="revision_number">3</field>
+            <field name="revision_date">2025-02-03</field>
+            <field name="description">Mise à jour du format de la fiche FNC</field>
+        </record>
+
+        <!-- Révision FAC N° 2 -->
+        <record id="rev_fac_02" model="nc_management.document_revision">
+            <field name="doc_type">fac</field>
+            <field name="revision_number">2</field>
+            <field name="revision_date">2025-01-30</field>
+            <field name="description">Mise à jour du format de la fiche FAC</field>
+        </record>
+    </data>
+</odoo>

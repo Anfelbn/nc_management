@@ -57,6 +57,22 @@
     <canvas id="nc_chart" height="80"></canvas>
   </div>
 
+  <!-- Revisions List -->
+  <div style="background:white;border-radius:8px;padding:16px;margin-bottom:20px;">
+    <p style="font-weight:bold;color:#534AB7;margin:0 0 12px;">Historique des Revisions (FNC / FAC)</p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#f8f9fa;">
+          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">Type</th>
+          <th style="text-align:center;padding:8px;border-bottom:2px solid #dee2e6;">N Revision</th>
+          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">Date</th>
+          <th style="text-align:left;padding:8px;border-bottom:2px solid #dee2e6;">Modification</th>
+        </tr>
+      </thead>
+      <tbody id="revision_body"></tbody>
+    </table>
+  </div>
+
   <!-- Urgent list -->
   <div style="background:white;border-radius:8px;padding:16px;">
     <p style="font-weight:bold;color:#c0392b;margin:0 0 12px;">Fiches en retard (en cours depuis plus de 7 jours)</p>

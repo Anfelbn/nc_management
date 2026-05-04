@@ -409,6 +409,28 @@ class PlanActionSmi(models.Model):
         self.state = 'verified'
 
 
+class DocumentRevision(models.Model):
+    _name = 'nc_management.document_revision'
+    _description = 'Révision de Document'
+    _order = 'revision_date desc, revision_number desc'
+
+    doc_type = fields.Selection([
+        ('fnc', 'Fiche de Non-Conformité (FNC)'),
+        ('fac', 'Fiche d\'Action Corrective (FAC)'),
+    ], string='Type de Document', required=True)
+    revision_number = fields.Integer(string='N° Révision', required=True)
+    revision_date = fields.Date(string='Date de Révision', required=True, default=fields.Date.today)
+    description = fields.Text(string='Modification apportée')
+
+    name = fields.Char(string='Révision', compute='_compute_name', store=True)
+
+    @api.depends('doc_type', 'revision_number')
+    def _compute_name(self):
+        for rec in self:
+            type_str = 'FNC' if rec.doc_type == 'fnc' else 'FAC'
+            rec.name = "%s - Rev %02d" % (type_str, rec.revision_number)
+
+
 class NcDashboard(models.Model):
     _name = 'nc_management.dashboard'
     _description = 'Dashboard'
@@ -528,6 +550,8 @@ class NcDashboard(models.Model):
         from dateutil.relativedelta import relativedelta
         fnc = self.env['nc_management.nonconformity']
         fac = self.env['nc_management.corrective_action']
+        rev = self.env['nc_management.document_revision']
+        
         total_fnc = fnc.search_count([])
         closed_fnc = fnc.search_count([('state', '=', 'closed')])
         taux = round((closed_fnc / total_fnc * 100) if total_fnc else 0, 1)
@@ -551,6 +575,9 @@ class NcDashboard(models.Model):
             ])
             months.append({'month': m_start.strftime('%b %Y'), 'count': count})
 
+        # Get revisions
+        revisions = rev.search_read([], ['id', 'doc_type', 'revision_number', 'revision_date', 'description'], limit=10)
+
         return {
             'fnc_draft':       fnc.search_count([('state', '=', 'draft')]),
             'fnc_submitted':   fnc.search_count([('state', '=', 'submitted')]),
@@ -564,6 +591,7 @@ class NcDashboard(models.Model):
             'taux_cloture':    taux,
             'urgent':          urgent,
             'monthly':         months,
+            'revisions':       revisions,
             'analyse_efficacite': {
                 'reclamation_pi': self.get_efficacite_categorie('type_reclamation'),
                 'nc_produit':     self.get_efficacite_categorie('type_nc_produit'),

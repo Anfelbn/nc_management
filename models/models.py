@@ -325,6 +325,17 @@ class CorrectiveAction(models.Model):
             rec.date_cloture = fields.Date.today()
             rec.message_post(body='Fiche FAC clôturée par la Responsable Qualité.')
 
+    @api.multi
+    def action_next_stage(self):
+        self.ensure_one()
+        if self.state == 'draft':
+            self.action_open()
+        elif self.state == 'open':
+            self.action_verify()
+        elif self.state == 'verified':
+            self.action_close()
+        return True
+
 
 class ActionLine(models.Model):
     _name = 'nc_management.action_line'

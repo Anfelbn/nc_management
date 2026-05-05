@@ -358,7 +358,7 @@
     <field name="name">nc_management.document_revision.tree</field>
     <field name="model">nc_management.document_revision</field>
     <field name="arch" type="xml">
-        <tree string="Historique des Révisions" import="0">
+        <tree string="Historique des Révisions" import="false">
             <field name="doc_type"/>
             <field name="revision_number_link" widget="html"/>
             <field name="revision_date"/>
@@ -388,7 +388,6 @@
     <field name="name">Révision des documents</field>
     <field name="res_model">nc_management.document_revision</field>
     <field name="view_mode">tree,form</field>
-    <field name="context">{'no_import': True}</field>
 </record>
 
 <menuitem name="Configuration"

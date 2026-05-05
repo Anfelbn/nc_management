@@ -422,6 +422,15 @@ class DocumentRevision(models.Model):
     revision_date = fields.Date(string='Date de Révision', required=True, default=fields.Date.today)
     description = fields.Text(string='Modification apportée')
 
+    revision_number_link = fields.Html(string='N° Révision', compute='_compute_revision_number_link')
+
+    @api.depends('revision_number', 'doc_type')
+    def _compute_revision_number_link(self):
+        for rec in self:
+            # Génère un lien HTML vers le rapport PDF d'Odoo
+            url = '/report/pdf/nc_management.report_revision_template/%s' % rec.id
+            rec.revision_number_link = '<a href="%s" target="_blank" style="font-weight:bold; color:#00A09D;">%s</a>' % (url, rec.revision_number)
+
     name = fields.Char(string='Révision', compute='_compute_name', store=True)
 
     @api.depends('doc_type', 'revision_number')

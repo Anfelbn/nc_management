@@ -1,270 +1,323 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates>
 <t t-name="NcDashboard">
-<div style="padding:20px;background:#F3F4F6;
-            min-height:100vh;font-family:Arial,sans-serif;">
+<div class="nc-db">
+<style>
+.nc-db *{box-sizing:border-box;margin:0;padding:0}
+.nc-db{background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;padding:16px;min-width:900px}
+.nc-inner{max-width:1240px;margin:0 auto}
+.nc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.nc-brand-sub{font-size:10px;color:#94a3b8;letter-spacing:.5px}
+.nc-brand-title{font-size:16px;font-weight:700;color:#0f172a}
+.nc-header-right{display:flex;align-items:center;gap:12px}
+.nc-period-label,.nc-update{font-size:11px;color:#94a3b8}
+.pb{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;transition:all .15s}
+.pb:hover{border-color:#1e40af;color:#1e40af}
+.pb.active{background:#1e40af;color:white;border-color:#1e40af}
+.period-btn{display:flex;gap:5px}
+.nc-tab-bar{display:flex;border-bottom:2px solid #e2e8f0;margin-bottom:16px}
+.nc-tab{padding:10px 22px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
+.nc-tab:hover{color:#1e40af;background:#f8fafc}
+.nc-tab.active{color:#1e40af;border-bottom-color:#1e40af;background:white;border-radius:6px 6px 0 0}
+.nc-tab-panel{display:none}
+.nc-tab-panel.active{display:block}
+.section-title{font-size:10px;font-weight:700;letter-spacing:1px;color:#94a3b8;text-transform:uppercase;margin-bottom:10px;padding-left:2px}
+.nc-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.nc-card-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:3px}
+.nc-card-sub{font-size:11px;color:#94a3b8;margin-bottom:10px}
+.nc-kpi{background:white;border-radius:12px;padding:12px 14px;border:1px solid #e2e8f0;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.nc-kpi-top{width:100%;height:3px;border-radius:3px 3px 0 0;position:absolute;top:0;left:0}
+.nc-kpi-label{font-size:11px;color:#64748b;margin-bottom:5px;margin-top:4px}
+.nc-kpi-val{font-size:24px;font-weight:700;line-height:1}
+.nc-kpi-sub{font-size:10px;color:#94a3b8;margin-top:4px;cursor:pointer;text-decoration:underline}
+.nc-kpi-sub:hover{color:#1e40af}
+.badge{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:500}
+.badge.red{background:#fef2f2;color:#991b1b}
+.badge.blue{background:#eff6ff;color:#1d4ed8}
+.badge.green{background:#f0fdf4;color:#166534}
+.badge.orange{background:#fff7ed;color:#9a3412}
+.badge.purple{background:#f5f3ff;color:#6d28d9}
+.nc-notif{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:7px;background:#fafafa;transition:background .2s}
+.nc-notif:hover{background:#f0f9ff}
+.nc-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.avatar-blue{background:#EBF5FF;color:#1565C0}
+.avatar-red{background:#FEF2F2;color:#991B1B}
+.avatar-purple{background:#F5F3FF;color:#6D28D9}
+.nc-notif-body{flex:1;min-width:0}
+.nc-notif-ref{font-size:12px;font-weight:600;color:#1e293b}
+.nc-notif-info{font-size:11px;color:#64748b;margin-top:2px}
+.nc-notif-actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.btn-sm{font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid #e2e8f0;background:white;color:#1e40af;cursor:pointer;transition:all .15s}
+.btn-sm:hover{background:#eff6ff}
+.btn-sm.primary{background:#1e40af;color:white;border-color:#1e40af}
+.btn-sm.primary:hover{background:#1d4ed8}
+.nc-alert{display:flex;gap:10px;align-items:center;padding:10px;border-radius:0 8px 8px 0;border:1px solid #fee2e2;border-left:3px solid #EF4444;background:#fef2f2;margin-bottom:7px}
+.nc-alert.orange{border-left-color:#FF9800;border-color:#ffedd5;background:#fff7ed}
+.nc-alert.green{border-left-color:#10B981;border-color:#d1fae5;background:#f0fdf4}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cal-wrap{font-size:12px;user-select:none}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cal-month-label{font-size:14px;font-weight:700;color:#1e293b}
+.cal-nav{display:flex;gap:6px}
+.cal-btn{width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#64748b;transition:all .15s}
+.cal-btn:hover{background:#f1f5f9}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day-name{font-size:10px;font-weight:600;color:#94a3b8;text-align:center;padding:4px 0}
+.cal-day{text-align:center;padding:5px 2px;border-radius:6px;cursor:pointer;font-size:12px;color:#374151;transition:background .15s;min-height:30px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cal-day:hover{background:#f1f5f9}
+.cal-day.other-month{color:#d1d5db}
+.cal-day.today{background:#1e40af;color:white;font-weight:700}
+.cal-day.selected{outline:2px solid #1e40af;background:#dbeafe;color:#1e3a8a;font-weight:700}
+.cal-day.today.selected{outline:2px solid #0f172a;background:#1e40af;color:white}
+.cal-dot-row{display:flex;gap:2px;justify-content:center;margin-top:1px}
+.cdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.nc-empty{font-size:12px;color:#94a3b8;text-align:center;padding:22px 8px;border:1px dashed #e2e8f0;border-radius:8px;background:#f8fafc}
+.gc-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.gc-lbl{font-size:11px;color:#64748b;width:80px;text-align:right;flex-shrink:0}
+.gc-bars{flex:1;display:flex;flex-direction:column;gap:3px}
+.gc-bar-fnc{height:9px;border-radius:3px;background:#2196F3;transition:width .3s}
+.gc-bar-fac{height:9px;border-radius:3px;background:#EF4444;transition:width .3s}
+.gc-bar-fnc,.gc-bar-fac{cursor:pointer}
+.gc-bar-fnc:hover,.gc-bar-fac:hover{filter:brightness(.9)}
+.dir-bar.selected{outline:2px solid #0f172a}
+.gc-vals{display:flex;flex-direction:column;gap:3px;width:28px}
+.gc-v{font-size:10px;color:#64748b;line-height:9px;text-align:right}
+.gc-legend{display:flex;gap:12px;margin-top:6px;justify-content:flex-end}
+.gc-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b}
+.gc-leg-dot{width:10px;height:10px;border-radius:2px}
+.dir-pie{width:116px;height:116px;border-radius:50%;margin:8px auto;background:#e2e8f0}
+.dir-pie-title{text-align:center;font-size:12px;font-weight:700;color:#1e293b;margin-top:8px}
+.split-card{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.split-box{border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#f8fafc;text-align:center}
+.split-label{font-size:10px;color:#64748b;margin-bottom:4px}
+.split-val{font-size:24px;font-weight:700;line-height:1}
+canvas{display:block;width:100%}
+</style>
 
-  <!-- Top bar -->
-  <div style="display:flex;justify-content:space-between;
-              align-items:center;margin-bottom:18px;">
-    <div>
-      <div style="font-size:11px;color:#6B7280;margin-bottom:2px;">
-          CIMENTERIE DE SÉTIF — GICA</div>
-      <div style="font-size:16px;font-weight:600;color:#111827;">Dashboard RMQE</div>
-      <div style="font-size:11px;color:#6B7280;">
-          Fiches Non-Conformité &amp; Actions Correctives</div>
+<div class="nc-inner">
+<div class="nc-header">
+  <div>
+    <div class="nc-brand-sub">CIMENTERIE DE SÉTIF — GICA</div>
+    <div class="nc-brand-title">Dashboard RMQE</div>
+  </div>
+  <div class="nc-header-right">
+    <span class="nc-period-label">Période :</span>
+    <div class="period-btn">
+      <div class="pb active" data-period="1m">1 mois</div>
+      <div class="pb" data-period="6m">6 mois</div>
+      <div class="pb" data-period="1y">1 an</div>
     </div>
   </div>
+</div>
 
-  <!-- Section FNC -->
-  <div style="font-size:11px;font-weight:600;letter-spacing:.5px;
-              color:#374151;text-transform:uppercase;
-              margin-bottom:10px;">Fiches Non-Conformité (FNC)</div>
+<div class="nc-tab-bar">
+  <div class="nc-tab active">Espace RMQE</div>
+  <div class="nc-tab">Autres services / Dép.</div>
+  <div class="nc-tab">Vue globale</div>
+</div>
 
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);
-              gap:10px;margin-bottom:10px;">
-    <div style="background:#EBF5FF;border:1px solid #BFDBFE;
-                border-top:4px solid #2196F3;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Total FNC</div>
-      <div id="fnc_total" style="font-size:26px;font-weight:500;color:#1565C0;">0</div>
-    </div>
-    <div style="background:#FFF8E8;border:1px solid #FDE68A;
-                border-top:4px solid #FF9800;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">En cours</div>
-      <div id="fnc_cours" style="font-size:26px;font-weight:500;color:#E65100;">0</div>
-    </div>
-    <div style="background:#F3EEFF;border:1px solid #DDD6FE;
-                border-top:4px solid #7C3AED;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Envoyées dép.</div>
-      <div id="fnc_envoyes" style="font-size:26px;font-weight:500;color:#5B21B6;">0</div>
-    </div>
-    <div style="background:#E8F8F1;border:1px solid #A7F3D0;
-                border-top:4px solid #10B981;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Clôturées</div>
-      <div id="fnc_closed" style="font-size:26px;font-weight:500;color:#065F46;">0</div>
-    </div>
-    <div style="background:#FEF2F2;border:1px solid #FECACA;
-                border-top:4px solid #EF4444;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">En retard</div>
-      <div id="fnc_retard" style="font-size:26px;font-weight:500;color:#991B1B;">0</div>
-      <div style="font-size:10px;color:#9CA3AF;margin-top:3px;">&gt; 7 jours</div>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:2fr 3fr;
-              gap:10px;margin-bottom:14px;">
-    <div style="background:#E8F8F1;border:1px solid #A7F3D0;
-                border-top:4px solid #10B981;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Taux clôture</div>
-      <div id="taux_cloture" style="font-size:28px;font-weight:500;color:#065F46;">0%</div>
-    </div>
-    <div style="background:#EBF5FF;border:1px solid #BFDBFE;
-                border-top:4px solid #2196F3;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">
-          FNC reçues des autres services / départements</div>
-      <div id="fnc_recues" style="font-size:28px;font-weight:500;color:#1565C0;">0</div>
-    </div>
-  </div>
-
-  <!-- Section FAC -->
-  <div style="font-size:11px;font-weight:600;letter-spacing:.5px;
-              color:#374151;text-transform:uppercase;
-              margin-bottom:10px;">Fiches Action Corrective (FAC)</div>
-
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);
-              gap:10px;margin-bottom:10px;">
-    <div style="background:#EBF5FF;border:1px solid #BFDBFE;
-                border-top:4px solid #2196F3;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Total FAC</div>
-      <div id="fac_total" style="font-size:26px;font-weight:500;color:#1565C0;">0</div>
-    </div>
-    <div style="background:#FFF8E8;border:1px solid #FDE68A;
-                border-top:4px solid #FF9800;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Ouvertes</div>
-      <div id="fac_open" style="font-size:26px;font-weight:500;color:#E65100;">0</div>
-    </div>
-    <div style="background:#F3EEFF;border:1px solid #DDD6FE;
-                border-top:4px solid #7C3AED;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Vérifiées</div>
-      <div id="fac_verif" style="font-size:26px;font-weight:500;color:#5B21B6;">0</div>
-    </div>
-    <div style="background:#E8F8F1;border:1px solid #A7F3D0;
-                border-top:4px solid #10B981;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Clôturées</div>
-      <div id="fac_closed" style="font-size:26px;font-weight:500;color:#065F46;">0</div>
-    </div>
-    <div style="background:#FEF2F2;border:1px solid #FECACA;
-                border-top:4px solid #EF4444;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">En retard</div>
-      <div id="fac_retard" style="font-size:26px;font-weight:500;color:#991B1B;">0</div>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:2fr 3fr;
-              gap:10px;margin-bottom:20px;">
-    <div style="background:#E8F8F1;border:1px solid #A7F3D0;
-                border-top:4px solid #10B981;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">Taux efficacité</div>
-      <div id="taux_eff" style="font-size:28px;font-weight:500;color:#065F46;">0%</div>
-    </div>
-    <div style="background:#FFF8E8;border:1px solid #FDE68A;
-                border-top:4px solid #FF9800;border-radius:10px;
-                padding:14px;text-align:center;">
-      <div style="font-size:11px;color:#4B5563;margin-bottom:6px;">
-          FAC à clôturer reçues (en attente approbation RMQE)</div>
-      <div id="fac_recues" style="font-size:28px;font-weight:500;color:#E65100;">0</div>
-    </div>
-  </div>
-
-  <!-- Graphes ligne 1 -->
-  <div style="display:grid;grid-template-columns:1.3fr 1fr;
-              gap:14px;margin-bottom:14px;">
-
-    <div style="background:white;border:1px solid #E5E7EB;
-                border-left:4px solid #2196F3;border-radius:12px;padding:16px;">
-      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:2px;">
-          Évolution FNC &amp; FAC</div>
-      <div style="font-size:11px;color:#6B7280;margin-bottom:12px;">6 derniers mois</div>
-      <canvas id="evo_chart" height="110"></canvas>
+<div class="nc-tab-panel active">
+  <div class="section-title">Calendrier de réception — FNC &amp; FAC</div>
+  <div class="g2">
+    <div class="nc-card" style="max-height:300px;overflow-y:auto">
+      <div class="nc-card-title">Fiches reçues</div>
+      <div class="nc-card-sub received-sub">Derniers documents de la période</div>
+      <div class="received-list"></div>
     </div>
 
-    <div style="background:white;border:1px solid #E5E7EB;
-                border-left:4px solid #7C3AED;border-radius:12px;padding:16px;">
-      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:2px;">
-          FNC par type</div>
-      <div style="font-size:11px;color:#6B7280;margin-bottom:12px;">
-          Répartition par catégorie</div>
-      <canvas id="type_chart" height="110"></canvas>
-    </div>
-
-  </div>
-
-  <!-- Graphes ligne 2 -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;
-              gap:14px;margin-bottom:14px;">
-
-    <div style="background:white;border:1px solid #E5E7EB;
-                border-left:4px solid #2196F3;border-radius:12px;padding:16px;">
-      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:2px;">
-          FNC par département</div>
-      <div style="font-size:11px;color:#6B7280;margin-bottom:12px;">
-          Reçues des autres services</div>
-      <canvas id="dept_chart" height="110"></canvas>
-    </div>
-
-    <div style="background:white;border:1px solid #E5E7EB;
-                border-left:4px solid #10B981;border-radius:12px;padding:16px;">
-      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:8px;">
-          États FNC &amp; FAC</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;
-                  padding:7px 0;border-bottom:1px solid #F3F4F6;">
-        <div style="font-size:12px;color:#4B5563;">FNC clôturées</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:120px;height:6px;background:#E5E7EB;
-                      border-radius:3px;overflow:hidden;">
-            <div id="s_fnc_closed_bar" style="height:100%;border-radius:3px;
-                 width:0%;"></div></div>
-          <div id="s_fnc_closed_pct" style="font-size:12px;font-weight:500;
-               min-width:34px;text-align:right;color:#065F46;">0%</div>
+    <div class="nc-card">
+      <div class="nc-card-title" style="margin-bottom:10px">Calendrier</div>
+      <div class="cal-wrap">
+        <div class="cal-header">
+          <div class="cal-month-label">Chargement...</div>
+          <div class="cal-nav">
+            <button class="cal-btn cal-prev">&#8249;</button>
+            <button class="cal-btn cal-next">&#8250;</button>
+          </div>
         </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;
-                  padding:7px 0;border-bottom:1px solid #F3F4F6;">
-        <div style="font-size:12px;color:#4B5563;">FNC en cours</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:120px;height:6px;background:#E5E7EB;
-                      border-radius:3px;overflow:hidden;">
-            <div id="s_fnc_cours_bar" style="height:100%;border-radius:3px;
-                 width:0%;"></div></div>
-          <div id="s_fnc_cours_pct" style="font-size:12px;font-weight:500;
-               min-width:34px;text-align:right;color:#1565C0;">0%</div>
+        <div class="cal-grid">
+          <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div><div class="cal-day-name">Mer</div><div class="cal-day-name">Jeu</div><div class="cal-day-name">Ven</div><div class="cal-day-name">Sam</div><div class="cal-day-name">Dim</div>
+          <div class="cal-grid-body" style="display:contents"></div>
         </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;
-                  padding:7px 0;border-bottom:1px solid #F3F4F6;">
-        <div style="font-size:12px;color:#4B5563;">FAC efficaces</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:120px;height:6px;background:#E5E7EB;
-                      border-radius:3px;overflow:hidden;">
-            <div id="s_fac_eff_bar" style="height:100%;border-radius:3px;
-                 width:0%;"></div></div>
-          <div id="s_fac_eff_pct" style="font-size:12px;font-weight:500;
-               min-width:34px;text-align:right;color:#065F46;">0%</div>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;
-                  padding:7px 0;border-bottom:1px solid #F3F4F6;">
-        <div style="font-size:12px;color:#4B5563;">FAC en retard</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:120px;height:6px;background:#E5E7EB;
-                      border-radius:3px;overflow:hidden;">
-            <div id="s_fac_retard_bar" style="height:100%;border-radius:3px;
-                 width:0%;"></div></div>
-          <div id="s_fac_retard_pct" style="font-size:12px;font-weight:500;
-               min-width:34px;text-align:right;color:#991B1B;">0%</div>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;
-                  padding:7px 0;">
-        <div style="font-size:12px;color:#4B5563;">FNC en retard</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:120px;height:6px;background:#E5E7EB;
-                      border-radius:3px;overflow:hidden;">
-            <div id="s_fnc_retard_bar" style="height:100%;border-radius:3px;
-                 width:0%;"></div></div>
-          <div id="s_fnc_retard_pct" style="font-size:12px;font-weight:500;
-               min-width:34px;text-align:right;color:#991B1B;">0%</div>
+        <div style="display:flex;gap:14px;margin-top:10px;justify-content:flex-end">
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#2196F3"></div>FNC</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#EF4444"></div>FAC</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#7C3AED"></div>Plan</div>
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- Alertes ligne 3 -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;
-              gap:14px;margin-bottom:14px;">
-
-    <div style="background:white;border:1px solid #E5E7EB;
-                border-radius:12px;padding:16px;">
-      <div style="display:flex;justify-content:space-between;
-                  align-items:center;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:500;color:#1F2937;">FAC à clôturer</div>
-        <span id="fac_retard_badge" style="font-size:10px;padding:2px 8px;
-              border-radius:99px;background:#FEF2F2;color:#991B1B;">urgentes</span>
+  <div class="g2" style="align-items:stretch">
+    <div class="nc-card">
+      <div class="nc-card-title">Évolution FNC &amp; FAC — RMQE</div>
+      <canvas id="evoChart" style="height:120px"></canvas>
+      <div style="display:flex;gap:12px;margin-top:6px;justify-content:flex-end">
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#C9443A"></div>FAC</div>
       </div>
-      <div id="fac_cloturer_list"></div>
     </div>
 
-    <div style="background:white;border:1px solid #E5E7EB;
-                border-radius:12px;padding:16px;">
-      <div style="display:flex;justify-content:space-between;
-                  align-items:center;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:500;color:#1F2937;">FNC en retard</div>
-        <span style="font-size:10px;padding:2px 8px;border-radius:99px;
-              background:#FEF2F2;color:#991B1B;">fiches</span>
+    <div class="g4">
+      <div class="nc-kpi">
+        <div class="nc-kpi-top" style="background:#2196F3"></div>
+        <div class="nc-kpi-label">Total FNC</div>
+        <div class="nc-kpi-val" style="color:#1565C0"><t t-esc="widget.stats.fnc_total"/></div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain="[]">↳ Taux clôture : <t t-esc="widget.stats.taux_cloture"/>%</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+          <span class="badge blue">En cours <t t-esc="widget.stats.fnc_cours"/></span>
+          <span class="badge orange">Envoyées <t t-esc="widget.stats.fnc_envoyes"/></span>
+          <span class="badge green">Clôturées <t t-esc="widget.stats.fnc_closed"/></span>
+        </div>
       </div>
-      <div id="fnc_retard_list"></div>
-      <div style="height:1px;background:#F3F4F6;margin:12px 0;"></div>
-      <div style="font-size:13px;font-weight:500;color:#1F2937;margin-bottom:10px;">
-          FNC reçues des départements</div>
-      <div id="dept_mini_list"></div>
-    </div>
 
+      <div class="nc-kpi">
+        <div class="nc-kpi-top" style="background:#10B981"></div>
+        <div class="nc-kpi-label">Total FAC</div>
+        <div class="nc-kpi-val" style="color:#065F46"><t t-esc="widget.stats.fac_total"/></div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain="[]">↳ Efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+          <span class="badge orange">Ouvertes <t t-esc="widget.stats.fac_open"/></span>
+          <span class="badge blue">Vérifiées <t t-esc="widget.stats.fac_verif"/></span>
+          <span class="badge green">Clôturées <t t-esc="widget.stats.fac_closed"/></span>
+        </div>
+      </div>
+
+      <div class="nc-kpi">
+        <div class="nc-kpi-top" style="background:#7C3AED"></div>
+        <div class="nc-kpi-label">FNC Audit</div>
+        <div class="nc-kpi-val" style="color:#5B21B6"><t t-esc="widget.stats.fnc_audit"/></div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["type_audit","=",true]]'>↳ Voir les fiches →</div>
+      </div>
+
+      <div class="nc-kpi">
+        <div class="nc-kpi-top" style="background:#FF9800"></div>
+        <div class="nc-kpi-label">FAC Audit</div>
+        <div class="nc-kpi-val" style="color:#E65100"><t t-esc="widget.stats.fac_audit"/></div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["fnc_id.type_audit","=",true]]'>↳ Voir les fiches →</div>
+      </div>
+    </div>
   </div>
+</div>
 
+<div class="nc-tab-panel">
+  <div class="section-title">Autres services / Départements / Directions</div>
+  <div class="g2" style="align-items:stretch">
+    <div class="nc-card">
+      <div class="nc-card-title">FNC &amp; FAC par direction</div>
+      <div class="nc-card-sub">Barres groupées · Cliquer sur une barre pour afficher les types FNC</div>
+
+      <t t-foreach="widget.stats.direction_stats" t-as="dept">
+        <div class="gc-row">
+          <div class="gc-lbl"><t t-esc="dept.name"/></div>
+          <div class="gc-bars">
+            <div class="gc-bar-fnc dir-bar" t-att-data-direction="dept.name" data-kind="fnc" t-att-style="'width:'+dept.pct_fnc+'%'"></div>
+            <div class="gc-bar-fac dir-bar" t-att-data-direction="dept.name" data-kind="fac" t-att-style="'width:'+dept.pct_fac+'%'"></div>
+          </div>
+          <div class="gc-vals">
+            <div class="gc-v"><t t-esc="dept.fnc_count"/></div>
+            <div class="gc-v"><t t-esc="dept.fac_count"/></div>
+          </div>
+        </div>
+      </t>
+
+      <div class="gc-legend">
+        <div class="gc-leg-item"><div class="gc-leg-dot" style="background:#2196F3"></div>FNC</div>
+        <div class="gc-leg-item"><div class="gc-leg-dot" style="background:#EF4444"></div>FAC</div>
+      </div>
+
+      <div style="margin-top:10px;border-top:1px solid #f1f5f9;padding-top:10px">
+        <div class="nc-card-sub">Types FNC liés à la barre sélectionnée</div>
+        <div class="dir-pie-title">Sélectionnez une barre</div>
+        <div class="dir-pie"></div>
+        <div class="dir-pie-legend" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;justify-content:center;font-size:10px;color:#64748b"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="nc-card" style="flex:1">
+        <div class="nc-kpi-top" style="background:#FF9800"></div>
+        <div class="nc-card-title">Par direction</div>
+        <div class="split-card">
+          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.direction.fnc"/></div></div>
+          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.direction.fac"/></div></div>
+        </div>
+      </div>
+      <div class="nc-card" style="flex:1">
+        <div class="nc-kpi-top" style="background:#10B981"></div>
+        <div class="nc-card-title">Par département</div>
+        <div class="split-card">
+          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.department.fnc"/></div></div>
+          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.department.fac"/></div></div>
+        </div>
+      </div>
+      <div class="nc-card" style="flex:1">
+        <div class="nc-kpi-top" style="background:#7C3AED"></div>
+        <div class="nc-card-title">Par services</div>
+        <div class="split-card">
+          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.service.fnc"/></div></div>
+          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.service.fac"/></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nc-tab-panel">
+  <div class="section-title">Vue globale &amp; Alertes</div>
+  <div class="g2">
+    <div class="nc-card">
+      <div class="nc-card-title">Diagramme global FNC &amp; FAC</div>
+      <div class="nc-card-sub">RMQE + Tous les services combinés — par mois</div>
+      <canvas id="globalChart" style="height:170px"></canvas>
+      <div style="display:flex;gap:12px;margin-top:8px;justify-content:center">
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#C9443A"></div>FAC</div>
+      </div>
+    </div>
+
+    <div class="nc-card">
+      <div class="nc-card-title">Alertes &amp; Notifications</div>
+      <div class="nc-card-sub">FAC à clôturer · FNC en retard · &lt; 7 jours</div>
+
+      <t t-foreach="widget.stats.fac_a_cloturer" t-as="fac">
+        <t t-if="fac.days > 7">
+          <div class="nc-alert">
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:#991b1b"><t t-esc="fac.name"/> — À clôturer</div>
+              <div style="font-size:11px;color:#b91c1c;margin-top:2px"><t t-esc="fac.department"/> · Retard <t t-esc="fac.days"/> jours</div>
+            </div>
+            <span class="badge red">Urgent</span>
+            <div class="btn-sm primary btn-open" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac.id">Ouvrir</div>
+          </div>
+        </t>
+        <t t-if="fac.days > 3 and fac.days &lt;= 7">
+          <div class="nc-alert orange">
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fac.name"/> — À clôturer</div>
+              <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fac.department"/> · Dans <t t-esc="fac.days"/> jours</div>
+            </div>
+            <span class="badge orange">Bientôt</span>
+            <div class="btn-sm btn-open" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac.id">Ouvrir</div>
+          </div>
+        </t>
+      </t>
+
+      <t t-foreach="widget.stats.fnc_retard_list" t-as="fnc">
+        <div class="nc-alert orange">
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — En retard</div>
+            <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours de retard</div>
+          </div>
+          <div class="btn-sm btn-open" t-att-data-model="'nc_management.nonconformity'" t-att-data-id="fnc.id">Ouvrir</div>
+        </div>
+      </t>
+    </div>
+  </div>
+</div>
+
+</div>
 </div>
 </t>
 

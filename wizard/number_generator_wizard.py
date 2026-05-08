@@ -5,7 +5,11 @@ class NumberGeneratorWizard(models.TransientModel):
     _name = 'nc_management.number_generator_wizard'
     _description = 'Générateur de Numéro FNC'
 
-    fnc_id = fields.Many2one('nc_management.nonconformity', string='FNC', required=True)
+    fnc_id = fields.Many2one(
+        'nc_management.nonconformity',
+        string='FNC',
+        required=True,
+        ondelete='cascade')
     
     category = fields.Selection([
         ('type_nc_produit', 'NC Produit'),

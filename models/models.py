@@ -566,71 +566,186 @@ class NcDashboard(models.Model):
         }
 
     @api.model
-    def get_stats(self):
+    def get_stats(self, period=None):
         from datetime import date, timedelta
         from dateutil.relativedelta import relativedelta
+        import calendar as cal_mod
 
         fnc = self.env['nc_management.nonconformity']
         fac = self.env['nc_management.corrective_action']
+        plan = self.env['nc_management.plan_action_smi']
+        today = date.today()
+        period_months = {
+            '1m': 1,
+            '6m': 6,
+            '1y': 12,
+        }.get(period or '1m', 1)
+        period_end = (today.replace(day=1) + relativedelta(months=1))
+        period_start = today.replace(day=1) - relativedelta(months=period_months - 1)
+
+        fnc_period_domain = [
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
+        ]
+        fac_period_domain = [
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
+        ]
+        received_fnc_period_domain = fnc_period_domain + [
+            ('state', '!=', 'draft'),
+            '|', ('submitted_by_id', '=', False),
+                 ('submitted_by_id', '!=', self.env.uid),
+        ]
+        received_fnc_ids = fnc.search(received_fnc_period_domain).ids
+        fac_received_period_domain = fac_period_domain + [
+            ('fnc_id', 'in', received_fnc_ids),
+        ]
 
         # ── FNC counters ──
-        total_fnc    = fnc.search_count([])
-        fnc_cours    = fnc.search_count([('state','=','in_progress')])
-        fnc_envoyes  = fnc.search_count([('state','=','submitted')])
-        fnc_closed   = fnc.search_count([('state','=','closed')])
+        total_fnc    = fnc.search_count(received_fnc_period_domain)
+        fnc_cours    = fnc.search_count(received_fnc_period_domain + [('state','=','in_progress')])
+        fnc_envoyes  = fnc.search_count(received_fnc_period_domain + [('state','=','submitted')])
+        fnc_closed   = fnc.search_count(received_fnc_period_domain + [('state','=','closed')])
         taux_cloture = round(fnc_closed / total_fnc * 100, 1) if total_fnc else 0
 
         # FNC en retard > 7 jours
-        limit7 = str(date.today() - timedelta(days=7))
+        limit7 = str(today - timedelta(days=7))
         fnc_retard_recs = fnc.search_read(
-            [('state','=','in_progress'), ('date','<=',limit7)],
+            received_fnc_period_domain + [('state','=','in_progress'), ('date','<=',limit7)],
             ['name','direction_id','service_dpt','date'], limit=10)
         fnc_retard = len(fnc_retard_recs)
 
         # FNC reçues des autres services (submitted_by != current user dept)
-        fnc_recues = fnc.search_count([('state','not in',['draft'])])
+        fnc_recues = total_fnc
 
         # FNC par département
         dept_counts = {}
-        fnc_all = fnc.search([('state','not in',['draft'])])
+        dept_fac_counts = {}
+        fnc_all = fnc.search(received_fnc_period_domain)
         for rec in fnc_all:
             dept = rec.direction_id.name if rec.direction_id else 'Autres'
             dept_counts[dept] = dept_counts.get(dept, 0) + 1
-        dept_list = sorted(dept_counts.items(), key=lambda x: x[1], reverse=True)[:6]
+        for rec in fac.search(fac_received_period_domain):
+            dept = rec.direction_id.name if rec.direction_id else 'Autres'
+            dept_fac_counts[dept] = dept_fac_counts.get(dept, 0) + 1
+        dept_names = set(dept_counts.keys()) | set(dept_fac_counts.keys())
+        dept_list = []
+        for dept_name in dept_names:
+            dept_list.append({
+                'name': dept_name,
+                'fnc_count': dept_counts.get(dept_name, 0),
+                'fac_count': dept_fac_counts.get(dept_name, 0),
+            })
+        dept_list = sorted(
+            dept_list, key=lambda x: x['fnc_count'] + x['fac_count'],
+            reverse=True)[:6]
+        max_fnc = max([d['fnc_count'] for d in dept_list] or [1]) or 1
+        max_fac = max([d['fac_count'] for d in dept_list] or [1]) or 1
+        for d in dept_list:
+            d['pct_fnc'] = round(d['fnc_count'] / max_fnc * 100)
+            d['pct_fac'] = round(d['fac_count'] / max_fac * 100)
 
         # FNC par type
-        type_counts = {
-            'NC Produit':   fnc.search_count([('type_nc_produit','=',True)]),
-            'Réclamation':  fnc.search_count([('type_reclamation','=',True)]),
-            'SST':          fnc.search_count([('type_sst','=',True)]),
-            'Environnement':fnc.search_count([('type_environnement','=',True)]),
-            'Audit':        fnc.search_count([('type_audit','=',True)]),
-            'Autres':       fnc.search_count([('type_autre','=',True)]),
+        raw_type_counts = {
+            'nc_produit': fnc.search_count(received_fnc_period_domain + [('type_nc_produit','=',True)]),
+            'reclamation': fnc.search_count(received_fnc_period_domain + [('type_reclamation','=',True)]),
+            'sst': fnc.search_count(received_fnc_period_domain + [('type_sst','=',True)]),
+            'environnement': fnc.search_count(received_fnc_period_domain + [('type_environnement','=',True)]),
+            'audit': fnc.search_count(received_fnc_period_domain + [('type_audit','=',True)]),
+            'autres': fnc.search_count(received_fnc_period_domain + [('type_autre','=',True)]),
         }
+        total_type = sum(raw_type_counts.values()) or 1
+        type_counts = dict(
+            (k, int(round(v / total_type * 100)))
+            for k, v in raw_type_counts.items())
+
+        def _type_percentages(records):
+            counts = {
+                'nc_produit': 0,
+                'reclamation': 0,
+                'sst': 0,
+                'environnement': 0,
+                'audit': 0,
+                'autres': 0,
+            }
+            for rec in records:
+                if rec.type_nc_produit:
+                    counts['nc_produit'] += 1
+                if rec.type_reclamation:
+                    counts['reclamation'] += 1
+                if rec.type_sst:
+                    counts['sst'] += 1
+                if rec.type_environnement:
+                    counts['environnement'] += 1
+                if rec.type_audit:
+                    counts['audit'] += 1
+                if rec.type_autre:
+                    counts['autres'] += 1
+            total = sum(counts.values()) or 1
+            return dict((k, int(round(v / total * 100))) for k, v in counts.items())
+
+        direction_names = [
+            'Comm.ET Marketing',
+            'R.Humaines',
+            'Finances ET Budget',
+            'Appros',
+            'Juridique ET Patremoine',
+            'Audit ET Cont. De Gestion',
+            'Production',
+            'Maintenance',
+            'Matieres Premieres ET Mat Roulant',
+            'Developpement',
+            'Dev Durab. ET Securite',
+        ]
+        direction_stats = []
+        max_dir_fnc = 1
+        max_dir_fac = 1
+        for direction_name in direction_names:
+            dir_fnc = fnc.search(received_fnc_period_domain + [
+                ('direction_id.name', '=', direction_name),
+            ])
+            dir_fac = fac.search(fac_received_period_domain + [
+                ('direction_id.name', '=', direction_name),
+            ])
+            dir_fac_fnc = dir_fac.mapped('fnc_id')
+            fnc_count = len(dir_fnc)
+            fac_count = len(dir_fac)
+            max_dir_fnc = max(max_dir_fnc, fnc_count)
+            max_dir_fac = max(max_dir_fac, fac_count)
+            direction_stats.append({
+                'name': direction_name,
+                'fnc_count': fnc_count,
+                'fac_count': fac_count,
+                'fnc_types': _type_percentages(dir_fnc),
+                'fac_types': _type_percentages(dir_fac_fnc),
+            })
+        for d in direction_stats:
+            d['pct_fnc'] = round(d['fnc_count'] / max_dir_fnc * 100)
+            d['pct_fac'] = round(d['fac_count'] / max_dir_fac * 100)
 
         # ── FAC counters ──
-        total_fac   = fac.search_count([])
-        fac_open    = fac.search_count([('state','=','open')])
-        fac_verif   = fac.search_count([('state','=','verified')])
-        fac_closed  = fac.search_count([('state','=','closed')])
-        fac_efficace = fac.search_count([('actions_efficaces','=','oui')])
+        total_fac   = fac.search_count(fac_received_period_domain)
+        fac_open    = fac.search_count(fac_received_period_domain + [('state','=','open')])
+        fac_verif   = fac.search_count(fac_received_period_domain + [('state','=','verified')])
+        fac_closed  = fac.search_count(fac_received_period_domain + [('state','=','closed')])
+        fac_efficace = fac.search_count(fac_received_period_domain + [('actions_efficaces','=','oui')])
         taux_eff    = round(fac_efficace / total_fac * 100, 1) if total_fac else 0
 
         # FAC en retard (open > 7 jours)
         fac_retard_recs = fac.search_read(
-            [('state','in',['open','verified']),
+            fac_received_period_domain + [('state','in',['open','verified']),
              ('date','<=',limit7)],
             ['name','direction_id','date_cloture','state'], limit=10)
         fac_retard = len(fac_retard_recs)
 
         # FAC à clôturer avec urgence
         fac_a_cloturer = []
-        for f in fac.search([('state','in',['open','verified'])],
+        for f in fac.search(fac_received_period_domain + [('state','in',['open','verified'])],
                             order='date asc', limit=8):
             if f.date:
                 from datetime import datetime as dt
                 f_date = dt.strptime(str(f.date), '%Y-%m-%d').date()
-                days_open = (date.today() - f_date).days
+                days_open = (today - f_date).days
             else:
                 days_open = 0
             if days_open > 7:
@@ -652,29 +767,36 @@ class NcDashboard(models.Model):
             })
 
         # FAC à approuver reçues
-        fac_recues_count = fac.search_count([('state','=','verified')])
+        fac_recues_count = fac.search_count(fac_received_period_domain + [('state','=','verified')])
 
         # ── Evolution mensuelle 6 mois ──
         monthly_fnc = []
         monthly_fac = []
+        fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
+        monthly_labels = []
         for i in range(5, -1, -1):
-            d = date.today() - relativedelta(months=i)
+            d = today - relativedelta(months=i)
             m_start = d.replace(day=1)
             m_end = (d + relativedelta(months=1)).replace(day=1)
             count_fnc = fnc.search_count([
                 ('date','>=',str(m_start)),
-                ('date','<',str(m_end))])
+                ('date','<',str(m_end)),
+                ('state', '!=', 'draft'),
+                '|', ('submitted_by_id', '=', False),
+                     ('submitted_by_id', '!=', self.env.uid)])
+            monthly_received_fnc_ids = fnc.search([
+                ('date','>=',str(m_start)),
+                ('date','<',str(m_end)),
+                ('state', '!=', 'draft'),
+                '|', ('submitted_by_id', '=', False),
+                     ('submitted_by_id', '!=', self.env.uid)]).ids
             count_fac = fac.search_count([
                 ('date','>=',str(m_start)),
-                ('date','<',str(m_end))])
-            monthly_fnc.append({
-                'month': m_start.strftime('%b %Y'),
-                'short': m_start.strftime('%b'),
-                'count': count_fnc})
-            monthly_fac.append({
-                'month': m_start.strftime('%b %Y'),
-                'short': m_start.strftime('%b'),
-                'count': count_fac})
+                ('date','<',str(m_end)),
+                ('fnc_id', 'in', monthly_received_fnc_ids)])
+            monthly_labels.append(fr_months[m_start.month - 1])
+            monthly_fnc.append(count_fnc)
+            monthly_fac.append(count_fac)
 
         # ── Etat global pourcentages ──
         pct_fnc_closed  = taux_cloture
@@ -683,7 +805,7 @@ class NcDashboard(models.Model):
         pct_fac_retard  = round(fac_retard / total_fac * 100, 1) if total_fac else 0
         pct_fnc_retard  = round(fnc_retard / total_fnc * 100, 1) if total_fnc else 0
 
-        return {
+        result = {
             'fnc_total':      total_fnc,
             'fnc_cours':      fnc_cours,
             'fnc_envoyes':    fnc_envoyes,
@@ -710,3 +832,212 @@ class NcDashboard(models.Model):
             'pct_fac_retard': pct_fac_retard,
             'pct_fnc_retard': pct_fnc_retard,
         }
+
+        # ── Additional dashboard data ──
+        result['today'] = today.strftime('%d/%m/%Y')
+        result['period'] = period or '1m'
+        result['period_start'] = period_start.strftime('%Y-%m-%d')
+        result['period_end'] = (period_end - timedelta(days=1)).strftime('%Y-%m-%d')
+        result['direction_stats'] = direction_stats
+        result['scope_totals'] = {
+            'direction': {
+                'fnc': sum([d['fnc_count'] for d in direction_stats]),
+                'fac': sum([d['fac_count'] for d in direction_stats]),
+            },
+            'department': {
+                'fnc': sum([d['fnc_count'] for d in dept_list]),
+                'fac': sum([d['fac_count'] for d in dept_list]),
+            },
+            'service': {
+                'fnc': fnc.search_count(received_fnc_period_domain + [('service_dpt', '!=', False)]),
+                'fac': fac.search_count(fac_received_period_domain + [('fnc_id.service_dpt', '!=', False)]),
+            },
+        }
+        result['calendar_year'] = today.year
+        result['calendar_month'] = today.month
+        result['monthly_labels'] = monthly_labels
+
+        result['fnc_audit'] = fnc.search_count(received_fnc_period_domain + [('type_audit', '=', True)])
+        result['fac_audit'] = fac.search_count(fac_received_period_domain + [('fnc_id.type_audit', '=', True)])
+
+        monthly_fnc_global = []
+        monthly_fac_global = []
+        for i in range(5, -1, -1):
+            d = today - relativedelta(months=i)
+            d_start = d.replace(day=1)
+            d_end = (d + relativedelta(months=1)).replace(day=1)
+            monthly_global_fnc_domain = [
+                ('date', '>=', d_start.strftime('%Y-%m-%d')),
+                ('date', '<', d_end.strftime('%Y-%m-%d')),
+                ('state', '!=', 'draft'),
+                '|', ('submitted_by_id', '=', False),
+                     ('submitted_by_id', '!=', self.env.uid),
+            ]
+            monthly_global_fnc_ids = fnc.search(monthly_global_fnc_domain).ids
+            monthly_fnc_global.append(len(monthly_global_fnc_ids))
+            monthly_fac_global.append(fac.search_count([
+                ('date', '>=', d_start.strftime('%Y-%m-%d')),
+                ('date', '<', d_end.strftime('%Y-%m-%d')),
+                ('fnc_id', 'in', monthly_global_fnc_ids),
+            ]))
+        result['monthly_fnc_global'] = monthly_fnc_global
+        result['monthly_fac_global'] = monthly_fac_global
+
+        calendar_events = {}
+        received_by_date = {}
+        fnc_this_month = fnc.search(received_fnc_period_domain)
+        fac_this_month = fac.search(fac_received_period_domain)
+        for fnc_rec in fnc_this_month:
+            k = str(fnc_rec.date)[:10]
+            if k not in calendar_events:
+                calendar_events[k] = {'fnc': False, 'fac': False, 'plan': False}
+            calendar_events[k]['fnc'] = True
+        for fac_rec in fac_this_month:
+            k = str(fac_rec.date)[:10]
+            if k not in calendar_events:
+                calendar_events[k] = {'fnc': False, 'fac': False, 'plan': False}
+            calendar_events[k]['fac'] = True
+        plan_domain = [('fnc_id', 'in', received_fnc_ids), '|',
+            '&', ('date_lancement', '>=', period_start.strftime('%Y-%m-%d')),
+                 ('date_lancement', '<', period_end.strftime('%Y-%m-%d')),
+            '&', ('date_lancement', '=', False),
+                 '&', ('date_prevue', '>=', period_start.strftime('%Y-%m-%d')),
+                      ('date_prevue', '<', period_end.strftime('%Y-%m-%d'))]
+        plan_this_period = plan.search(plan_domain)
+        for plan_rec in plan_this_period:
+            plan_date = plan_rec.date_lancement or plan_rec.date_prevue
+            if not plan_date:
+                continue
+            k = str(plan_date)[:10]
+            if k not in calendar_events:
+                calendar_events[k] = {'fnc': False, 'fac': False, 'plan': False}
+            calendar_events[k]['plan'] = True
+        result['calendar_events'] = calendar_events
+
+        fac_a_cloturer_list = []
+        for fac_rec in fac.search(fac_received_period_domain + [('state', 'in', ['open','verified'])],
+                                  order='date asc', limit=8):
+            delta = 0
+            if fac_rec.date:
+                delta = (today - fields.Date.from_string(fac_rec.date)).days
+            fac_a_cloturer_list.append({
+                'id': fac_rec.id,
+                'name': fac_rec.name,
+                'department': fac_rec.direction_id.name if fac_rec.direction_id else '',
+                'days': delta,
+                'state': fac_rec.state,
+            })
+        result['fac_a_cloturer'] = fac_a_cloturer_list
+
+        def _fnc_type_label(fnc_rec):
+            labels = []
+            if fnc_rec.type_nc_produit:
+                labels.append('NC Produit')
+            if fnc_rec.type_reclamation:
+                labels.append('Réclamation')
+            if fnc_rec.type_sst:
+                labels.append('SST')
+            if fnc_rec.type_environnement:
+                labels.append('Environnement')
+            if fnc_rec.type_audit:
+                labels.append('Audit')
+            if fnc_rec.type_autre:
+                labels.append('Autre')
+            return ', '.join(labels) or 'NC'
+
+        def _initials(employee):
+            name = employee.name if employee else 'XX'
+            return ''.join([w[0].upper() for w in name.split()[:2]]) or 'XX'
+
+        fnc_retard_list = []
+        for fnc_rec in fnc.search(received_fnc_period_domain + [
+            ('state', '=', 'in_progress'),
+            ('date', '<=', limit7),
+        ], limit=10):
+            delta = 0
+            if fnc_rec.date:
+                delta = (today - fields.Date.from_string(fnc_rec.date)).days
+            fnc_retard_list.append({
+                'id': fnc_rec.id,
+                'name': fnc_rec.name,
+                'department': fnc_rec.direction_id.name if fnc_rec.direction_id else '',
+                'days': delta,
+                'type': _fnc_type_label(fnc_rec),
+            })
+        result['fnc_retard_list'] = fnc_retard_list
+
+        def _date_label(value):
+            return fields.Date.from_string(value).strftime('%d/%m/%Y') if value else ''
+
+        def _append_received(day_key, item):
+            if day_key not in received_by_date:
+                received_by_date[day_key] = []
+            received_by_date[day_key].append(item)
+
+        received_docs = []
+        for fnc_rec in fnc.search(received_fnc_period_domain,
+                                  order='date desc, id desc', limit=20):
+            responsible = fnc_rec.assigned_to_id or fnc_rec.responsable_action_id
+            item = {
+                'id': fnc_rec.id,
+                'name': fnc_rec.name,
+                'type': _fnc_type_label(fnc_rec),
+                'kind': 'FNC',
+                'badge': 'blue',
+                'model': 'nc_management.nonconformity',
+                'department': fnc_rec.direction_id.name if fnc_rec.direction_id else '',
+                'responsible': responsible.name if responsible else '',
+                'date': _date_label(fnc_rec.date),
+                'initials': _initials(responsible),
+            }
+            received_docs.append(item)
+            if fnc_rec.date:
+                _append_received(str(fnc_rec.date)[:10], item)
+
+        for fac_rec in fac.search(fac_received_period_domain, order='date desc, id desc', limit=20):
+            responsible = fac_rec.responsable_actions_id
+            item = {
+                'id': fac_rec.id,
+                'name': fac_rec.name,
+                'type': 'Action corrective',
+                'kind': 'FAC',
+                'badge': 'red',
+                'model': 'nc_management.corrective_action',
+                'department': fac_rec.direction_id.name if fac_rec.direction_id else '',
+                'responsible': responsible.name if responsible else '',
+                'date': _date_label(fac_rec.date),
+                'initials': _initials(responsible),
+            }
+            received_docs.append(item)
+            if fac_rec.date:
+                _append_received(str(fac_rec.date)[:10], item)
+
+        for plan_rec in plan_this_period:
+            plan_date = plan_rec.date_lancement or plan_rec.date_prevue
+            responsible = plan_rec.responsable_id
+            item = {
+                'id': plan_rec.id,
+                'name': plan_rec.name,
+                'type': dict(plan_rec._fields['nature'].selection).get(plan_rec.nature, 'Plan action'),
+                'kind': 'Plan',
+                'badge': 'purple',
+                'model': 'nc_management.plan_action_smi',
+                'department': plan_rec.fnc_id.direction_id.name if plan_rec.fnc_id and plan_rec.fnc_id.direction_id else '',
+                'responsible': responsible.name if responsible else '',
+                'date': _date_label(plan_date),
+                'initials': _initials(responsible),
+            }
+            received_docs.append(item)
+            if plan_date:
+                _append_received(str(plan_date)[:10], item)
+
+        received_docs = sorted(
+            received_docs,
+            key=lambda x: fields.Date.from_string(x['date'].split('/')[2] + '-' + x['date'].split('/')[1] + '-' + x['date'].split('/')[0]) if x.get('date') else date.min,
+            reverse=True)[:10]
+        result['received_docs'] = received_docs
+        result['received_by_date'] = received_by_date
+        result['fnc_recues'] = [d for d in received_docs if d['kind'] == 'FNC']
+        result['fac_recues'] = [d for d in received_docs if d['kind'] == 'FAC']
+
+        return result

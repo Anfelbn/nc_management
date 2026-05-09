@@ -16,7 +16,7 @@
 .pb.active{background:#1e40af;color:white;border-color:#1e40af}
 .period-btn{display:flex;gap:5px}
 .nc-section-hdr{display:flex;align-items:center;gap:14px;margin:22px 0 16px;padding:12px 18px;border-radius:10px;color:white;font-size:13px;font-weight:700;letter-spacing:.4px}
-.nc-section-hdr.rmqe{background:linear-gradient(90deg,#1e3a8a,#2563eb)}
+.nc-section-hdr.rmqse{background:linear-gradient(90deg,#1e3a8a,#2563eb)}
 .nc-section-hdr.autres{background:linear-gradient(90deg,#065f46,#059669)}
 .nc-section-hdr.globale{background:linear-gradient(90deg,#581c87,#7c3aed)}
 .nc-section-hdr-sep{flex:1;height:1px;background:rgba(255,255,255,.25)}
@@ -77,8 +77,9 @@
 .gc-bars{flex:1;display:flex;flex-direction:column;gap:3px}
 .gc-bar-fnc{height:9px;border-radius:3px;background:#2196F3;transition:width .3s}
 .gc-bar-fac{height:9px;border-radius:3px;background:#EF4444;transition:width .3s}
-.gc-bar-fnc,.gc-bar-fac{cursor:pointer}
-.gc-bar-fnc:hover,.gc-bar-fac:hover{filter:brightness(.9)}
+.gc-bar-fnc{cursor:pointer}
+.gc-bar-fnc:hover{filter:brightness(.9)}
+.gc-bar-fac{cursor:default}
 .dir-bar.selected{outline:2px solid #0f172a}
 .gc-vals{display:flex;flex-direction:column;gap:3px;width:28px}
 .gc-v{font-size:10px;color:#64748b;line-height:9px;text-align:right}
@@ -109,15 +110,14 @@ canvas{display:block;width:100%}
 <div class="nc-header">
   <div>
     <div class="nc-brand-sub">CIMENTERIE DE SÉTIF — GICA</div>
-    <div class="nc-brand-title">Dashboard RMQE</div>
+    <div class="nc-brand-title">Dashboard RMQSE</div>
   </div>
   <div class="nc-header-right">
-    <span class="nc-period-label" style="font-size:11px;color:#94a3b8">Statistiques filtrées par période (voir calendrier)</span>
   </div>
 </div>
 
-<div class="nc-section-hdr rmqe">
-  <span>Espace RMQE</span>
+<div class="nc-section-hdr rmqse">
+  <span>Espace RMQSE</span>
   <div class="nc-section-hdr-sep"></div>
 </div>
 
@@ -183,7 +183,7 @@ canvas{display:block;width:100%}
 
   <div class="g2" style="align-items:stretch">
     <div class="nc-card">
-      <div class="nc-card-title">Évolution FNC &amp; FAC — RMQE</div>
+      <div class="nc-card-title">Évolution FNC &amp; FAC — Créées par RMQSE</div>
       <canvas id="evoChart" style="height:120px"></canvas>
       <div style="display:flex;gap:12px;margin-top:6px;justify-content:flex-end">
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
@@ -262,14 +262,21 @@ canvas{display:block;width:100%}
   <div class="g2" style="align-items:stretch">
     <div class="nc-card">
       <div class="nc-card-title">FNC &amp; FAC par direction</div>
-      <div class="nc-card-sub">Barres groupées · Cliquer sur une barre pour afficher les types FNC</div>
+      <div class="nc-card-sub">Barres groupées · Cliquer sur une barre FNC pour afficher les types</div>
+
+      <!-- Total global toutes directions + départements + services -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;padding:8px 12px;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd">
+        <div style="font-size:11px;font-weight:700;color:#0369a1;flex:1">Total global (tous espaces)</div>
+        <span class="badge blue">FNC <t t-esc="widget.stats.global_fnc_total"/></span>
+        <span class="badge red">FAC <t t-esc="widget.stats.global_fac_total"/></span>
+      </div>
 
       <t t-foreach="widget.stats.direction_stats" t-as="dept">
         <div class="gc-row">
           <div class="gc-lbl" style="cursor:pointer" t-att-data-direction="dept.name" t-att-data-direction-id="dept.id"><t t-esc="dept.name"/></div>
           <div class="gc-bars">
             <div class="gc-bar-fnc dir-bar" t-att-data-direction="dept.name" t-att-data-direction-id="dept.id" data-kind="fnc" t-att-style="'width:'+dept.pct_fnc+'%'"></div>
-            <div class="gc-bar-fac dir-bar" t-att-data-direction="dept.name" t-att-data-direction-id="dept.id" data-kind="fac" t-att-style="'width:'+dept.pct_fac+'%'"></div>
+            <div class="gc-bar-fac" t-att-style="'width:'+dept.pct_fac+'%'"></div>
           </div>
           <div class="gc-vals">
             <div class="gc-v"><t t-esc="dept.fnc_count"/></div>
@@ -341,7 +348,7 @@ canvas{display:block;width:100%}
   <div class="g2">
     <div class="nc-card">
       <div class="nc-card-title">Diagramme global FNC &amp; FAC</div>
-      <div class="nc-card-sub">RMQE + Tous les services combinés — par mois</div>
+      <div class="nc-card-sub">RMQSE + Tous les services combinés — par mois</div>
       <canvas id="globalChart" style="height:170px"></canvas>
       <div style="display:flex;gap:12px;margin-top:8px;justify-content:center">
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>

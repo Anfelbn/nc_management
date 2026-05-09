@@ -659,29 +659,46 @@ class NcDashboard(models.Model):
             ('fnc_id', 'in', received_fnc_ids),
         ]
 
-        # ── FNC counters ──
-        total_fnc     = fnc.search_count(received_fnc_period_domain)
-        fnc_cours     = fnc.search_count(received_fnc_period_domain + [('state','=','in_progress')])
-        fnc_envoyes   = fnc.search_count(received_fnc_period_domain + [('state','=','submitted')])
-        fnc_closed    = fnc.search_count(received_fnc_period_domain + [('state','=','closed')])
-        fnc_validated = fnc.search_count(received_fnc_period_domain + [('state','=','validated')])
-        taux_cloture  = round(fnc_closed / total_fnc * 100, 1) if total_fnc else 0
-        # FNC brouillon créées par moi sur la période
-        fnc_brouillon = fnc.search_count([
+        # Domaine FNC créées par RMQSE (espace RMQSE — section Évolution)
+        own_fnc_domain = [
             ('date', '>=', period_start.strftime('%Y-%m-%d')),
-            ('date', '<',  period_end.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
             ('create_uid', '=', self.env.uid),
-            ('state', '=', 'draft'),
-        ])
-        # Audit split interne / externe
-        fnc_audit_interne = fnc.search_count(received_fnc_period_domain + [('type_audit_interne','=',True)])
-        fnc_audit_externe = fnc.search_count(received_fnc_period_domain + [('type_audit_externe','=',True)])
+        ]
+        # Domaine combiné : RMQSE créé + audits internes/externes (pour Total FNC/FAC)
+        combined_fnc_domain = [
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
+            '|', '|', ('create_uid', '=', self.env.uid),
+                      ('type_audit_interne', '=', True),
+                 ('type_audit_externe', '=', True),
+        ]
+        combined_fnc_ids = fnc.search(combined_fnc_domain).ids
+        combined_fac_domain = [
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
+            ('fnc_id', 'in', combined_fnc_ids),
+        ]
 
-        # FNC en retard > 7 jours
+        # ── FNC counters (combiné : RMQSE créé + audits) ──
+        total_fnc     = len(combined_fnc_ids)
+        fnc_cours     = fnc.search_count(combined_fnc_domain + [('state','=','in_progress')])
+        fnc_envoyes   = fnc.search_count(combined_fnc_domain + [('state','=','submitted')])
+        fnc_closed    = fnc.search_count(combined_fnc_domain + [('state','=','closed')])
+        fnc_validated = fnc.search_count(combined_fnc_domain + [('state','=','validated')])
+        taux_cloture  = round(fnc_validated / total_fnc * 100, 1) if total_fnc else 0
+        fnc_brouillon = fnc.search_count(combined_fnc_domain + [('state','=','draft')])
+        # Audit split interne / externe
+        fnc_audit_interne = fnc.search_count(combined_fnc_domain + [('type_audit_interne','=',True)])
+        fnc_audit_externe = fnc.search_count(combined_fnc_domain + [('type_audit_externe','=',True)])
+
+        # FNC en retard > 7 jours (créées par RMQSE, in_progress)
         limit7 = str(today - timedelta(days=7))
-        fnc_retard_recs = fnc.search_read(
-            received_fnc_period_domain + [('state','=','in_progress'), ('date','<=',limit7)],
-            ['name','direction_id','service_dpt','date'], limit=10)
+        fnc_retard_recs = fnc.search_read([
+            ('state', '=', 'in_progress'),
+            ('date', '<=', limit7),
+            ('create_uid', '=', self.env.uid),
+        ], ['name', 'direction_id', 'service_dpt', 'date'], limit=10)
         fnc_retard = len(fnc_retard_recs)
 
         # FNC reçues des autres services (submitted_by != current user dept)
@@ -782,38 +799,36 @@ class NcDashboard(models.Model):
             d['pct_fnc'] = round(d['fnc_count'] / max_dir_fnc * 100)
             d['pct_fac'] = round(d['fac_count'] / max_dir_fac * 100)
 
-        # ── FAC counters ──
-        total_fac          = fac.search_count(fac_received_period_domain)
-        fac_open           = fac.search_count(fac_received_period_domain + [('state','=','open')])
-        fac_verif          = fac.search_count(fac_received_period_domain + [('state','=','verified')])
-        fac_closed         = fac.search_count(fac_received_period_domain + [('state','=','closed')])
-        fac_brouillon      = fac.search_count(fac_received_period_domain + [('state','=','draft')])
-        fac_efficace       = fac.search_count(fac_received_period_domain + [('actions_efficaces','=','oui')])
+        # ── FAC counters (combinées : liées aux FNC RMQSE + audits) ──
+        total_fac          = fac.search_count(combined_fac_domain)
+        fac_open           = fac.search_count(combined_fac_domain + [('state','=','open')])
+        fac_verif          = fac.search_count(combined_fac_domain + [('state','=','verified')])
+        fac_closed         = fac.search_count(combined_fac_domain + [('state','=','closed')])
+        fac_brouillon      = fac.search_count(combined_fac_domain + [('state','=','draft')])
+        fac_efficace       = fac.search_count(combined_fac_domain + [('actions_efficaces','=','oui')])
         taux_eff           = round(fac_efficace / total_fac * 100, 1) if total_fac else 0
         taux_validation_fac = round(fac_verif  / total_fac * 100, 1) if total_fac else 0
         taux_cloture_fac   = round(fac_closed  / total_fac * 100, 1) if total_fac else 0
         # FAC audit split
-        fac_audit_interne  = fac.search_count(fac_received_period_domain + [('fnc_id.type_audit_interne','=',True)])
-        fac_audit_externe  = fac.search_count(fac_received_period_domain + [('fnc_id.type_audit_externe','=',True)])
-        # Totaux combinés FNC+FAC par type d'audit
+        fac_audit_interne  = fac.search_count(combined_fac_domain + [('fnc_id.type_audit_interne','=',True)])
+        fac_audit_externe  = fac.search_count(combined_fac_domain + [('fnc_id.type_audit_externe','=',True)])
         audit_interne_total = fnc_audit_interne + fac_audit_interne
         audit_externe_total = fnc_audit_externe + fac_audit_externe
-        # FAC "soumises" = en draft liées à une FNC déjà soumise/en cours
-        fac_submitted = fac.search_count(fac_received_period_domain + [
+        fac_submitted = fac.search_count(combined_fac_domain + [
             ('state', '=', 'draft'),
             ('fnc_id.state', 'in', ['submitted', 'in_progress']),
         ])
 
-        # FAC en retard (open > 7 jours)
+        # FAC en retard (ouvertes > 7 jours — tout le système)
         fac_retard_recs = fac.search_read(
-            fac_received_period_domain + [('state','in',['open','verified']),
-             ('date','<=',limit7)],
-            ['name','direction_id','date_cloture','state'], limit=10)
+            [('state', 'in', ['open', 'verified']),
+             ('date', '<=', limit7)],
+            ['name', 'direction_id', 'date_cloture', 'state'], limit=10)
         fac_retard = len(fac_retard_recs)
 
-        # FAC à clôturer avec urgence
+        # FAC à clôturer avec urgence (toutes FAC du système — RMQSE clôture tout)
         fac_a_cloturer = []
-        for f in fac.search(fac_received_period_domain + [('state','in',['open','verified'])],
+        for f in fac.search([('state', 'in', ['open', 'verified'])],
                             order='date asc', limit=8):
             if f.date:
                 from datetime import datetime as dt
@@ -842,7 +857,7 @@ class NcDashboard(models.Model):
         # FAC à approuver reçues
         fac_recues_count = fac.search_count(fac_received_period_domain + [('state','=','verified')])
 
-        # ── Evolution mensuelle 6 mois ──
+        # ── Evolution mensuelle 6 mois — FNC/FAC créées par RMQSE uniquement ──
         monthly_fnc = []
         monthly_fac = []
         fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
@@ -851,24 +866,19 @@ class NcDashboard(models.Model):
             d = today - relativedelta(months=i)
             m_start = d.replace(day=1)
             m_end = (d + relativedelta(months=1)).replace(day=1)
-            count_fnc = fnc.search_count([
-                ('date','>=',str(m_start)),
-                ('date','<',str(m_end)),
-                ('state', '!=', 'draft'),
-                '|', ('submitted_by_id', '=', False),
-                     ('submitted_by_id', '!=', self.env.uid)])
-            monthly_received_fnc_ids = fnc.search([
-                ('date','>=',str(m_start)),
-                ('date','<',str(m_end)),
-                ('state', '!=', 'draft'),
-                '|', ('submitted_by_id', '=', False),
-                     ('submitted_by_id', '!=', self.env.uid)]).ids
+            m_fnc_recs = fnc.search([
+                ('date', '>=', str(m_start)),
+                ('date', '<', str(m_end)),
+                ('create_uid', '=', self.env.uid),
+            ])
+            m_fnc_ids = m_fnc_recs.ids
             count_fac = fac.search_count([
-                ('date','>=',str(m_start)),
-                ('date','<',str(m_end)),
-                ('fnc_id', 'in', monthly_received_fnc_ids)])
+                ('date', '>=', str(m_start)),
+                ('date', '<', str(m_end)),
+                ('fnc_id', 'in', m_fnc_ids),
+            ])
             monthly_labels.append(fr_months[m_start.month - 1])
-            monthly_fnc.append(count_fnc)
+            monthly_fnc.append(len(m_fnc_recs))
             monthly_fac.append(count_fac)
 
         # ── Etat global pourcentages ──
@@ -942,28 +952,33 @@ class NcDashboard(models.Model):
         result['calendar_month'] = today.month
         result['monthly_labels'] = monthly_labels
 
-        result['fnc_audit'] = fnc.search_count(received_fnc_period_domain + [('type_audit', '=', True)])
-        result['fac_audit'] = fac.search_count(fac_received_period_domain + [('fnc_id.type_audit', '=', True)])
+        result['fnc_audit'] = fnc.search_count(combined_fnc_domain + [('type_audit', '=', True)])
+        result['fac_audit'] = fac.search_count(combined_fac_domain + [('fnc_id.type_audit', '=', True)])
 
+        # Totaux globaux (tout le système) pour l'en-tête du graphique direction
+        result['global_fnc_total'] = fnc.search_count([
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
+        ])
+        result['global_fac_total'] = fac.search_count([
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
+        ])
+
+        # Diagramme global : toutes FNC/FAC du système (tous espaces/modules)
         monthly_fnc_global = []
         monthly_fac_global = []
         for i in range(5, -1, -1):
             d = today - relativedelta(months=i)
             d_start = d.replace(day=1)
             d_end = (d + relativedelta(months=1)).replace(day=1)
-            monthly_global_fnc_domain = [
+            monthly_fnc_global.append(fnc.search_count([
                 ('date', '>=', d_start.strftime('%Y-%m-%d')),
                 ('date', '<', d_end.strftime('%Y-%m-%d')),
-                ('state', '!=', 'draft'),
-                '|', ('submitted_by_id', '=', False),
-                     ('submitted_by_id', '!=', self.env.uid),
-            ]
-            monthly_global_fnc_ids = fnc.search(monthly_global_fnc_domain).ids
-            monthly_fnc_global.append(len(monthly_global_fnc_ids))
+            ]))
             monthly_fac_global.append(fac.search_count([
                 ('date', '>=', d_start.strftime('%Y-%m-%d')),
                 ('date', '<', d_end.strftime('%Y-%m-%d')),
-                ('fnc_id', 'in', monthly_global_fnc_ids),
             ]))
         result['monthly_fnc_global'] = monthly_fnc_global
         result['monthly_fac_global'] = monthly_fac_global
@@ -1000,7 +1015,7 @@ class NcDashboard(models.Model):
         result['calendar_events'] = calendar_events
 
         fac_a_cloturer_list = []
-        for fac_rec in fac.search(fac_received_period_domain + [('state', 'in', ['open','verified'])],
+        for fac_rec in fac.search([('state', 'in', ['open', 'verified'])],
                                   order='date asc', limit=8):
             delta = 0
             if fac_rec.date:
@@ -1034,10 +1049,12 @@ class NcDashboard(models.Model):
             name = employee.name if employee else 'XX'
             return ''.join([w[0].upper() for w in name.split()[:2]]) or 'XX'
 
+        # FNC en retard alertes : créées par RMQSE, in_progress > 7 jours
         fnc_retard_list = []
-        for fnc_rec in fnc.search(received_fnc_period_domain + [
+        for fnc_rec in fnc.search([
             ('state', '=', 'in_progress'),
             ('date', '<=', limit7),
+            ('create_uid', '=', self.env.uid),
         ], limit=10):
             delta = 0
             if fnc_rec.date:
@@ -1063,6 +1080,7 @@ class NcDashboard(models.Model):
         for fnc_rec in fnc.search(received_fnc_period_domain,
                                   order='date desc, id desc', limit=20):
             responsible = fnc_rec.assigned_to_id or fnc_rec.responsable_action_id
+            submitter = fnc_rec.submitted_by_id
             item = {
                 'id': fnc_rec.id,
                 'name': fnc_rec.name,
@@ -1074,6 +1092,8 @@ class NcDashboard(models.Model):
                 'responsible': responsible.name if responsible else '',
                 'date': _date_label(fnc_rec.date),
                 'initials': _initials(responsible),
+                'submitted_by_partner_id': submitter.partner_id.id if submitter else None,
+                'submitted_by_name': submitter.name if submitter else '',
             }
             received_docs.append(item)
             if fnc_rec.date:
@@ -1081,6 +1101,7 @@ class NcDashboard(models.Model):
 
         for fac_rec in fac.search(fac_received_period_domain, order='date desc, id desc', limit=20):
             responsible = fac_rec.responsable_actions_id
+            fnc_submitter = fac_rec.fnc_id.submitted_by_id if fac_rec.fnc_id else None
             item = {
                 'id': fac_rec.id,
                 'name': fac_rec.name,
@@ -1094,6 +1115,8 @@ class NcDashboard(models.Model):
                 'initials': _initials(responsible),
                 'fnc_id': fac_rec.fnc_id.id if fac_rec.fnc_id else None,
                 'state': fac_rec.state,
+                'submitted_by_partner_id': fnc_submitter.partner_id.id if fnc_submitter else None,
+                'submitted_by_name': fnc_submitter.name if fnc_submitter else '',
             }
             received_docs.append(item)
             if fac_rec.date:

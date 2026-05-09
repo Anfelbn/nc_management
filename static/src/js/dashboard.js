@@ -41,6 +41,8 @@ odoo.define('nc_management.dashboard', function(require){
                 monthly_fac: [],
                 monthly_fnc_global: [],
                 monthly_fac_global: [],
+                global_fnc_total: 0,
+                global_fac_total: 0,
                 calendar_events: {},
                 fnc_total: 0,
                 fnc_cours: 0,
@@ -111,6 +113,22 @@ odoo.define('nc_management.dashboard', function(require){
                     res_id:    id,
                     views:     [[false, 'form']],
                     target:    'current',
+                });
+            });
+
+            this.$el.on('click', '.btn-reply', function(){
+                var model = $(this).data('model');
+                var id    = parseInt($(this).data('id'), 10);
+                self.do_action({
+                    type:      'ir.actions.act_window',
+                    name:      'Répondre à la fiche',
+                    res_model: 'nc_management.reply_wizard',
+                    views:     [[false, 'form']],
+                    target:    'new',
+                    context: {
+                        default_record_model: model,
+                        default_record_id:    id,
+                    },
                 });
             });
 
@@ -428,7 +446,10 @@ odoo.define('nc_management.dashboard', function(require){
                       + '<span class="badge blue">FNC</span>'
                       + '</div>'
                       + '<div class="nc-notif-info">' + _.escape(fnc.department || '') + (fnc.responsible ? ' · ' + _.escape(fnc.responsible) : '') + ' · ' + _.escape(fnc.date || '') + '</div>'
-                      + '<div class="nc-notif-actions"><div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" data-id="' + fnc.id + '">Ouvrir FNC</div></div>'
+                      + '<div class="nc-notif-actions">'
+                      + '<div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" data-id="' + fnc.id + '">Ouvrir FNC</div>'
+                      + '<div class="btn-sm btn-reply" data-model="nc_management.nonconformity" data-id="' + fnc.id + '" data-partner-id="">Répondre</div>'
+                      + '</div>'
                       + '</div></div>';
                 // FAC liées (indentées avec barre rouge)
                 g.facs.forEach(function(fac){
@@ -441,7 +462,10 @@ odoo.define('nc_management.dashboard', function(require){
                           + '<span class="badge red">FAC</span>'
                           + '</div>'
                           + '<div class="nc-notif-info">' + _.escape(fac.department || '') + ' · ' + _.escape(fac.date || '') + '</div>'
-                          + '<div class="nc-notif-actions"><div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Ouvrir FAC</div></div>'
+                          + '<div class="nc-notif-actions">'
+                          + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Ouvrir FAC</div>'
+                          + '<div class="btn-sm btn-reply" data-model="nc_management.corrective_action" data-id="' + fac.id + '" data-partner-id="">Répondre</div>'
+                          + '</div>'
                           + '</div></div>';
                 });
                 html += '</div>';
@@ -457,7 +481,10 @@ odoo.define('nc_management.dashboard', function(require){
                       + '<span class="badge red">FAC</span>'
                       + '</div>'
                       + '<div class="nc-notif-info">' + _.escape(item.department || '') + ' · ' + _.escape(item.date || '') + '</div>'
-                      + '<div class="nc-notif-actions"><div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + item.id + '">Ouvrir FAC</div></div>'
+                      + '<div class="nc-notif-actions">'
+                      + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + item.id + '">Ouvrir FAC</div>'
+                      + '<div class="btn-sm btn-reply" data-model="nc_management.corrective_action" data-id="' + item.id + '" data-partner-id="">Répondre</div>'
+                      + '</div>'
                       + '</div></div>';
             });
 
@@ -471,7 +498,10 @@ odoo.define('nc_management.dashboard', function(require){
                       + '<span class="badge purple">Plan</span>'
                       + '</div>'
                       + '<div class="nc-notif-info">' + _.escape(item.department || '') + ' · ' + _.escape(item.date || '') + '</div>'
-                      + '<div class="nc-notif-actions"><div class="btn-sm btn-open" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div></div>'
+                      + '<div class="nc-notif-actions">'
+                      + '<div class="btn-sm btn-open" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
+                      + '<div class="btn-sm btn-reply" data-model="nc_management.plan_action_smi" data-id="' + item.id + '" data-partner-id="">Répondre</div>'
+                      + '</div>'
                       + '</div></div>';
             });
 

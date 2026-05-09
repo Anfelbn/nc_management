@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record model="ir.ui.view" id="view_reply_wizard">
+        <field name="name">nc_management.reply_wizard.form</field>
+        <field name="model">nc_management.reply_wizard</field>
+        <field name="arch" type="xml">
+            <form string="Répondre à la fiche">
+                <group>
+                    <field name="record_model" invisible="1"/>
+                    <field name="record_id"    invisible="1"/>
+                    <field name="recipient_id"
+                           options="{'no_create': True, 'no_create_edit': True}"
+                           string="Destinataire"/>
+                    <field name="note"
+                           placeholder="Message optionnel pour le destinataire..."/>
+                </group>
+                <footer>
+                    <button name="action_reply"
+                            string="Envoyer"
+                            type="object"
+                            class="oe_highlight"/>
+                    <button string="Annuler"
+                            class="oe_link"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</data>
+</odoo>

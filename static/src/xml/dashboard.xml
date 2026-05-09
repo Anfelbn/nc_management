@@ -15,12 +15,11 @@
 .pb:hover{border-color:#1e40af;color:#1e40af}
 .pb.active{background:#1e40af;color:white;border-color:#1e40af}
 .period-btn{display:flex;gap:5px}
-.nc-tab-bar{display:flex;border-bottom:2px solid #e2e8f0;margin-bottom:16px}
-.nc-tab{padding:10px 22px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
-.nc-tab:hover{color:#1e40af;background:#f8fafc}
-.nc-tab.active{color:#1e40af;border-bottom-color:#1e40af;background:white;border-radius:6px 6px 0 0}
-.nc-tab-panel{display:none}
-.nc-tab-panel.active{display:block}
+.nc-section-hdr{display:flex;align-items:center;gap:14px;margin:22px 0 16px;padding:12px 18px;border-radius:10px;color:white;font-size:13px;font-weight:700;letter-spacing:.4px}
+.nc-section-hdr.rmqe{background:linear-gradient(90deg,#1e3a8a,#2563eb)}
+.nc-section-hdr.autres{background:linear-gradient(90deg,#065f46,#059669)}
+.nc-section-hdr.globale{background:linear-gradient(90deg,#581c87,#7c3aed)}
+.nc-section-hdr-sep{flex:1;height:1px;background:rgba(255,255,255,.25)}
 .section-title{font-size:10px;font-weight:700;letter-spacing:1px;color:#94a3b8;text-transform:uppercase;margin-bottom:10px;padding-left:2px}
 .nc-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .nc-card-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:3px}
@@ -93,6 +92,17 @@
 .split-label{font-size:10px;color:#64748b;margin-bottom:4px}
 .split-val{font-size:24px;font-weight:700;line-height:1}
 canvas{display:block;width:100%}
+.cal-header-pick{display:flex;justify-content:space-between;align-items:center;cursor:pointer;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px;background:#f8fafc;margin-bottom:8px;transition:background .15s}
+.cal-header-pick:hover{background:#dbeafe}
+.cal-pm{font-size:11px;padding:6px 2px;border-radius:6px;border:1px solid #c7d7f8;background:white;color:#3b5cc4;cursor:pointer;text-align:center;transition:all .15s}
+.cal-pm:hover{background:#dbeafe;border-color:#93c5fd}
+.cal-pm.cal-pm-active{background:#1e40af;color:white;border-color:#1e40af}
+.nc-kpi-txt{font-size:10px;color:#94a3b8;margin-top:4px}
+.dir-pill{font-size:10px;padding:3px 10px;border-radius:99px;border:1px solid #e2e8f0;background:white;color:#374151;cursor:pointer;transition:all .15s;white-space:nowrap}
+.dir-pill:hover{border-color:#1e40af;color:#1e40af;background:#eff6ff}
+.dir-pill.active{background:#1e40af;color:white;border-color:#1e40af}
+.dir-pill.dept-pill.active{background:#059669;border-color:#059669}
+.dir-pill.svc-pill.active{background:#7c3aed;border-color:#7c3aed}
 </style>
 
 <div class="nc-inner">
@@ -102,48 +112,70 @@ canvas{display:block;width:100%}
     <div class="nc-brand-title">Dashboard RMQE</div>
   </div>
   <div class="nc-header-right">
-    <span class="nc-period-label">Période :</span>
-    <div class="period-btn">
-      <div class="pb active" data-period="1m">1 mois</div>
-      <div class="pb" data-period="6m">6 mois</div>
-      <div class="pb" data-period="1y">1 an</div>
-    </div>
+    <span class="nc-period-label" style="font-size:11px;color:#94a3b8">Statistiques filtrées par période (voir calendrier)</span>
   </div>
 </div>
 
-<div class="nc-tab-bar">
-  <div class="nc-tab active">Espace RMQE</div>
-  <div class="nc-tab">Autres services / Dép.</div>
-  <div class="nc-tab">Vue globale</div>
+<div class="nc-section-hdr rmqe">
+  <span>Espace RMQE</span>
+  <div class="nc-section-hdr-sep"></div>
 </div>
 
-<div class="nc-tab-panel active">
+<div>
   <div class="section-title">Calendrier de réception — FNC &amp; FAC</div>
   <div class="g2">
-    <div class="nc-card" style="max-height:300px;overflow-y:auto">
+
+    <!-- Fiches reçues : FNC regroupées avec leurs FAC dans un seul conteneur -->
+    <div class="nc-card" style="max-height:400px;overflow-y:auto">
       <div class="nc-card-title">Fiches reçues</div>
-      <div class="nc-card-sub received-sub">Derniers documents de la période</div>
+      <div class="nc-card-sub received-sub">Documents reçus aujourd'hui</div>
       <div class="received-list"></div>
     </div>
 
-    <div class="nc-card">
-      <div class="nc-card-title" style="margin-bottom:10px">Calendrier</div>
-      <div class="cal-wrap">
-        <div class="cal-header">
-          <div class="cal-month-label">Chargement...</div>
-          <div class="cal-nav">
-            <button class="cal-btn cal-prev">&#8249;</button>
-            <button class="cal-btn cal-next">&#8250;</button>
+    <!-- Calendrier indépendant + sélecteur 2-clics -->
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="nc-card">
+        <div class="nc-card-title" style="margin-bottom:8px">Calendrier</div>
+        <div class="cal-wrap">
+          <div class="cal-header-pick">
+            <div class="cal-month-label" style="font-size:13px;font-weight:700;color:#1e293b">Chargement...</div>
+            <span style="font-size:11px;color:#94a3b8">▼</span>
+          </div>
+          <div class="cal-picker" style="display:none;background:#f0f4ff;border:1px solid #c7d7f8;border-radius:8px;padding:8px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <button class="cal-btn cal-yr-prev">&#8249;</button>
+              <span class="cal-picker-yr" style="font-size:13px;font-weight:700;color:#1e293b">2026</span>
+              <button class="cal-btn cal-yr-next">&#8250;</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+              <div class="cal-pm" data-m="0">Jan</div><div class="cal-pm" data-m="1">Fév</div>
+              <div class="cal-pm" data-m="2">Mar</div><div class="cal-pm" data-m="3">Avr</div>
+              <div class="cal-pm" data-m="4">Mai</div><div class="cal-pm" data-m="5">Jun</div>
+              <div class="cal-pm" data-m="6">Jul</div><div class="cal-pm" data-m="7">Aoû</div>
+              <div class="cal-pm" data-m="8">Sep</div><div class="cal-pm" data-m="9">Oct</div>
+              <div class="cal-pm" data-m="10">Nov</div><div class="cal-pm" data-m="11">Déc</div>
+            </div>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div><div class="cal-day-name">Mer</div><div class="cal-day-name">Jeu</div><div class="cal-day-name">Ven</div><div class="cal-day-name">Sam</div><div class="cal-day-name">Dim</div>
+            <div class="cal-grid-body" style="display:contents"></div>
+          </div>
+          <div style="display:flex;gap:14px;margin-top:8px;justify-content:flex-end">
+            <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#2196F3"></div>FNC</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#EF4444"></div>FAC</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#7C3AED"></div>Plan</div>
           </div>
         </div>
-        <div class="cal-grid">
-          <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div><div class="cal-day-name">Mer</div><div class="cal-day-name">Jeu</div><div class="cal-day-name">Ven</div><div class="cal-day-name">Sam</div><div class="cal-day-name">Dim</div>
-          <div class="cal-grid-body" style="display:contents"></div>
-        </div>
-        <div style="display:flex;gap:14px;margin-top:10px;justify-content:flex-end">
-          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#2196F3"></div>FNC</div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#EF4444"></div>FAC</div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#7C3AED"></div>Plan</div>
+      </div>
+
+      <!-- Période : composant indépendant sous le calendrier -->
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+        <span style="font-size:10px;font-weight:600;color:#64748b;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase">Période stats</span>
+        <div style="flex:1;height:1px;background:#e2e8f0"></div>
+        <div class="period-btn">
+          <div class="pb active" data-period="1m">1 mois</div>
+          <div class="pb" data-period="6m">6 mois</div>
+          <div class="pb" data-period="1y">1 an</div>
         </div>
       </div>
     </div>
@@ -160,49 +192,73 @@ canvas{display:block;width:100%}
     </div>
 
     <div class="g4">
+
+      <!-- 1. AUDIT INTERNE — FNC + FAC -->
+      <div class="nc-kpi">
+        <div class="nc-kpi-top" style="background:#7C3AED"></div>
+        <div class="nc-kpi-label">Audit Interne</div>
+        <div class="nc-kpi-val" style="color:#5B21B6"><t t-esc="widget.stats.audit_interne_total"/></div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+          <span class="badge blue">FNC <t t-esc="widget.stats.fnc_audit_interne"/></span>
+          <span class="badge red">FAC <t t-esc="widget.stats.fac_audit_interne"/></span>
+        </div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["type_audit_interne","=",true]]' style="margin-top:6px">↳ Voir FNC →</div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["fnc_id.type_audit_interne","=",true]]'>↳ Voir FAC →</div>
+      </div>
+
+      <!-- 2. AUDIT EXTERNE — FNC + FAC -->
+      <div class="nc-kpi">
+        <div class="nc-kpi-top" style="background:#FF9800"></div>
+        <div class="nc-kpi-label">Audit Externe</div>
+        <div class="nc-kpi-val" style="color:#E65100"><t t-esc="widget.stats.audit_externe_total"/></div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+          <span class="badge blue">FNC <t t-esc="widget.stats.fnc_audit_externe"/></span>
+          <span class="badge red">FAC <t t-esc="widget.stats.fac_audit_externe"/></span>
+        </div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["type_audit_externe","=",true]]' style="margin-top:6px">↳ Voir FNC →</div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["fnc_id.type_audit_externe","=",true]]'>↳ Voir FAC →</div>
+      </div>
+
+      <!-- 3. TOTAL FNC — Brouillon · Soumise · En cours · Validée -->
       <div class="nc-kpi">
         <div class="nc-kpi-top" style="background:#2196F3"></div>
         <div class="nc-kpi-label">Total FNC</div>
         <div class="nc-kpi-val" style="color:#1565C0"><t t-esc="widget.stats.fnc_total"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain="[]">↳ Taux clôture : <t t-esc="widget.stats.taux_cloture"/>%</div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["state","=","validated"]]'>↳ Taux validation : <t t-esc="widget.stats.taux_cloture"/>%</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+          <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fnc_brouillon"/></span>
+          <span class="badge orange">Soumise <t t-esc="widget.stats.fnc_envoyes"/></span>
           <span class="badge blue">En cours <t t-esc="widget.stats.fnc_cours"/></span>
-          <span class="badge orange">Envoyées <t t-esc="widget.stats.fnc_envoyes"/></span>
-          <span class="badge green">Clôturées <t t-esc="widget.stats.fnc_closed"/></span>
+          <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fnc_validated"/></span>
         </div>
       </div>
 
+      <!-- 4. TOTAL FAC — Brouillon · Soumise · En cours · Validée · Clôturée -->
       <div class="nc-kpi">
         <div class="nc-kpi-top" style="background:#10B981"></div>
         <div class="nc-kpi-label">Total FAC</div>
         <div class="nc-kpi-val" style="color:#065F46"><t t-esc="widget.stats.fac_total"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain="[]">↳ Efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
+        <div class="nc-kpi-txt">Taux efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["state","=","closed"]]'>↳ Taux clôture : <t t-esc="widget.stats.taux_cloture_fac"/>%</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-          <span class="badge orange">Ouvertes <t t-esc="widget.stats.fac_open"/></span>
-          <span class="badge blue">Vérifiées <t t-esc="widget.stats.fac_verif"/></span>
-          <span class="badge green">Clôturées <t t-esc="widget.stats.fac_closed"/></span>
+          <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
+          <span class="badge" style="background:#fef9c3;color:#854d0e">Soumise <t t-esc="widget.stats.fac_submitted"/></span>
+          <span class="badge orange">En cours <t t-esc="widget.stats.fac_open"/></span>
+          <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fac_verif"/></span>
+          <span class="badge green">Clôturée <t t-esc="widget.stats.fac_closed"/></span>
         </div>
       </div>
 
-      <div class="nc-kpi">
-        <div class="nc-kpi-top" style="background:#7C3AED"></div>
-        <div class="nc-kpi-label">FNC Audit</div>
-        <div class="nc-kpi-val" style="color:#5B21B6"><t t-esc="widget.stats.fnc_audit"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["type_audit","=",true]]'>↳ Voir les fiches →</div>
-      </div>
-
-      <div class="nc-kpi">
-        <div class="nc-kpi-top" style="background:#FF9800"></div>
-        <div class="nc-kpi-label">FAC Audit</div>
-        <div class="nc-kpi-val" style="color:#E65100"><t t-esc="widget.stats.fac_audit"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["fnc_id.type_audit","=",true]]'>↳ Voir les fiches →</div>
-      </div>
     </div>
   </div>
 </div>
 
-<div class="nc-tab-panel">
-  <div class="section-title">Autres services / Départements / Directions</div>
+<div class="nc-section-hdr autres">
+  <span>Autres services / Départements / Directions</span>
+  <div class="nc-section-hdr-sep"></div>
+</div>
+
+<div>
   <div class="g2" style="align-items:stretch">
     <div class="nc-card">
       <div class="nc-card-title">FNC &amp; FAC par direction</div>
@@ -210,10 +266,10 @@ canvas{display:block;width:100%}
 
       <t t-foreach="widget.stats.direction_stats" t-as="dept">
         <div class="gc-row">
-          <div class="gc-lbl"><t t-esc="dept.name"/></div>
+          <div class="gc-lbl" style="cursor:pointer" t-att-data-direction="dept.name" t-att-data-direction-id="dept.id"><t t-esc="dept.name"/></div>
           <div class="gc-bars">
-            <div class="gc-bar-fnc dir-bar" t-att-data-direction="dept.name" data-kind="fnc" t-att-style="'width:'+dept.pct_fnc+'%'"></div>
-            <div class="gc-bar-fac dir-bar" t-att-data-direction="dept.name" data-kind="fac" t-att-style="'width:'+dept.pct_fac+'%'"></div>
+            <div class="gc-bar-fnc dir-bar" t-att-data-direction="dept.name" t-att-data-direction-id="dept.id" data-kind="fnc" t-att-style="'width:'+dept.pct_fnc+'%'"></div>
+            <div class="gc-bar-fac dir-bar" t-att-data-direction="dept.name" t-att-data-direction-id="dept.id" data-kind="fac" t-att-style="'width:'+dept.pct_fac+'%'"></div>
           </div>
           <div class="gc-vals">
             <div class="gc-v"><t t-esc="dept.fnc_count"/></div>
@@ -227,8 +283,20 @@ canvas{display:block;width:100%}
         <div class="gc-leg-item"><div class="gc-leg-dot" style="background:#EF4444"></div>FAC</div>
       </div>
 
+      <!-- Filtres département / service -->
+      <div class="dir-filter-zone" style="display:none;margin-top:10px;border-top:1px solid #f1f5f9;padding-top:8px">
+        <div class="dir-filter-dept-row" style="margin-bottom:6px">
+          <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Départements</div>
+          <div class="dir-dept-pills" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+        </div>
+        <div class="dir-filter-svc-row" style="display:none;margin-bottom:6px">
+          <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Services</div>
+          <div class="dir-svc-pills" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+        </div>
+      </div>
+
       <div style="margin-top:10px;border-top:1px solid #f1f5f9;padding-top:10px">
-        <div class="nc-card-sub">Types FNC liés à la barre sélectionnée</div>
+        <div class="nc-card-sub dir-pie-scope">Types FNC liés à la barre sélectionnée</div>
         <div class="dir-pie-title">Sélectionnez une barre</div>
         <div class="dir-pie"></div>
         <div class="dir-pie-legend" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;justify-content:center;font-size:10px;color:#64748b"></div>
@@ -238,34 +306,38 @@ canvas{display:block;width:100%}
     <div style="display:flex;flex-direction:column;gap:8px">
       <div class="nc-card" style="flex:1">
         <div class="nc-kpi-top" style="background:#FF9800"></div>
-        <div class="nc-card-title">Par direction</div>
+        <div class="nc-card-title scope-dir-title">Par direction</div>
         <div class="split-card">
-          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.direction.fnc"/></div></div>
-          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.direction.fac"/></div></div>
+          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val scope-dir-fnc" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.direction.fnc"/></div></div>
+          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val scope-dir-fac" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.direction.fac"/></div></div>
         </div>
       </div>
       <div class="nc-card" style="flex:1">
         <div class="nc-kpi-top" style="background:#10B981"></div>
-        <div class="nc-card-title">Par département</div>
+        <div class="nc-card-title scope-dept-title">Par département</div>
         <div class="split-card">
-          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.department.fnc"/></div></div>
-          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.department.fac"/></div></div>
+          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val scope-dept-fnc" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.department.fnc"/></div></div>
+          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val scope-dept-fac" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.department.fac"/></div></div>
         </div>
       </div>
       <div class="nc-card" style="flex:1">
         <div class="nc-kpi-top" style="background:#7C3AED"></div>
-        <div class="nc-card-title">Par services</div>
+        <div class="nc-card-title scope-svc-title">Par service</div>
         <div class="split-card">
-          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.service.fnc"/></div></div>
-          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.service.fac"/></div></div>
+          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val scope-svc-fnc" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.service.fnc"/></div></div>
+          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val scope-svc-fac" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.service.fac"/></div></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="nc-tab-panel">
-  <div class="section-title">Vue globale &amp; Alertes</div>
+<div class="nc-section-hdr globale">
+  <span>Vue globale &amp; Alertes</span>
+  <div class="nc-section-hdr-sep"></div>
+</div>
+
+<div>
   <div class="g2">
     <div class="nc-card">
       <div class="nc-card-title">Diagramme global FNC &amp; FAC</div>

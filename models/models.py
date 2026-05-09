@@ -2,6 +2,20 @@ from datetime import date, timedelta
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 
+
+class HrDepartmentScaek(models.Model):
+    _inherit = 'hr.department'
+
+    scaek_level = fields.Selection([
+        ('direction',   'Direction'),
+        ('departement', 'Département'),
+        ('service',     'Service'),
+        ('section',     'Section'),
+        ('equipe',      'Équipe'),
+    ], string='Niveau hiérarchique')
+    scaek_code = fields.Char(string='Code')
+
+
 class NcType(models.Model):
     _name = 'nc_management.nc_type'
     _description = 'Type de Non-Conformité (Abréviation)'
@@ -34,14 +48,34 @@ class Nonconformity(models.Model):
     name = fields.Char(
         string='N° FNC', required=True, copy=False,
         default='New')
-    direction_id  = fields.Many2one('hr.department', string='Direction / Emetteur',
-                      context={'no_create': True, 'no_create_edit': True})
+    direction_id  = fields.Many2one(
+        'hr.department', string='Direction / Emetteur',
+        domain=[('scaek_level', '=', 'direction')],
+        context={'no_create': True, 'no_create_edit': True})
+    department_id = fields.Many2one(
+        'hr.department', string='Département',
+        domain=[('scaek_level', '=', 'departement')],
+        context={'no_create': True, 'no_create_edit': True})
+    service_id    = fields.Many2one(
+        'hr.department', string='Service',
+        domain=[('scaek_level', '=', 'service')],
+        context={'no_create': True, 'no_create_edit': True})
+    section_id    = fields.Many2one(
+        'hr.department', string='Section',
+        domain=[('scaek_level', '=', 'section')],
+        context={'no_create': True, 'no_create_edit': True})
+    equipe_id     = fields.Many2one(
+        'hr.department', string='Équipe',
+        domain=[('scaek_level', '=', 'equipe')],
+        context={'no_create': True, 'no_create_edit': True})
     service_dpt   = fields.Char(string='Sce / DPT')
     date          = fields.Date(string='Date', default=fields.Date.today)
 
     # ── Type de Non-Conformité ────────────────────────────────
     type_nc_produit        = fields.Boolean(string='NC Produit')
     type_audit             = fields.Boolean(string='Audit interne/Externe')
+    type_audit_interne     = fields.Boolean(string='Audit interne')
+    type_audit_externe     = fields.Boolean(string='Audit externe')
     type_reclamation       = fields.Boolean(string='Réclamation clients / PI')
     type_achat             = fields.Boolean(string='Achat')
     type_sst               = fields.Boolean(string='SST Accident')
@@ -211,6 +245,28 @@ class Nonconformity(models.Model):
             [('user_id', '=', self.env.uid)], limit=1)
         return emp and emp.id == self.assigned_to_id.id
 
+    @api.onchange('direction_id')
+    def _onchange_direction_id(self):
+        self.department_id = False
+        self.service_id = False
+        self.section_id = False
+        self.equipe_id = False
+
+    @api.onchange('department_id')
+    def _onchange_department_id(self):
+        self.service_id = False
+        self.section_id = False
+        self.equipe_id = False
+
+    @api.onchange('service_id')
+    def _onchange_service_id(self):
+        self.section_id = False
+        self.equipe_id = False
+
+    @api.onchange('section_id')
+    def _onchange_section_id(self):
+        self.equipe_id = False
+
 
 class CorrectiveAction(models.Model):
     _name = 'nc_management.corrective_action'
@@ -221,8 +277,10 @@ class CorrectiveAction(models.Model):
     name         = fields.Char(
         string='N° FAC', required=True, copy=False,
         readonly=True, default='New')
-    direction_id = fields.Many2one('hr.department', string='Direction',
-                     context={'no_create': True, 'no_create_edit': True})
+    direction_id = fields.Many2one(
+        'hr.department', string='Direction',
+        domain=[('scaek_level', '=', 'direction')],
+        context={'no_create': True, 'no_create_edit': True})
     date         = fields.Date(string='Date', default=fields.Date.today)
     fnc_id       = fields.Many2one(
         'nc_management.nonconformity',
@@ -602,11 +660,22 @@ class NcDashboard(models.Model):
         ]
 
         # ── FNC counters ──
-        total_fnc    = fnc.search_count(received_fnc_period_domain)
-        fnc_cours    = fnc.search_count(received_fnc_period_domain + [('state','=','in_progress')])
-        fnc_envoyes  = fnc.search_count(received_fnc_period_domain + [('state','=','submitted')])
-        fnc_closed   = fnc.search_count(received_fnc_period_domain + [('state','=','closed')])
-        taux_cloture = round(fnc_closed / total_fnc * 100, 1) if total_fnc else 0
+        total_fnc     = fnc.search_count(received_fnc_period_domain)
+        fnc_cours     = fnc.search_count(received_fnc_period_domain + [('state','=','in_progress')])
+        fnc_envoyes   = fnc.search_count(received_fnc_period_domain + [('state','=','submitted')])
+        fnc_closed    = fnc.search_count(received_fnc_period_domain + [('state','=','closed')])
+        fnc_validated = fnc.search_count(received_fnc_period_domain + [('state','=','validated')])
+        taux_cloture  = round(fnc_closed / total_fnc * 100, 1) if total_fnc else 0
+        # FNC brouillon créées par moi sur la période
+        fnc_brouillon = fnc.search_count([
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<',  period_end.strftime('%Y-%m-%d')),
+            ('create_uid', '=', self.env.uid),
+            ('state', '=', 'draft'),
+        ])
+        # Audit split interne / externe
+        fnc_audit_interne = fnc.search_count(received_fnc_period_domain + [('type_audit_interne','=',True)])
+        fnc_audit_externe = fnc.search_count(received_fnc_period_domain + [('type_audit_externe','=',True)])
 
         # FNC en retard > 7 jours
         limit7 = str(today - timedelta(days=7))
@@ -684,28 +753,17 @@ class NcDashboard(models.Model):
             total = sum(counts.values()) or 1
             return dict((k, int(round(v / total * 100))) for k, v in counts.items())
 
-        direction_names = [
-            'Comm.ET Marketing',
-            'R.Humaines',
-            'Finances ET Budget',
-            'Appros',
-            'Juridique ET Patremoine',
-            'Audit ET Cont. De Gestion',
-            'Production',
-            'Maintenance',
-            'Matieres Premieres ET Mat Roulant',
-            'Developpement',
-            'Dev Durab. ET Securite',
-        ]
+        direction_recs = self.env['hr.department'].search(
+            [('scaek_level', '=', 'direction')], order='name asc')
         direction_stats = []
         max_dir_fnc = 1
         max_dir_fac = 1
-        for direction_name in direction_names:
+        for direction in direction_recs:
             dir_fnc = fnc.search(received_fnc_period_domain + [
-                ('direction_id.name', '=', direction_name),
+                ('direction_id', '=', direction.id),
             ])
             dir_fac = fac.search(fac_received_period_domain + [
-                ('direction_id.name', '=', direction_name),
+                ('direction_id', '=', direction.id),
             ])
             dir_fac_fnc = dir_fac.mapped('fnc_id')
             fnc_count = len(dir_fnc)
@@ -713,7 +771,8 @@ class NcDashboard(models.Model):
             max_dir_fnc = max(max_dir_fnc, fnc_count)
             max_dir_fac = max(max_dir_fac, fac_count)
             direction_stats.append({
-                'name': direction_name,
+                'id': direction.id,
+                'name': direction.name,
                 'fnc_count': fnc_count,
                 'fac_count': fac_count,
                 'fnc_types': _type_percentages(dir_fnc),
@@ -724,12 +783,26 @@ class NcDashboard(models.Model):
             d['pct_fac'] = round(d['fac_count'] / max_dir_fac * 100)
 
         # ── FAC counters ──
-        total_fac   = fac.search_count(fac_received_period_domain)
-        fac_open    = fac.search_count(fac_received_period_domain + [('state','=','open')])
-        fac_verif   = fac.search_count(fac_received_period_domain + [('state','=','verified')])
-        fac_closed  = fac.search_count(fac_received_period_domain + [('state','=','closed')])
-        fac_efficace = fac.search_count(fac_received_period_domain + [('actions_efficaces','=','oui')])
-        taux_eff    = round(fac_efficace / total_fac * 100, 1) if total_fac else 0
+        total_fac          = fac.search_count(fac_received_period_domain)
+        fac_open           = fac.search_count(fac_received_period_domain + [('state','=','open')])
+        fac_verif          = fac.search_count(fac_received_period_domain + [('state','=','verified')])
+        fac_closed         = fac.search_count(fac_received_period_domain + [('state','=','closed')])
+        fac_brouillon      = fac.search_count(fac_received_period_domain + [('state','=','draft')])
+        fac_efficace       = fac.search_count(fac_received_period_domain + [('actions_efficaces','=','oui')])
+        taux_eff           = round(fac_efficace / total_fac * 100, 1) if total_fac else 0
+        taux_validation_fac = round(fac_verif  / total_fac * 100, 1) if total_fac else 0
+        taux_cloture_fac   = round(fac_closed  / total_fac * 100, 1) if total_fac else 0
+        # FAC audit split
+        fac_audit_interne  = fac.search_count(fac_received_period_domain + [('fnc_id.type_audit_interne','=',True)])
+        fac_audit_externe  = fac.search_count(fac_received_period_domain + [('fnc_id.type_audit_externe','=',True)])
+        # Totaux combinés FNC+FAC par type d'audit
+        audit_interne_total = fnc_audit_interne + fac_audit_interne
+        audit_externe_total = fnc_audit_externe + fac_audit_externe
+        # FAC "soumises" = en draft liées à une FNC déjà soumise/en cours
+        fac_submitted = fac.search_count(fac_received_period_domain + [
+            ('state', '=', 'draft'),
+            ('fnc_id.state', 'in', ['submitted', 'in_progress']),
+        ])
 
         # FAC en retard (open > 7 jours)
         fac_retard_recs = fac.search_read(
@@ -806,31 +879,43 @@ class NcDashboard(models.Model):
         pct_fnc_retard  = round(fnc_retard / total_fnc * 100, 1) if total_fnc else 0
 
         result = {
-            'fnc_total':      total_fnc,
-            'fnc_cours':      fnc_cours,
-            'fnc_envoyes':    fnc_envoyes,
-            'fnc_closed':     fnc_closed,
-            'fnc_retard':     fnc_retard,
-            'fnc_retard_list': fnc_retard_recs,
-            'fnc_recues':     fnc_recues,
-            'taux_cloture':   taux_cloture,
-            'dept_list':      dept_list,
-            'type_counts':    type_counts,
-            'fac_total':      total_fac,
-            'fac_open':       fac_open,
-            'fac_verif':      fac_verif,
-            'fac_closed':     fac_closed,
-            'fac_retard':     fac_retard,
-            'fac_recues':     fac_recues_count,
-            'taux_efficacite': taux_eff,
-            'fac_a_cloturer': fac_a_cloturer,
-            'monthly_fnc':    monthly_fnc,
-            'monthly_fac':    monthly_fac,
-            'pct_fnc_closed': pct_fnc_closed,
-            'pct_fnc_cours':  pct_fnc_cours,
-            'pct_fac_eff':    pct_fac_eff,
-            'pct_fac_retard': pct_fac_retard,
-            'pct_fnc_retard': pct_fnc_retard,
+            'fnc_total':          total_fnc,
+            'fnc_cours':          fnc_cours,
+            'fnc_envoyes':        fnc_envoyes,
+            'fnc_closed':         fnc_closed,
+            'fnc_validated':      fnc_validated,
+            'fnc_brouillon':      fnc_brouillon,
+            'fnc_audit_interne':  fnc_audit_interne,
+            'fnc_audit_externe':  fnc_audit_externe,
+            'fnc_retard':         fnc_retard,
+            'fnc_retard_list':    fnc_retard_recs,
+            'fnc_recues':         fnc_recues,
+            'taux_cloture':       taux_cloture,
+            'dept_list':          dept_list,
+            'type_counts':        type_counts,
+            'fac_total':          total_fac,
+            'fac_open':           fac_open,
+            'fac_verif':          fac_verif,
+            'fac_closed':         fac_closed,
+            'fac_brouillon':      fac_brouillon,
+            'fac_audit_interne':   fac_audit_interne,
+            'fac_audit_externe':   fac_audit_externe,
+            'audit_interne_total': audit_interne_total,
+            'audit_externe_total': audit_externe_total,
+            'fac_submitted':       fac_submitted,
+            'fac_retard':         fac_retard,
+            'fac_recues':         fac_recues_count,
+            'taux_efficacite':    taux_eff,
+            'taux_validation_fac': taux_validation_fac,
+            'taux_cloture_fac':   taux_cloture_fac,
+            'fac_a_cloturer':     fac_a_cloturer,
+            'monthly_fnc':        monthly_fnc,
+            'monthly_fac':        monthly_fac,
+            'pct_fnc_closed':     pct_fnc_closed,
+            'pct_fnc_cours':      pct_fnc_cours,
+            'pct_fac_eff':        pct_fac_eff,
+            'pct_fac_retard':     pct_fac_retard,
+            'pct_fnc_retard':     pct_fnc_retard,
         }
 
         # ── Additional dashboard data ──
@@ -1007,6 +1092,8 @@ class NcDashboard(models.Model):
                 'responsible': responsible.name if responsible else '',
                 'date': _date_label(fac_rec.date),
                 'initials': _initials(responsible),
+                'fnc_id': fac_rec.fnc_id.id if fac_rec.fnc_id else None,
+                'state': fac_rec.state,
             }
             received_docs.append(item)
             if fac_rec.date:
@@ -1041,3 +1128,92 @@ class NcDashboard(models.Model):
         result['fac_recues'] = [d for d in received_docs if d['kind'] == 'FAC']
 
         return result
+
+    @api.model
+    def get_direction_details(self, direction_id, period=None):
+        from dateutil.relativedelta import relativedelta
+
+        fnc = self.env['nc_management.nonconformity']
+        fac = self.env['nc_management.corrective_action']
+        today = date.today()
+        period_months = {'1m': 1, '6m': 6, '1y': 12}.get(period or '1m', 1)
+        period_end = today.replace(day=1) + relativedelta(months=1)
+        period_start = today.replace(day=1) - relativedelta(months=period_months - 1)
+
+        base_fnc = [
+            ('date', '>=', str(period_start)),
+            ('date', '<', str(period_end)),
+            ('state', '!=', 'draft'),
+            '|', ('submitted_by_id', '=', False),
+                 ('submitted_by_id', '!=', self.env.uid),
+            ('direction_id', '=', direction_id),
+        ]
+        base_fac = [
+            ('date', '>=', str(period_start)),
+            ('date', '<', str(period_end)),
+        ]
+
+        def _pct(recs):
+            counts = {k: 0 for k in ['nc_produit','reclamation','sst','environnement','audit','autres']}
+            for r in recs:
+                if r.type_nc_produit: counts['nc_produit'] += 1
+                if r.type_reclamation: counts['reclamation'] += 1
+                if r.type_sst: counts['sst'] += 1
+                if r.type_environnement: counts['environnement'] += 1
+                if r.type_audit: counts['audit'] += 1
+                if r.type_autre: counts['autres'] += 1
+            total = sum(counts.values()) or 1
+            return {k: int(round(v / total * 100)) for k, v in counts.items()}
+
+        dir_fnc_recs = fnc.search(base_fnc)
+        dir_fnc_ids = dir_fnc_recs.ids
+        dir_fac_recs = fac.search(base_fac + [('fnc_id', 'in', dir_fnc_ids)])
+
+        departments = self.env['hr.department'].search([
+            ('scaek_level', '=', 'departement'),
+            ('parent_id', '=', direction_id),
+        ], order='name asc')
+
+        dept_data = []
+        for dept in departments:
+            d_fnc = fnc.search(base_fnc + [('department_id', '=', dept.id)])
+            d_fnc_ids = d_fnc.ids
+            d_fac = fac.search(base_fac + [('fnc_id', 'in', d_fnc_ids)])
+
+            services = self.env['hr.department'].search([
+                ('scaek_level', '=', 'service'),
+                ('parent_id', '=', dept.id),
+            ], order='name asc')
+
+            svc_data = []
+            for svc in services:
+                s_fnc = fnc.search(base_fnc + [('service_id', '=', svc.id)])
+                s_fnc_ids = s_fnc.ids
+                s_fac = fac.search(base_fac + [('fnc_id', 'in', s_fnc_ids)])
+                svc_data.append({
+                    'id': svc.id,
+                    'name': svc.name,
+                    'fnc_count': len(s_fnc),
+                    'fac_count': len(s_fac),
+                    'fnc_types': _pct(s_fnc),
+                    'fac_types': _pct(s_fac.mapped('fnc_id')),
+                })
+
+            dept_data.append({
+                'id': dept.id,
+                'name': dept.name,
+                'fnc_count': len(d_fnc),
+                'fac_count': len(d_fac),
+                'fnc_types': _pct(d_fnc),
+                'fac_types': _pct(d_fac.mapped('fnc_id')),
+                'services': svc_data,
+            })
+
+        return {
+            'direction_id': direction_id,
+            'fnc_count': len(dir_fnc_recs),
+            'fac_count': len(dir_fac_recs),
+            'fnc_types': _pct(dir_fnc_recs),
+            'fac_types': _pct(dir_fac_recs.mapped('fnc_id')),
+            'departments': dept_data,
+        }

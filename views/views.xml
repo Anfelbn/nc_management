@@ -15,7 +15,8 @@
             <field name="name"/>
             <field name="date"/>
             <field name="direction_id"/>
-            <field name="service_dpt"/>
+            <field name="department_id"/>
+            <field name="service_id"/>
             <field name="signale_par_id"/>
             <field name="assigned_to_id"/>
             <field name="state"/>
@@ -60,7 +61,28 @@
                     <group>
                         <field name="direction_id"
                                options="{'no_create': True, 'no_create_edit': True}"
-                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                               attrs="{'readonly': [('state','!=','draft')]}"
+                               required="1"/>
+                        <field name="department_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state','!=','draft')],
+                                       'invisible': [('direction_id','=',False)]}"
+                               domain="[('scaek_level','=','departement'),('parent_id','=',direction_id)]"/>
+                        <field name="service_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state','!=','draft')],
+                                       'invisible': [('department_id','=',False)]}"
+                               domain="[('scaek_level','=','service'),('parent_id','=',department_id)]"/>
+                        <field name="section_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state','!=','draft')],
+                                       'invisible': [('service_id','=',False)]}"
+                               domain="[('scaek_level','=','section'),('parent_id','=',service_id)]"/>
+                        <field name="equipe_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state','!=','draft')],
+                                       'invisible': [('section_id','=',False)]}"
+                               domain="[('scaek_level','=','equipe'),('parent_id','=',section_id)]"/>
                         <field name="service_dpt"
                                attrs="{'readonly': [('state','!=','draft')]}"/>
                     </group>
@@ -85,7 +107,9 @@
                                attrs="{'readonly': [('state','!=','draft')]}"/>
                     </group>
                     <group>
-                        <field name="type_audit"
+                        <field name="type_audit_interne"
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                        <field name="type_audit_externe"
                                attrs="{'readonly': [('state','!=','draft')]}"/>
                         <field name="type_achat"
                                attrs="{'readonly': [('state','!=','draft')]}"/>
@@ -319,6 +343,82 @@
 </record>
 
 <!-- ============================================================ -->
+<!--  VUE RECHERCHE FNC                                            -->
+<!-- ============================================================ -->
+
+<record model="ir.ui.view" id="view_nonconformity_search">
+    <field name="name">nc_management.nonconformity.search</field>
+    <field name="model">nc_management.nonconformity</field>
+    <field name="arch" type="xml">
+        <search string="Rechercher FNC">
+            <field name="name" string="N° FNC"/>
+            <field name="direction_id" string="Direction"
+                   domain="[('scaek_level','=','direction')]"/>
+            <field name="department_id" string="Département"
+                   domain="[('scaek_level','=','departement')]"/>
+            <field name="service_id" string="Service"
+                   domain="[('scaek_level','=','service')]"/>
+            <field name="service_dpt" string="Service / DPT (texte)"/>
+            <field name="signale_par_id" string="Signalé par"/>
+            <field name="assigned_to_id" string="Responsable action"/>
+
+            <!-- Filtre "Mes FNC" activé par défaut via search_default_mes_fnc -->
+            <filter string="Mes FNC" name="mes_fnc"
+                    domain="[('create_uid', '=', uid)]"/>
+
+            <!-- Filtre "Toutes les FNC" réservé au Responsable Qualité -->
+            <filter string="Toutes les FNC" name="toutes_fnc"
+                    domain="[]"
+                    groups="nc_management.group_nc_manager"/>
+
+            <separator/>
+
+            <!-- Filtres par statut -->
+            <filter string="Brouillon"   name="etat_brouillon"
+                    domain="[('state','=','draft')]"/>
+            <filter string="Soumises"    name="etat_soumise"
+                    domain="[('state','=','submitted')]"/>
+            <filter string="En cours"    name="etat_en_cours"
+                    domain="[('state','=','in_progress')]"/>
+            <filter string="Validées"    name="etat_validee"
+                    domain="[('state','=','validated')]"/>
+            <filter string="Clôturées"   name="etat_cloturee"
+                    domain="[('state','=','closed')]"/>
+
+            <separator/>
+
+            <!-- Filtres périmètre hiérarchiques -->
+            <filter string="Avec Direction" name="par_direction"
+                    domain="[('direction_id','!=',False)]"
+                    groups="nc_management.group_nc_manager"/>
+            <filter string="Avec Département" name="par_departement"
+                    domain="[('department_id','!=',False)]"
+                    groups="nc_management.group_nc_manager"/>
+            <filter string="Avec Service"   name="par_service"
+                    domain="[('service_id','!=',False)]"
+                    groups="nc_management.group_nc_manager"/>
+
+            <!-- Regroupements -->
+            <group expand="0" string="Regrouper par">
+                <filter string="Direction" name="group_direction"
+                        context="{'group_by': 'direction_id'}"
+                        groups="nc_management.group_nc_manager"/>
+                <filter string="Département" name="group_departement"
+                        context="{'group_by': 'department_id'}"
+                        groups="nc_management.group_nc_manager"/>
+                <filter string="Service" name="group_service"
+                        context="{'group_by': 'service_id'}"
+                        groups="nc_management.group_nc_manager"/>
+                <filter string="Statut" name="group_state"
+                        context="{'group_by': 'state'}"/>
+                <filter string="Date" name="group_date"
+                        context="{'group_by': 'date:month'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+<!-- ============================================================ -->
 <!--  ACTIONS ET MENUS                                             -->
 <!-- ============================================================ -->
 
@@ -326,6 +426,8 @@
     <field name="name">Non-Conformités</field>
     <field name="res_model">nc_management.nonconformity</field>
     <field name="view_mode">tree,form</field>
+    <field name="search_view_id" ref="view_nonconformity_search"/>
+    <field name="context">{'search_default_mes_fnc': 1}</field>
 </record>
 
 <record model="ir.actions.act_window" id="action_corrective">
@@ -401,6 +503,34 @@
           parent="nc_management.menu_root"
           action="action_document_revision"
           sequence="30"/>
+
+<!-- ============================================================ -->
+<!--  VUE CONFIGURATION DÉPARTEMENTS (niveaux hiérarchiques)      -->
+<!-- ============================================================ -->
+
+<record model="ir.ui.view" id="view_hr_department_scaek_form">
+    <field name="name">hr.department.scaek.form</field>
+    <field name="model">hr.department</field>
+    <field name="inherit_id" ref="hr.view_department_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='manager_id']" position="after">
+            <field name="scaek_level" string="Niveau hiérarchique"/>
+            <field name="scaek_code"  string="Code"/>
+        </xpath>
+    </field>
+</record>
+
+<record model="ir.ui.view" id="view_hr_department_scaek_tree">
+    <field name="name">hr.department.scaek.tree</field>
+    <field name="model">hr.department</field>
+    <field name="inherit_id" ref="hr.view_department_tree"/>
+    <field name="arch" type="xml">
+        <xpath expr="//tree" position="inside">
+            <field name="scaek_level" string="Niveau"/>
+            <field name="scaek_code"  string="Code"/>
+        </xpath>
+    </field>
+</record>
 
 </data>
 </odoo>

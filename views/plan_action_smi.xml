@@ -197,7 +197,7 @@
                 <!-- Avancement -->
                 <group string="Avancement">
                     <group>
-                        <field name="avancement" widget="percentpie"/>
+                        <field name="avancement"/>
                     </group>
                     <group>
                         <field name="duree_reelle"/>

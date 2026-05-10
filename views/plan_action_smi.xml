@@ -11,19 +11,19 @@
     <field name="priority">10</field>
     <field name="arch" type="xml">
         <tree string="Mes Plans"
-              decoration-success="submission_state == 'integre'"
-              decoration-warning="submission_state == 'soumis'"
+              decoration-success="is_integrated == True"
               decoration-danger="is_late == True">
-            <field name="name"/>
-            <field name="direction_id"/>
-            <field name="nature"/>
-            <field name="responsable_id"/>
-            <field name="date_prevue"/>
+            <field name="name"            string="Référence"/>
+            <field name="direction_id"    string="Direction"/>
+            <field name="nature"          string="Nature"/>
+            <field name="responsable_id"  string="Responsable"/>
             <field name="avancement"      string="Avancement %"/>
-            <field name="efficacite"/>
-            <field name="state"           string="Avancement"/>
-            <field name="submission_state" string="État"/>
+            <field name="efficacite"      string="Efficacité"/>
+            <field name="date_realisation" string="Date de réalisation"/>
+            <field name="state"           string="État"/>
+            <field name="is_integrated"   string="Intégré au plan d'amélioration"/>
             <field name="is_late"         invisible="1"/>
+            <field name="submission_state" invisible="1"/>
         </tree>
     </field>
 </record>

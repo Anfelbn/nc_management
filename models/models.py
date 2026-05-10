@@ -479,6 +479,16 @@ class PlanActionSmi(models.Model):
         compute='_compute_is_late',
         store=True
     )
+    is_integrated = fields.Boolean(
+        string="Intégré au plan d'amélioration",
+        compute='_compute_is_integrated',
+        store=True
+    )
+
+    @api.depends('global_plan_id')
+    def _compute_is_integrated(self):
+        for rec in self:
+            rec.is_integrated = bool(rec.global_plan_id)
     description = fields.Text(string="Brève description de la non-conformité, remarque et/ou point sensible / ou Objectif d'amélioration")
     causes = fields.Text(string='Causes')
     action = fields.Text(string='Action')

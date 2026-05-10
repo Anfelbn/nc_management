@@ -552,6 +552,21 @@ class PlanActionSmi(models.Model):
     nb_en_retard     = fields.Integer('En retard',         compute='_compute_global_stats')
     taux_realisation = fields.Integer('Taux de réalisation (%)', compute='_compute_global_stats')
     taux_efficacite  = fields.Integer("Taux d'efficacité (%)",   compute='_compute_global_stats')
+    etat_global      = fields.Selection([
+        ('brouillon', 'Brouillon'),
+        ('en_cours',  'En cours'),
+        ('cloture',   'Clôturé'),
+    ], string='État', compute='_compute_etat_global')
+
+    @api.depends('child_plan_ids', 'submission_state')
+    def _compute_etat_global(self):
+        for rec in self:
+            if rec.submission_state == 'cloture':
+                rec.etat_global = 'cloture'
+            elif rec.child_plan_ids:
+                rec.etat_global = 'en_cours'
+            else:
+                rec.etat_global = 'brouillon'
 
     @api.depends('child_plan_ids.avancement', 'child_plan_ids.state',
                  'child_plan_ids.is_late', 'child_plan_ids.efficacite')

@@ -69,7 +69,8 @@
             <field name="avancement_global" string="Avancement Global %"/>
             <field name="taux_realisation"  string="Taux de réalisation %"/>
             <field name="taux_efficacite"   string="Taux d'efficacité %"/>
-            <field name="submission_state"  string="État"/>
+            <field name="etat_global"       string="État"/>
+            <field name="submission_state"  invisible="1"/>
         </tree>
     </field>
 </record>
@@ -253,8 +254,8 @@
                         confirm="Clôturer ce plan créera automatiquement un nouveau Plan d'Amélioration avec les plans récents. Continuer ?"
                         attrs="{'invisible': [('submission_state', '=', 'cloture')]}"
                         style="color: white; background-color: #d9534f;"/>
-                <field name="submission_state" widget="statusbar"
-                       statusbar_visible="brouillon,integre,cloture"/>
+                <field name="etat_global" widget="statusbar"
+                       statusbar_visible="brouillon,en_cours,cloture"/>
             </header>
             <sheet>
                 <!-- Champs techniques requis par attrs -->

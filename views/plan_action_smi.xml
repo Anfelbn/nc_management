@@ -254,8 +254,6 @@
                         confirm="Clôturer ce plan créera automatiquement un nouveau Plan d'Amélioration avec les plans récents. Continuer ?"
                         attrs="{'invisible': [('submission_state', '=', 'cloture')]}"
                         style="color: white; background-color: #d9534f;"/>
-                <field name="etat_global" widget="statusbar"
-                       statusbar_visible="brouillon,en_cours,cloture"/>
             </header>
             <sheet>
                 <!-- Champs techniques requis par attrs -->

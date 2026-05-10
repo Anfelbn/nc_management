@@ -7,6 +7,7 @@ class HrDepartmentScaek(models.Model):
     _inherit = 'hr.department'
 
     scaek_level = fields.Selection([
+        ('pdg',         'P-DG'),
         ('direction',   'Direction'),
         ('departement', 'Département'),
         ('service',     'Service'),
@@ -14,6 +15,18 @@ class HrDepartmentScaek(models.Model):
         ('equipe',      'Équipe'),
     ], string='Niveau hiérarchique')
     scaek_code = fields.Char(string='Code')
+
+
+class HrJobScaek(models.Model):
+    _inherit = 'hr.job'
+
+    is_linked_to_pdg = fields.Boolean(
+        string='Lié au P-DG',
+        default=False,
+        help='Ce poste reporte directement au P-DG '
+             '(ex : Assistant, Secrétaire Général, Médecin…)',
+    )
+
 
 
 class NcType(models.Model):
@@ -424,6 +437,7 @@ class PlanActionSmi(models.Model):
     _name = 'nc_management.plan_action_smi'
     _description = 'Plan Action Amelioration SMI'
     _order = 'name asc'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string='Référence', required=True, copy=False,
                        readonly=True, default='New')
@@ -432,8 +446,31 @@ class PlanActionSmi(models.Model):
         ('reclamation_pi', 'Réclamation Client ou PI'),
         ('environnement',  'Environnement'),
         ('sst',            'SST'),
-    ], string='Nature', required=True)
+    ], string='Nature')
     fnc_id = fields.Many2one('nc_management.nonconformity', string='FNC Liée')
+    direction_id = fields.Many2one(
+        'hr.department',
+        domain=[('scaek_level', '=', 'direction')],
+        string='Direction',
+        context={'no_create': True, 'no_create_edit': True}
+    )
+    department_id = fields.Many2one(
+        'hr.department',
+        domain=[('scaek_level', '=', 'departement')],
+        string='Département',
+        context={'no_create': True, 'no_create_edit': True}
+    )
+    service_id = fields.Many2one(
+        'hr.department',
+        domain=[('scaek_level', '=', 'service')],
+        string='Service',
+        context={'no_create': True, 'no_create_edit': True}
+    )
+    is_late = fields.Boolean(
+        string='En retard',
+        compute='_compute_is_late',
+        store=True
+    )
     description = fields.Text(string='Brève description / Objectif amélioration')
     causes = fields.Text(string='Causes')
     action = fields.Text(string='Action')
@@ -456,18 +493,103 @@ class PlanActionSmi(models.Model):
         ('draft',    'En cours'),
         ('done',     'Réalisé'),
         ('verified', 'Vérifié'),
-    ], string='État', default='draft')
+    ], string='Avancement', default='draft', track_visibility='onchange')
+
+    # ── Cycle de vie RMQSE ────────────────────────────────────────
+    submission_state = fields.Selection([
+        ('brouillon', 'Brouillon'),
+        ('soumis',    'Soumis à la Responsable Qualité'),
+        ('integre',   "Intégré au Plan d'Amélioration"),
+        ('cloture',   'Plan clôturé'),
+    ], string='État', default='brouillon', track_visibility='onchange')
+
+    sent_to_rmqse = fields.Boolean('Envoyé à la Responsable Qualité',
+                                   default=False, readonly=True)
+    date_envoi    = fields.Datetime("Date d'envoi", readonly=True)
+    sent_by       = fields.Many2one('res.users', 'Envoyé par', readonly=True)
+
+    # ── Plan d'Action d'Amélioration SMI ─────────────────────────
+    is_global      = fields.Boolean("Est un Plan d'Amélioration", default=False)
+    global_plan_id = fields.Many2one(
+        'nc_management.plan_action_smi',
+        string="Plan d'Amélioration parent",
+        domain=[('is_global', '=', True)],
+        ondelete='set null',
+        index=True,
+    )
+    mois_reception = fields.Date('Date de création')
+    date_maj       = fields.Datetime("Dernière mise à jour", readonly=True)
+    child_plan_ids = fields.One2many(
+        'nc_management.plan_action_smi',
+        'global_plan_id',
+        string='Plans intégrés',
+    )
+
+    # ── Statistiques plan global (calculées) ──────────────────────
+    nb_plans_integres = fields.Integer(
+        'Nb plans intégrés', compute='_compute_global_stats')
+    avancement_global = fields.Integer(
+        'Avancement global (%)', compute='_compute_global_stats')
+    nb_realises   = fields.Integer('Réalisés',   compute='_compute_global_stats')
+    nb_en_cours   = fields.Integer('En cours',   compute='_compute_global_stats')
+    nb_en_retard  = fields.Integer('En retard',  compute='_compute_global_stats')
+
+    @api.depends('child_plan_ids.avancement', 'child_plan_ids.state',
+                 'child_plan_ids.is_late')
+    def _compute_global_stats(self):
+        for rec in self:
+            children = rec.child_plan_ids
+            nb = len(children)
+            rec.nb_plans_integres = nb
+            rec.avancement_global = int(sum(c.avancement for c in children) / nb) if nb else 0
+            rec.nb_realises  = sum(1 for c in children if c.state == 'done')
+            rec.nb_en_cours  = sum(1 for c in children if c.state == 'draft')
+            rec.nb_en_retard = sum(1 for c in children if c.is_late)
+
+    @api.depends('date_prevue', 'state')
+    def _compute_is_late(self):
+        today = fields.Date.today()
+        for rec in self:
+            rec.is_late = bool(
+                rec.date_prevue and
+                rec.date_prevue < today and
+                rec.state != 'verified'
+            )
 
     @api.model
     def create(self, vals):
         if vals.get('name', 'New') == 'New':
-            vals['name'] = self.env['ir.sequence'].next_by_code(
-                'nc_management.plan_action_smi') or 'New'
+            if vals.get('is_global'):
+                from datetime import date as _date
+                today = _date.today()
+                vals['name'] = 'AMELIORATION-%02d-%04d' % (today.month, today.year)
+            else:
+                vals['name'] = self.env['ir.sequence'].next_by_code(
+                    'nc_management.plan_action_smi') or 'New'
         return super(PlanActionSmi, self).create(vals)
+
+    @api.multi
+    def write(self, vals):
+        res = super(PlanActionSmi, self).write(vals)
+        if not self.env.context.get('_skip_date_maj') and 'date_maj' not in vals:
+            plans_amelioration = self.filtered('is_global')
+            if plans_amelioration:
+                plans_amelioration.with_context(_skip_date_maj=True).write(
+                    {'date_maj': fields.Datetime.now()})
+        return res
 
     @api.onchange('nature')
     def _onchange_nature(self):
         self.fnc_id = False
+
+    @api.onchange('direction_id')
+    def _onchange_smi_direction_id(self):
+        self.department_id = False
+        self.service_id = False
+
+    @api.onchange('department_id')
+    def _onchange_smi_department_id(self):
+        self.service_id = False
 
     @api.multi
     def action_done(self):
@@ -476,6 +598,159 @@ class PlanActionSmi(models.Model):
     @api.multi
     def action_verify(self):
         self.state = 'verified'
+
+    @api.multi
+    def action_envoyer_rmqse(self):
+        self.ensure_one()
+        if self.submission_state != 'brouillon':
+            raise UserError("Ce plan a déjà été soumis à la Responsable Qualité.")
+        if self.env.uid != self.create_uid.id:
+            raise UserError("Seul le créateur peut soumettre ce plan.")
+
+        self.write({
+            'submission_state': 'soumis',
+            'sent_to_rmqse': True,
+            'date_envoi': fields.Datetime.now(),
+            'sent_by': self.env.uid,
+            'mois_reception': fields.Date.today(),
+        })
+
+        rmqse_group = self.env.ref(
+            'nc_management.group_responsable_qualite', raise_if_not_found=False)
+        if rmqse_group:
+            partner_ids = rmqse_group.users.mapped('partner_id').ids
+            self.message_post(
+                body=(
+                    "<p>Le plan d'action <strong>%s</strong> a été soumis à "
+                    "la Responsable Qualité par <strong>%s</strong>.</p>"
+                    "<p>Direction : %s</p>"
+                ) % (
+                    self.name,
+                    self.env.user.name,
+                    self.direction_id.name if self.direction_id else '-',
+                ),
+                partner_ids=partner_ids,
+                message_type='notification',
+                subtype='mail.mt_comment',
+            )
+        return True
+
+    @api.multi
+    def action_analyse_efficacite(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Analyse d'Efficacité — %s" % self.name,
+            'res_model': 'nc_management.plan_action_smi',
+            'view_mode': 'pivot,graph',
+            'domain': [('global_plan_id', '=', self.id)],
+            'context': {'search_default_group_state': 1},
+        }
+
+    @api.multi
+    def action_consolider_tous(self):
+        """Intègre TOUS les plans non encore rattachés à ce Plan d'Amélioration."""
+        self.ensure_one()
+        unlinked = self.search([
+            ('is_global', '=', False),
+            ('global_plan_id', '=', False),
+            '|',
+            ('create_uid', '=', self.env.uid),
+            ('sent_to_rmqse', '=', True),
+        ])
+        unlinked.with_context(_skip_date_maj=True).write({
+            'global_plan_id': self.id,
+            'submission_state': 'integre',
+        })
+
+    @api.multi
+    def action_cloturer_plan(self):
+        """Clôture le plan actuel et crée automatiquement le suivant
+        en y intégrant tous les plans créés/reçus après la date_maj courante."""
+        self.ensure_one()
+        if self.submission_state == 'cloture':
+            raise UserError("Ce Plan d'Amélioration est déjà clôturé.")
+
+        cutoff = self.date_maj or self.create_date
+
+        # 1. Clôturer le plan actuel
+        self.with_context(_skip_date_maj=True).write(
+            {'submission_state': 'cloture'})
+
+        # 2. Créer le nouveau Plan d'Amélioration
+        new_plan = self.with_context(_skip_date_maj=True).create({
+            'name': 'New',
+            'is_global': True,
+            'submission_state': 'brouillon',
+            'mois_reception': fields.Date.today(),
+            'description': "Plan d'Action d'Amélioration SMI",
+        })
+
+        # 3. Plans de la Responsable Qualité créés après cutoff
+        mes_plans = self.search([
+            ('is_global', '=', False),
+            ('create_uid', '=', self.env.uid),
+            ('create_date', '>', str(cutoff)),
+            ('global_plan_id', '=', False),
+        ])
+
+        # 4. Plans reçus après cutoff
+        plans_recus = self.search([
+            ('is_global', '=', False),
+            ('sent_to_rmqse', '=', True),
+            ('date_envoi', '>', str(cutoff)),
+            ('global_plan_id', '=', False),
+        ])
+
+        (mes_plans | plans_recus).with_context(_skip_date_maj=True).write({
+            'global_plan_id': new_plan.id,
+        })
+
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'nc_management.plan_action_smi',
+            'res_id': new_plan.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_plan_smi_form_global').id,
+            'target': 'current',
+        }
+
+    @api.model
+    def _auto_create_global_plan(self):
+        from datetime import date as _date
+        from dateutil.relativedelta import relativedelta
+
+        today = _date.today()
+        first_of_current = today.replace(day=1)
+        first_of_last = first_of_current - relativedelta(months=1)
+        ref = 'GLOBAL-%02d-%04d' % (first_of_last.month, first_of_last.year)
+
+        if self.search([('is_global', '=', True), ('name', '=', ref)], limit=1):
+            return True
+
+        submitted = self.search([
+            ('submission_state', '=', 'soumis'),
+            ('is_global', '=', False),
+            ('mois_reception', '>=', first_of_last.strftime('%Y-%m-%d')),
+            ('mois_reception', '<',  first_of_current.strftime('%Y-%m-%d')),
+        ])
+        if not submitted:
+            return True
+
+        global_plan = self.create({
+            'name': ref,
+            'is_global': True,
+            'mois_reception': first_of_last.strftime('%Y-%m-%d'),
+            'submission_state': 'brouillon',
+            'description': 'Plan Global consolidé — %02d/%04d' % (
+                first_of_last.month, first_of_last.year),
+        })
+        submitted.write({
+            'global_plan_id': global_plan.id,
+            'submission_state': 'integre',
+        })
+        return True
 
 
 class DocumentRevision(models.Model):

@@ -2,19 +2,18 @@
 <odoo>
 <data>
 
-    <!-- Catégorie du module -->
     <record id="module_nc_management" model="ir.module.category">
         <field name="name">NC Management</field>
     </record>
 
-    <!-- Groupe Utilisateur (Département / Service) -->
-    <record id="group_nc_user" model="res.groups">
-        <field name="name">Utilisateur NC</field>
+    <!-- NC Utilisateur : chefs de direction, responsables dept, etc. -->
+    <record id="group_nc_utilisateur" model="res.groups">
+        <field name="name">NC Utilisateur</field>
         <field name="category_id" ref="module_nc_management"/>
     </record>
 
-    <!-- Groupe Responsable Qualité -->
-    <record id="group_nc_manager" model="res.groups">
+    <!-- Responsable Qualité : RMQSE, voit tout -->
+    <record id="group_responsable_qualite" model="res.groups">
         <field name="name">Responsable Qualité</field>
         <field name="category_id" ref="module_nc_management"/>
     </record>

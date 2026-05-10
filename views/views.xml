@@ -46,7 +46,7 @@
                         type="object"
                         states="validated"
                         class="oe_highlight"
-                        groups="nc_management.group_nc_manager"/>
+                        groups="nc_management.group_responsable_qualite"/>
                 <field name="state" widget="statusbar"
                        statusbar_visible="draft,submitted,in_progress,validated,closed"/>
             </header>
@@ -369,7 +369,7 @@
             <!-- Filtre "Toutes les FNC" réservé au Responsable Qualité -->
             <filter string="Toutes les FNC" name="toutes_fnc"
                     domain="[]"
-                    groups="nc_management.group_nc_manager"/>
+                    groups="nc_management.group_responsable_qualite"/>
 
             <separator/>
 
@@ -390,25 +390,25 @@
             <!-- Filtres périmètre hiérarchiques -->
             <filter string="Avec Direction" name="par_direction"
                     domain="[('direction_id','!=',False)]"
-                    groups="nc_management.group_nc_manager"/>
+                    groups="nc_management.group_responsable_qualite"/>
             <filter string="Avec Département" name="par_departement"
                     domain="[('department_id','!=',False)]"
-                    groups="nc_management.group_nc_manager"/>
+                    groups="nc_management.group_responsable_qualite"/>
             <filter string="Avec Service"   name="par_service"
                     domain="[('service_id','!=',False)]"
-                    groups="nc_management.group_nc_manager"/>
+                    groups="nc_management.group_responsable_qualite"/>
 
             <!-- Regroupements -->
             <group expand="0" string="Regrouper par">
                 <filter string="Direction" name="group_direction"
                         context="{'group_by': 'direction_id'}"
-                        groups="nc_management.group_nc_manager"/>
+                        groups="nc_management.group_responsable_qualite"/>
                 <filter string="Département" name="group_departement"
                         context="{'group_by': 'department_id'}"
-                        groups="nc_management.group_nc_manager"/>
+                        groups="nc_management.group_responsable_qualite"/>
                 <filter string="Service" name="group_service"
                         context="{'group_by': 'service_id'}"
-                        groups="nc_management.group_nc_manager"/>
+                        groups="nc_management.group_responsable_qualite"/>
                 <filter string="Statut" name="group_state"
                         context="{'group_by': 'state'}"/>
                 <filter string="Date" name="group_date"
@@ -496,7 +496,7 @@
           id="nc_management.menu_config"
           parent="nc_management.menu_root"
           sequence="100"
-          groups="nc_management.group_nc_manager"/>
+          groups="nc_management.group_responsable_qualite"/>
 
 <menuitem name="Révision des documents"
           id="nc_management.menu_revision"
@@ -531,6 +531,7 @@
         </xpath>
     </field>
 </record>
+
 
 </data>
 </odoo>

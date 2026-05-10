@@ -2,11 +2,12 @@
 <odoo>
 <data>
 
-    <!-- Managers see ALL FNC records -->
+    <!-- ── FNC ──────────────────────────────────────────────────── -->
+
     <record id="rule_fnc_manager" model="ir.rule">
-        <field name="name">FNC: Manager voit tout</field>
+        <field name="name">FNC: Responsable Qualité voit tout</field>
         <field name="model_id" ref="model_nc_management_nonconformity"/>
-        <field name="groups" eval="[(4, ref('nc_management.group_nc_manager'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_responsable_qualite'))]"/>
         <field name="domain_force">[(1,'=',1)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
@@ -14,11 +15,10 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
-    <!-- Users see FNC they created OR are assigned to -->
     <record id="rule_fnc_user" model="ir.rule">
-        <field name="name">FNC: User voit ses fiches</field>
+        <field name="name">FNC: Utilisateur voit ses fiches</field>
         <field name="model_id" ref="model_nc_management_nonconformity"/>
-        <field name="groups" eval="[(4, ref('nc_management.group_nc_user'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
         <field name="domain_force">['|',
             ('submitted_by_id','=',user.id),
             ('assigned_to_id.user_id','=',user.id)
@@ -29,11 +29,12 @@
         <field name="perm_unlink" eval="False"/>
     </record>
 
-    <!-- Managers see ALL FAC records -->
+    <!-- ── FAC ──────────────────────────────────────────────────── -->
+
     <record id="rule_fac_manager" model="ir.rule">
-        <field name="name">FAC: Manager voit tout</field>
+        <field name="name">FAC: Responsable Qualité voit tout</field>
         <field name="model_id" ref="model_nc_management_corrective_action"/>
-        <field name="groups" eval="[(4, ref('nc_management.group_nc_manager'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_responsable_qualite'))]"/>
         <field name="domain_force">[(1,'=',1)]</field>
         <field name="perm_read"   eval="True"/>
         <field name="perm_write"  eval="True"/>
@@ -41,11 +42,10 @@
         <field name="perm_unlink" eval="True"/>
     </record>
 
-    <!-- Users see FAC linked to their FNC (creator or assigned) -->
     <record id="rule_fac_user" model="ir.rule">
-        <field name="name">FAC: User voit ses FAC</field>
+        <field name="name">FAC: Utilisateur voit ses FAC</field>
         <field name="model_id" ref="model_nc_management_corrective_action"/>
-        <field name="groups" eval="[(4, ref('nc_management.group_nc_user'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
         <field name="domain_force">['|',
             ('fnc_id.submitted_by_id','=',user.id),
             ('fnc_id.assigned_to_id.user_id','=',user.id)
@@ -54,6 +54,32 @@
         <field name="perm_write"  eval="True"/>
         <field name="perm_create" eval="True"/>
         <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ── Plan Action SMI ──────────────────────────────────────── -->
+
+    <!-- NC Utilisateur : ses plans uniquement, pas de plans globaux -->
+    <record id="rule_plan_smi_utilisateur" model="ir.rule">
+        <field name="name">Plan SMI: Utilisateur voit ses plans</field>
+        <field name="model_id" ref="model_nc_management_plan_action_smi"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
+        <field name="domain_force">[('create_uid', '=', user.id), ('is_global', '=', False)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Responsable Qualité : ses propres plans + tous les plans soumis reçus -->
+    <record id="rule_plan_smi_responsable" model="ir.rule">
+        <field name="name">Plan SMI: Responsable Qualité voit ses plans + plans reçus</field>
+        <field name="model_id" ref="model_nc_management_plan_action_smi"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_responsable_qualite'))]"/>
+        <field name="domain_force">['|', ('create_uid', '=', user.id), ('sent_to_rmqse', '=', True)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
     </record>
 
 </data>

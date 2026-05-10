@@ -25,7 +25,7 @@
         id="nc_management.menu_dashboard"
         parent="nc_management.menu_root"
         action="action_nc_dashboard"
-        groups="nc_management.group_nc_manager"
+        groups="nc_management.group_responsable_qualite"
         sequence="1"/>
 
 

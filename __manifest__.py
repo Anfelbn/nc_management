@@ -13,6 +13,8 @@
         'data/sequences.xml',
         'data/nc_types.xml',
         'data/revisions.xml',
+        'data/mail_template.xml',
+        'data/ir_cron.xml',
         'wizard/send_fnc_wizard.xml',
         'wizard/reply_wizard.xml',
         'wizard/number_generator_wizard.xml',

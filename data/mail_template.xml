@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="1">
+
+    <record id="mail_template_plan_smi_soumis" model="mail.template">
+        <field name="name">Notification — Plan SMI soumis à la RMQSE</field>
+        <field name="model_id" ref="model_nc_management_plan_action_smi"/>
+        <field name="subject">Plan SMI ${object.name} soumis pour révision RMQSE</field>
+        <field name="body_html"><![CDATA[
+<div style="font-family: Arial, sans-serif; padding: 20px;">
+    <h3 style="color: #875A7B;">Nouveau Plan d'Action soumis à la RMQSE</h3>
+    <p>Bonjour,</p>
+    <p>
+        Le plan d'action <strong>${object.name}</strong> a été soumis à la RMQSE
+        et est disponible pour révision.
+    </p>
+    <table style="border-collapse: collapse; margin-top: 10px;">
+        <tr>
+            <td style="padding: 4px 12px 4px 0; font-weight: bold;">Direction :</td>
+            <td>${object.direction_id.name or '-'}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4px 12px 4px 0; font-weight: bold;">Envoyé par :</td>
+            <td>${object.sent_by.name or '-'}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4px 12px 4px 0; font-weight: bold;">Date d'envoi :</td>
+            <td>${object.date_envoi or '-'}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4px 12px 4px 0; font-weight: bold;">Nature :</td>
+            <td>${dict(object._fields['nature'].selection).get(object.nature, '-') if object.nature else '-'}</td>
+        </tr>
+    </table>
+    <p style="margin-top: 15px;">
+        Veuillez vous connecter à Odoo pour consulter ce plan dans la section
+        <strong>Plan Action SMI &gt; Plans Reçus</strong>.
+    </p>
+</div>
+        ]]></field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+</data>
+</odoo>

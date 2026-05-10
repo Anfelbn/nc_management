@@ -45,8 +45,9 @@
             <field name="nature"/>
             <field name="sent_by"/>
             <field name="date_envoi"/>
-            <field name="global_plan_id" string="Plan d'Amélioration"/>
-            <field name="submission_state" string="État"/>
+            <field name="avancement"      string="Avancement %"/>
+            <field name="global_plan_id"  string="Plan d'Amélioration"/>
+            <field name="submission_state" invisible="1"/>
         </tree>
     </field>
 </record>

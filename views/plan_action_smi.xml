@@ -67,9 +67,8 @@
             <field name="date_maj"          string="Dernière màj"/>
             <field name="nb_plans_integres" string="Nb Plans"/>
             <field name="avancement_global" string="Avancement Global %"/>
-            <field name="nb_realises"       string="Réalisés"/>
-            <field name="nb_en_cours"       string="En cours"/>
-            <field name="nb_en_retard"      string="En retard"/>
+            <field name="taux_realisation"  string="Taux de réalisation %"/>
+            <field name="taux_efficacite"   string="Taux d'efficacité %"/>
             <field name="submission_state"  string="État"/>
         </tree>
     </field>

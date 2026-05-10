@@ -547,21 +547,26 @@ class PlanActionSmi(models.Model):
         'Nb plans intégrés', compute='_compute_global_stats')
     avancement_global = fields.Integer(
         'Avancement global (%)', compute='_compute_global_stats')
-    nb_realises   = fields.Integer('Réalisés',   compute='_compute_global_stats')
-    nb_en_cours   = fields.Integer('En cours',   compute='_compute_global_stats')
-    nb_en_retard  = fields.Integer('En retard',  compute='_compute_global_stats')
+    nb_realises      = fields.Integer('Réalisés',          compute='_compute_global_stats')
+    nb_en_cours      = fields.Integer('En cours',          compute='_compute_global_stats')
+    nb_en_retard     = fields.Integer('En retard',         compute='_compute_global_stats')
+    taux_realisation = fields.Integer('Taux de réalisation (%)', compute='_compute_global_stats')
+    taux_efficacite  = fields.Integer("Taux d'efficacité (%)",   compute='_compute_global_stats')
 
     @api.depends('child_plan_ids.avancement', 'child_plan_ids.state',
-                 'child_plan_ids.is_late')
+                 'child_plan_ids.is_late', 'child_plan_ids.efficacite')
     def _compute_global_stats(self):
         for rec in self:
             children = rec.child_plan_ids
             nb = len(children)
             rec.nb_plans_integres = nb
             rec.avancement_global = int(sum(c.avancement for c in children) / nb) if nb else 0
-            rec.nb_realises  = sum(1 for c in children if c.state == 'done')
-            rec.nb_en_cours  = sum(1 for c in children if c.state == 'draft')
-            rec.nb_en_retard = sum(1 for c in children if c.is_late)
+            rec.nb_realises       = sum(1 for c in children if c.state == 'done')
+            rec.nb_en_cours       = sum(1 for c in children if c.state == 'draft')
+            rec.nb_en_retard      = sum(1 for c in children if c.is_late)
+            nb_efficaces          = sum(1 for c in children if c.efficacite == 'oui')
+            rec.taux_realisation  = int(rec.nb_realises / nb * 100) if nb else 0
+            rec.taux_efficacite   = int(nb_efficaces / nb * 100) if nb else 0
 
     @api.depends('date_prevue', 'state')
     def _compute_is_late(self):

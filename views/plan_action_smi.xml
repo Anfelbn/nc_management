@@ -11,7 +11,7 @@
     <field name="priority">10</field>
     <field name="arch" type="xml">
         <tree string="Mes Plans"
-              decoration-success="is_integrated == True"
+              decoration-success="is_integrated == 'Oui'"
               decoration-danger="is_late == True">
             <field name="name"            string="Référence"/>
             <field name="direction_id"    string="Direction"/>

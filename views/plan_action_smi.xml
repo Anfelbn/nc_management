@@ -91,9 +91,7 @@
                         class="oe_highlight"
                         groups="nc_management.group_nc_utilisateur"
                         attrs="{'invisible': [('submission_state', '!=', 'brouillon')]}"/>
-                <!-- Barres de statut -->
-                <field name="submission_state" widget="statusbar"
-                       statusbar_visible="brouillon,soumis,integre"/>
+                <!-- Barre de statut avancement -->
                 <field name="state" widget="statusbar"
                        statusbar_visible="draft,done"/>
             </header>

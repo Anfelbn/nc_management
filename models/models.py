@@ -620,6 +620,12 @@ class PlanActionSmi(models.Model):
             if plans_amelioration:
                 plans_amelioration.with_context(_skip_date_maj=True).write(
                     {'date_maj': fields.Datetime.now()})
+            parents = self.filtered(
+                lambda r: not r.is_global and r.global_plan_id
+            ).mapped('global_plan_id')
+            if parents:
+                parents.with_context(_skip_date_maj=True).write(
+                    {'date_maj': fields.Datetime.now()})
         return res
 
     @api.onchange('nature')
@@ -685,19 +691,16 @@ class PlanActionSmi(models.Model):
 
     @api.multi
     def action_consolider_tous(self):
-        """Intègre TOUS les plans non encore rattachés à ce Plan d'Amélioration."""
+        """Ouvre le wizard de sélection des plans à consolider."""
         self.ensure_one()
-        unlinked = self.search([
-            ('is_global', '=', False),
-            ('global_plan_id', '=', False),
-            '|',
-            ('create_uid', '=', self.env.uid),
-            ('sent_to_rmqse', '=', True),
-        ])
-        unlinked.with_context(_skip_date_maj=True).write({
-            'global_plan_id': self.id,
-            'submission_state': 'integre',
-        })
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Consolider des plans',
+            'res_model': 'nc_management.consolidate_wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'active_id': self.id},
+        }
 
     @api.multi
     def action_cloturer_plan(self):

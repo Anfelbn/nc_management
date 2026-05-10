@@ -238,7 +238,7 @@
             <header>
                 <!-- Consolider : intègre TOUS les plans non rattachés -->
                 <button name="action_consolider_tous"
-                        string="Consolider tous les plans"
+                        string="Consolider des plans"
                         type="object"
                         attrs="{'invisible': [('submission_state', '=', 'cloture')]}"/>
                 <!-- Analyse d'efficacité -->

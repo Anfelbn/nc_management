@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<record id="view_consolidate_wizard_form" model="ir.ui.view">
+    <field name="name">nc_management.consolidate_wizard.form</field>
+    <field name="model">nc_management.consolidate_wizard</field>
+    <field name="arch" type="xml">
+        <form string="Sélectionner les plans à consolider">
+            <field name="global_plan_id" invisible="1"/>
+            <field name="plan_ids" nolabel="1">
+                <tree>
+                    <field name="name"          string="Référence"/>
+                    <field name="direction_id"  string="Direction"/>
+                    <field name="department_id" string="Département"/>
+                    <field name="nature"        string="Nature"/>
+                    <field name="responsable_id" string="Responsable"/>
+                    <field name="avancement"    string="Avancement %"/>
+                    <field name="sent_to_rmqse" string="Plan reçu"/>
+                </tree>
+            </field>
+            <footer>
+                <button name="action_consolidate"
+                        string="Consolider les plans sélectionnés"
+                        type="object"
+                        class="oe_highlight"/>
+                <button string="Annuler" class="oe_link" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<record id="action_consolidate_wizard" model="ir.actions.act_window">
+    <field name="name">Consolider des plans</field>
+    <field name="res_model">nc_management.consolidate_wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+</record>
+
+</data>
+</odoo>

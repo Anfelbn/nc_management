@@ -280,9 +280,8 @@
                         <field name="avancement_global" widget="percentpie"/>
                     </group>
                     <group>
-                        <field name="nb_realises"  string="Plans réalisés"/>
-                        <field name="nb_en_cours"  string="Plans en cours"/>
-                        <field name="nb_en_retard" string="Plans en retard"/>
+                        <field name="taux_realisation"  string="Taux de réalisation %"/>
+                        <field name="taux_efficacite"   string="Taux d'efficacité %"/>
                     </group>
                 </group>
 
@@ -311,10 +310,6 @@
                 </notebook>
 
             </sheet>
-            <div class="oe_chatter">
-                <field name="message_follower_ids" widget="mail_followers"/>
-                <field name="message_ids"          widget="mail_thread"/>
-            </div>
         </form>
     </field>
 </record>

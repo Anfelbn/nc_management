@@ -442,12 +442,20 @@ class PlanActionSmi(models.Model):
     name = fields.Char(string='Référence', required=True, copy=False,
                        readonly=True, default='New')
     nature = fields.Selection([
-        ('nc_produit',     'NC Produit'),
-        ('reclamation_pi', 'Réclamation Client ou PI'),
-        ('environnement',  'Environnement'),
-        ('sst',            'SST'),
+        ('nc_produit',              'NC Produit'),
+        ('reclamation_pi',          'Réclamation Client ou PI'),
+        ('environnement',           'Environnement'),
+        ('sst',                     'SST'),
+        ('audit_externe',           'Audit Externe'),
+        ('audit_interne',           'Audit Interne'),
+        ('swot',                    'SWOT'),
+        ('risque',                  'Risque'),
+        ('objectif_non_atteint',    'Objectif non atteint'),
+        ('decision_revue_direction','Décision revue direction'),
+        ('amelioration',            'Amélioration'),
+        ('nc_reglementaire',        'NC réglementaire'),
     ], string='Nature')
-    fnc_id = fields.Many2one('nc_management.nonconformity', string='FNC Liée')
+    fnc_id = fields.Many2one('nc_management.nonconformity', string='Référence')
     direction_id = fields.Many2one(
         'hr.department',
         domain=[('scaek_level', '=', 'direction')],
@@ -471,7 +479,7 @@ class PlanActionSmi(models.Model):
         compute='_compute_is_late',
         store=True
     )
-    description = fields.Text(string='Brève description / Objectif amélioration')
+    description = fields.Text(string="Brève description de la non-conformité, remarque et/ou point sensible / ou Objectif d'amélioration")
     causes = fields.Text(string='Causes')
     action = fields.Text(string='Action')
     responsable_id = fields.Many2one('hr.employee', string='Responsable',
@@ -490,9 +498,8 @@ class PlanActionSmi(models.Model):
     ], string='Efficacité')
     remarque = fields.Text(string='Remarque (si non efficace)')
     state = fields.Selection([
-        ('draft',    'En cours'),
-        ('done',     'Réalisé'),
-        ('verified', 'Vérifié'),
+        ('draft', 'Brouillon'),
+        ('done',  'Réalisé'),
     ], string='Avancement', default='draft', track_visibility='onchange')
 
     # ── Cycle de vie RMQSE ────────────────────────────────────────
@@ -553,7 +560,7 @@ class PlanActionSmi(models.Model):
             rec.is_late = bool(
                 rec.date_prevue and
                 rec.date_prevue < today and
-                rec.state != 'verified'
+                rec.state != 'done'
             )
 
     @api.model
@@ -568,8 +575,15 @@ class PlanActionSmi(models.Model):
                     'nc_management.plan_action_smi') or 'New'
         return super(PlanActionSmi, self).create(vals)
 
+    @api.onchange('efficacite')
+    def _onchange_efficacite(self):
+        if self.efficacite:
+            self.state = 'done'
+
     @api.multi
     def write(self, vals):
+        if vals.get('efficacite'):
+            vals['state'] = 'done'
         res = super(PlanActionSmi, self).write(vals)
         if not self.env.context.get('_skip_date_maj') and 'date_maj' not in vals:
             plans_amelioration = self.filtered('is_global')
@@ -590,14 +604,6 @@ class PlanActionSmi(models.Model):
     @api.onchange('department_id')
     def _onchange_smi_department_id(self):
         self.service_id = False
-
-    @api.multi
-    def action_done(self):
-        self.state = 'done'
-
-    @api.multi
-    def action_verify(self):
-        self.state = 'verified'
 
     @api.multi
     def action_envoyer_rmqse(self):

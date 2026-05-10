@@ -91,22 +91,11 @@
                         class="oe_highlight"
                         groups="nc_management.group_nc_utilisateur"
                         attrs="{'invisible': [('submission_state', '!=', 'brouillon')]}"/>
-                <!-- Workflow avancement interne -->
-                <button name="action_done"
-                        string="Marquer Réalisé"
-                        type="object"
-                        attrs="{'invisible': [('state', '!=', 'draft')]}"/>
-                <button name="action_verify"
-                        string="Vérifier Efficacité"
-                        type="object"
-                        class="oe_highlight"
-                        attrs="{'invisible': [('state', '!=', 'done')]}"
-                        groups="nc_management.group_responsable_qualite"/>
                 <!-- Barres de statut -->
                 <field name="submission_state" widget="statusbar"
                        statusbar_visible="brouillon,soumis,integre"/>
                 <field name="state" widget="statusbar"
-                       statusbar_visible="draft,done,verified"/>
+                       statusbar_visible="draft,done"/>
             </header>
             <sheet>
                 <!-- Champs techniques requis par attrs -->
@@ -159,10 +148,10 @@
                 </group>
 
                 <!-- Description -->
-                <group string="Brève description / Objectif d'amélioration">
+                <group string="Brève description de la non-conformité, remarque et/ou point sensible / ou Objectif d'amélioration">
                     <field name="description" nolabel="1" colspan="2"
                            attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
-                           placeholder="Décrivez l'objectif d'amélioration..."/>
+                           placeholder="Décrivez la non-conformité, remarque et/ou point sensible, ou l'objectif d'amélioration..."/>
                 </group>
 
                 <!-- Causes / Action -->
@@ -234,10 +223,6 @@
                 </group>
 
             </sheet>
-            <div class="oe_chatter">
-                <field name="message_follower_ids" widget="mail_followers"/>
-                <field name="message_ids"          widget="mail_thread"/>
-            </div>
         </form>
     </field>
 </record>
@@ -308,7 +293,7 @@
                     <page string="Plans intégrés">
                         <field name="child_plan_ids" readonly="1">
                             <tree string="Plans intégrés"
-                                  decoration-success="state == 'verified'"
+                                  decoration-success="state == 'done'"
                                   decoration-danger="is_late == True"
                                   decoration-muted="submission_state == 'integre'">
                                 <field name="name"/>
@@ -364,12 +349,10 @@
             <filter string="Intégré"    name="f_integre"
                     domain="[('submission_state', '=', 'integre')]"/>
             <separator/>
-            <filter string="En Cours"   name="en_cours"
+            <filter string="Brouillon"  name="en_cours"
                     domain="[('state', '=', 'draft')]"/>
             <filter string="Réalisé"    name="realise"
                     domain="[('state', '=', 'done')]"/>
-            <filter string="Vérifié"    name="verifie"
-                    domain="[('state', '=', 'verified')]"/>
             <group expand="0" string="Grouper par">
                 <filter string="Direction"   name="group_direction"
                         context="{'group_by': 'direction_id'}"/>

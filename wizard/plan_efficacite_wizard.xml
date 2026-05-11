@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<record id="view_plan_efficacite_wizard_form" model="ir.ui.view">
+    <field name="name">nc_management.plan_efficacite_wizard.form</field>
+    <field name="model">nc_management.plan_efficacite_wizard</field>
+    <field name="arch" type="xml">
+        <form string="Analyse Efficacité Globale">
+            <sheet>
+
+                <div class="oe_title">
+                    <h2>Analyse Efficacité Globale</h2>
+                    <h4 style="color:#888;">
+                        <field name="plan_id" readonly="1"/>
+                    </h4>
+                </div>
+
+                <!-- Tableau par catégorie -->
+                <field name="line_ids" readonly="1" nolabel="1">
+                    <tree string="Analyse par catégorie"
+                          decoration-success="taux &gt;= 75"
+                          decoration-warning="taux &gt;= 50 and taux &lt; 75"
+                          decoration-danger="taux &lt; 50 and total &gt; 0">
+                        <field name="categorie"       string="Catégorie"/>
+                        <field name="efficace"        string="Efficace"/>
+                        <field name="non_efficace"    string="Non Efficace"/>
+                        <field name="realise_100"     string="Réalisé 100%"/>
+                        <field name="realise_50plus"  string="Réalisé >50%"/>
+                        <field name="realise_50moins" string="Réalisé &lt;50%"/>
+                        <field name="taux"            string="Taux Efficacité %"
+                                                      widget="float"/>
+                        <field name="total"           string="Total"/>
+                    </tree>
+                </field>
+
+                <!-- Graphique en barres (SVG généré en Python) -->
+                <field name="chart_html" widget="html" readonly="1" nolabel="1"/>
+
+            </sheet>
+            <footer>
+                <button string="Fermer" class="btn-secondary" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+</data>
+</odoo>

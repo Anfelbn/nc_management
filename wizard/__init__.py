@@ -4,3 +4,4 @@ from . import export_plan_wizard
 from . import export_smi_analysis_wizard
 from . import reply_wizard
 from . import consolidate_wizard
+from . import plan_efficacite_wizard

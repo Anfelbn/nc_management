@@ -241,12 +241,6 @@
                         string="Consolider des plans"
                         type="object"
                         attrs="{'invisible': [('submission_state', '=', 'cloture')]}"/>
-                <!-- Analyse d'efficacité -->
-                <button name="action_analyse_efficacite"
-                        string="Analyse d'Efficacité"
-                        type="object"
-                        class="oe_highlight"
-                        attrs="{'invisible': [('nb_plans_integres', '=', 0)]}"/>
                 <!-- Clôturer : crée automatiquement le plan suivant -->
                 <button name="action_cloturer_plan"
                         string="Clôturer et créer le suivant"
@@ -328,22 +322,26 @@
             <field name="responsable_id"/>
             <field name="fnc_id"/>
             <separator/>
-            <filter string="Mes Plans"  name="mes_plans"
+            <filter string="Mes Plans"    name="mes_plans"
                     domain="[('create_uid', '=', uid), ('is_global', '=', False)]"/>
-            <filter string="En retard"  name="en_retard"
+            <filter string="Plans Reçus"  name="plans_recus"
+                    domain="[('sent_to_rmqse', '=', True),
+                             ('is_global', '=', False),
+                             ('create_uid', '!=', uid)]"/>
+            <filter string="En retard"    name="en_retard"
                     domain="[('date_prevue', '&lt;', context_today().strftime('%Y-%m-%d')),
                              ('state', '!=', 'verified')]"/>
             <separator/>
-            <filter string="Brouillon"  name="f_brouillon"
+            <filter string="Brouillon"    name="f_brouillon"
                     domain="[('submission_state', '=', 'brouillon')]"/>
-            <filter string="Soumis"     name="f_soumis"
+            <filter string="Soumis"       name="f_soumis"
                     domain="[('submission_state', '=', 'soumis')]"/>
-            <filter string="Intégré"    name="f_integre"
+            <filter string="Intégré"      name="f_integre"
                     domain="[('submission_state', '=', 'integre')]"/>
             <separator/>
-            <filter string="Brouillon"  name="en_cours"
+            <filter string="En cours"     name="en_cours"
                     domain="[('state', '=', 'draft')]"/>
-            <filter string="Réalisé"    name="realise"
+            <filter string="Réalisé"      name="realise"
                     domain="[('state', '=', 'done')]"/>
             <group expand="0" string="Grouper par">
                 <filter string="Direction"   name="group_direction"
@@ -474,16 +472,69 @@
         (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form_global')})]"/>
 </record>
 
-<!-- Analyse d'Efficacité (Responsable Qualité uniquement) -->
+<!-- ============================================================ -->
+<!--  TREE — LISTE DES ANALYSES (Plans clôturés)                  -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_plan_smi_tree_analyses">
+    <field name="name">nc_management.plan_action_smi.tree.analyses</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="priority">18</field>
+    <field name="arch" type="xml">
+        <tree string="Analyses d'Efficacité" create="false" delete="false">
+            <field name="name"              string="Plan d'Amélioration"/>
+            <field name="mois_reception"    string="Période"/>
+            <field name="date_maj"          string="Date de clôture"/>
+            <field name="nb_plans_integres" string="Plans intégrés"/>
+            <field name="avancement_global" string="Avancement global %"/>
+            <field name="nb_realises"       string="Réalisés"/>
+            <field name="nb_en_retard"      string="En retard"/>
+        </tree>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  FORM — ANALYSE EFFICACITÉ (clic depuis la liste)            -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_plan_smi_form_analyse">
+    <field name="name">nc_management.plan_action_smi.form.analyse</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="priority">18</field>
+    <field name="arch" type="xml">
+        <form string="Analyse Efficacité Globale" edit="false">
+            <sheet>
+                <div class="oe_title">
+                    <h2>Analyse Efficacité Globale</h2>
+                    <h4 style="color:#888;">
+                        <field name="name" readonly="1"/>
+                    </h4>
+                </div>
+
+                <group>
+                    <group>
+                        <field name="mois_reception"    string="Période"         readonly="1"/>
+                        <field name="date_maj"          string="Date de clôture" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="nb_plans_integres" string="Plans intégrés"  readonly="1"/>
+                        <field name="avancement_global" string="Avancement %"    readonly="1"/>
+                    </group>
+                </group>
+
+                <field name="analyse_html" widget="html" readonly="1" nolabel="1"/>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<!-- Analyse d'Efficacité — liste + formulaire (clic sur ligne ouvre l'analyse) -->
 <record model="ir.actions.act_window" id="action_plan_smi_analyse_efficacite">
-    <field name="name">Analyse d'Efficacité SMI</field>
+    <field name="name">Analyses d'Efficacité</field>
     <field name="res_model">nc_management.plan_action_smi</field>
-    <field name="view_mode">pivot,graph</field>
-    <field name="domain">[('is_global', '=', False)]</field>
-    <field name="context">{'search_default_group_direction': 1}</field>
+    <field name="view_mode">tree,form</field>
+    <field name="domain">[('is_global', '=', True), ('submission_state', '=', 'cloture')]</field>
     <field name="view_ids" eval="[(5, 0, 0),
-        (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_plan_smi_pivot')}),
-        (0, 0, {'view_mode': 'graph', 'view_id': ref('view_plan_smi_graph_direction')})]"/>
+        (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_analyses')}),
+        (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form_analyse')})]"/>
 </record>
 
 <!-- ============================================================ -->

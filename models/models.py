@@ -542,6 +542,145 @@ class PlanActionSmi(models.Model):
         string='Plans intégrés',
     )
 
+    # ── Analyse HTML (tableau + graphique, catégories dynamiques) ──
+    analyse_html = fields.Html(
+        string='Analyse Efficacité',
+        compute='_compute_analyse_html',
+        sanitize=False,
+    )
+
+    _CAT_COLORS = {
+        'nc_produit':               '#007bff',  # bleu
+        'reclamation_pi':           '#fd7e14',  # orange
+        'environnement':            '#28a745',  # vert
+        'sst':                      '#6f42c1',  # violet
+        'audit_externe':            '#17a2b8',  # cyan
+        'audit_interne':            '#20c997',  # turquoise
+        'swot':                     '#e83e8c',  # rose
+        'risque':                   '#dc3545',  # rouge
+        'objectif_non_atteint':     '#ffc107',  # jaune
+        'decision_revue_direction': '#6c757d',  # gris
+        'amelioration':             '#0dcaf0',  # bleu clair
+        'nc_reglementaire':         '#d63384',  # magenta
+    }
+
+    @api.depends('child_plan_ids.nature', 'child_plan_ids.efficacite',
+                 'child_plan_ids.avancement', 'is_global', 'submission_state')
+    def _compute_analyse_html(self):
+        def badge(t):
+            if t > 80: return '#28a745'
+            if t >= 50: return '#fd7e14'
+            return '#dc3545'
+
+        th  = 'padding:10px 14px;text-align:center;white-space:nowrap;'
+        thl = 'padding:10px 14px;text-align:left;'
+        tdc = 'padding:8px 14px;text-align:center;border-bottom:1px solid #dee2e6;'
+        tdl = 'padding:8px 14px;text-align:left;border-bottom:1px solid #dee2e6;'
+
+        for rec in self:
+            children = rec.child_plan_ids
+            if not rec.is_global or not children:
+                rec.analyse_html = (
+                    '<p style="color:#888;padding:16px;">'
+                    'Aucune donnée disponible.</p>')
+                continue
+
+            # Toutes les natures de la sélection, même celles à zéro
+            sel = rec._fields['nature'].selection
+            nature_labels = dict(sel if not callable(sel) else sel(rec))
+            all_natures = [code for code, _ in (sel if not callable(sel) else sel(rec))]
+
+            rows = []
+            for nat in all_natures:
+                cat   = children.filtered(lambda p: p.nature == nat)
+                total = len(cat)
+                eff   = sum(1 for p in cat if p.efficacite == 'oui')
+                neff  = sum(1 for p in cat if p.efficacite == 'non')
+                r100  = sum(1 for p in cat if p.avancement == 100)
+                r50p  = sum(1 for p in cat if 50 < p.avancement < 100)
+                r50m  = sum(1 for p in cat if p.avancement <= 50)
+                taux  = round(eff / total * 100, 1) if total else 0.0
+                rows.append(dict(nat=nat, label=nature_labels.get(nat, nat),
+                                 total=total, eff=eff, neff=neff,
+                                 r100=r100, r50p=r50p, r50m=r50m, taux=taux))
+
+            # ── Tableau ────────────────────────────────────────────
+            thead = (
+                '<thead><tr style="background:#212529;color:white;font-weight:bold;">'
+                '<th style="{thl}">Catégorie</th>'
+                '<th style="{th}">Efficace</th>'
+                '<th style="{th}">Non Efficace</th>'
+                '<th style="{th}">Réalisé 100%</th>'
+                '<th style="{th}">Réalisé &gt;50%</th>'
+                '<th style="{th}">Réalisé &lt;50%</th>'
+                '<th style="{th}">Taux Efficacité%</th>'
+                '<th style="{th}">Total</th>'
+                '</tr></thead>'
+            ).format(th=th, thl=thl)
+
+            tbody = ''
+            for i, r in enumerate(rows):
+                bg  = '#ffffff' if i % 2 == 0 else '#f8f9fa'
+                bc  = badge(r['taux'])
+                cc  = rec._CAT_COLORS.get(r['nat'], '#6c757d')
+                bdg = ('<span style="background:{bc};color:white;padding:3px 10px;'
+                       'border-radius:12px;font-weight:bold;font-size:12px;">'
+                       '{t:.1f}%</span>').format(bc=bc, t=r['taux'])
+                tbody += (
+                    '<tr style="background:{bg};">'
+                    '<td style="{tdl}"><span style="color:{cc};font-weight:bold;">'
+                    '{label}</span></td>'
+                    '<td style="{tdc};color:#28a745;font-weight:bold;">{eff}</td>'
+                    '<td style="{tdc};color:#dc3545;font-weight:bold;">{neff}</td>'
+                    '<td style="{tdc}">{r100}</td>'
+                    '<td style="{tdc}">{r50p}</td>'
+                    '<td style="{tdc}">{r50m}</td>'
+                    '<td style="{tdc}">{bdg}</td>'
+                    '<td style="{tdc};font-weight:bold;">{total}</td>'
+                    '</tr>'
+                ).format(bg=bg, tdl=tdl, tdc=tdc, cc=cc,
+                         label=r['label'], eff=r['eff'], neff=r['neff'],
+                         r100=r['r100'], r50p=r['r50p'], r50m=r['r50m'],
+                         bdg=bdg, total=r['total'])
+
+            table = (
+                '<table style="width:100%;border-collapse:collapse;font-size:13px;'
+                'box-shadow:0 1px 3px rgba(0,0,0,.1);border-radius:6px;overflow:hidden;">'
+                '{thead}<tbody>{tbody}</tbody></table>'
+            ).format(thead=thead, tbody=tbody)
+
+            # ── Graphique CSS ──────────────────────────────────────
+            bars = ''
+            for r in rows:
+                bc  = badge(r['taux'])
+                cc  = rec._CAT_COLORS.get(r['nat'], '#6c757d')
+                pct = min(int(r['taux']), 100)
+                bars += (
+                    '<div style="display:flex;align-items:center;margin-bottom:12px;">'
+                    '<span style="width:160px;font-size:13px;color:{cc};'
+                    'font-weight:bold;flex-shrink:0;">{label}</span>'
+                    '<div style="flex:1;background:#f0f0f0;border-radius:6px;'
+                    'height:28px;position:relative;overflow:hidden;">'
+                    '<div style="width:{pct}%;background:{bc};height:28px;'
+                    'border-radius:6px;"></div>'
+                    '</div>'
+                    '<span style="width:50px;text-align:right;font-size:13px;'
+                    'font-weight:bold;color:{bc};padding-left:8px;">{taux:.1f}%</span>'
+                    '</div>'
+                ).format(cc=cc, bc=bc, label=r['label'], pct=pct, taux=r['taux'])
+
+            chart = (
+                '<div style="margin-top:24px;">'
+                '<p style="font-weight:bold;font-size:14px;margin-bottom:12px;'
+                'color:#212529;">Taux d\'efficacité par catégorie (%)</p>'
+                '{bars}</div>'
+            ).format(bars=bars)
+
+            rec.analyse_html = (
+                '<div style="font-family:Arial,sans-serif;padding:16px;">'
+                '{table}{chart}</div>'
+            ).format(table=table, chart=chart)
+
     # ── Statistiques plan global (calculées) ──────────────────────
     nb_plans_integres = fields.Integer(
         'Nb plans intégrés', compute='_compute_global_stats')
@@ -679,14 +818,17 @@ class PlanActionSmi(models.Model):
 
     @api.multi
     def action_analyse_efficacite(self):
+        """Ouvre le wizard Analyse Efficacité Globale pour ce plan clôturé."""
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
-            'name': "Analyse d'Efficacité — %s" % self.name,
-            'res_model': 'nc_management.plan_action_smi',
-            'view_mode': 'pivot,graph',
-            'domain': [('global_plan_id', '=', self.id)],
-            'context': {'search_default_group_state': 1},
+            'name': "Analyse Efficacité Globale",
+            'res_model': 'nc_management.plan_efficacite_wizard',
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_plan_efficacite_wizard_form').id,
+            'target': 'new',
+            'context': {'default_plan_id': self.id},
         }
 
     @api.multi

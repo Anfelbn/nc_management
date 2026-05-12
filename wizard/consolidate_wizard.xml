@@ -9,7 +9,7 @@
         <form string="Sélectionner les plans à consolider">
             <field name="global_plan_id" invisible="1"/>
             <field name="plan_ids" nolabel="1">
-                <tree>
+                <tree import="false">
                     <field name="name"          string="Référence"/>
                     <field name="direction_id"  string="Direction"/>
                     <field name="department_id" string="Département"/>

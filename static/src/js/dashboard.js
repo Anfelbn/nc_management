@@ -43,8 +43,6 @@ odoo.define('nc_management.dashboard', function(require){
                 monthly_fac_global: [],
                 global_fnc_total: 0,
                 global_fac_total: 0,
-                global_fnc_types: {},
-                global_fac_types: {},
                 calendar_events: {},
                 fnc_total: 0,
                 fnc_cours: 0,
@@ -55,7 +53,6 @@ odoo.define('nc_management.dashboard', function(require){
                 fac_total: 0,
                 fac_open: 0,
                 fac_verif: 0,
-                fac_validated: 0,
                 fac_closed: 0,
                 fac_retard: 0,
                 taux_efficacite: 0,
@@ -76,9 +73,6 @@ odoo.define('nc_management.dashboard', function(require){
                 period: '1m',
                 calendar_year: 0,
                 calendar_month: 0,
-                plan_total: 0,
-                plan_en_attente: 0,
-                plan_integres: 0,
             };
         },
 
@@ -139,16 +133,14 @@ odoo.define('nc_management.dashboard', function(require){
             });
 
             this.$el.on('click', '.btn-list', function(){
-                var model   = $(this).data('model') || 'nc_management.nonconformity';
-                var domain  = JSON.parse($(this).attr('data-domain') || '[]');
-                var context = JSON.parse($(this).attr('data-context') || '{}');
+                var model  = $(this).data('model') || 'nc_management.nonconformity';
+                var domain = JSON.parse($(this).attr('data-domain') || '[]');
                 self.do_action({
                     type:      'ir.actions.act_window',
                     res_model: model,
                     domain:    domain,
                     views:     [[false, 'list'], [false, 'form']],
                     target:    'current',
-                    context:   context,
                 });
             });
 
@@ -178,13 +170,6 @@ odoo.define('nc_management.dashboard', function(require){
                 var svcData = JSON.parse($(this).attr('data-svc'));
                 var kind = self._currentKind || 'fnc';
                 self._onSvcClick(svcData, kind);
-            });
-
-            this.$el.on('click', '.avatar-clickable', function(e){
-                e.stopPropagation();
-                var model = $(this).data('model');
-                var id    = parseInt($(this).data('id'), 10);
-                self._onAvatarClick(model, id);
             });
 
             this._initCalendar();
@@ -289,42 +274,23 @@ odoo.define('nc_management.dashboard', function(require){
         },
 
         _renderPie: function(types, title){
-            var TYPE_DEFS = [
-                {key: 'nc_produit',        label: 'NC Produit',          color: '#2196F3'},
-                {key: 'reclamation',       label: 'Réclamation',         color: '#EF4444'},
-                {key: 'sst',               label: 'SST',                 color: '#10B981'},
-                {key: 'environnement',     label: 'Environnement',       color: '#FF9800'},
-                {key: 'audit_interne',     label: 'Audit Interne',       color: '#7C3AED'},
-                {key: 'audit_externe',     label: 'Audit Externe',       color: '#9B59B6'},
-                {key: 'achat',             label: 'Achat',               color: '#F59E0B'},
-                {key: 'reception',         label: 'Réception',           color: '#06B6D4'},
-                {key: 'dysfonctionnement', label: 'Dysfonctionnement',   color: '#EC4899'},
-                {key: 'travaux',           label: 'Travaux',             color: '#84CC16'},
-                {key: 'autres',            label: 'Autres',              color: '#64748B'},
-            ];
-
-            var active = TYPE_DEFS.filter(function(t){ return (types[t.key] || 0) > 0; });
-
-            var cum = 0;
-            var segments = active.map(function(t){
-                var pct = types[t.key] || 0;
-                var seg = t.color + ' ' + cum + '% ' + (cum + pct) + '%';
-                cum += pct;
-                return seg;
-            });
-
-            var bg = active.length
-                ? 'conic-gradient(' + segments.join(',') + ')'
-                : '#e2e8f0';
+            var nc = types.nc_produit || 0;
+            var sst = types.sst || 0;
+            var env = types.environnement || 0;
+            var rec = types.reclamation || 0;
+            var audit = types.audit || 0;
+            var autres = types.autres || 0;
+            var p1=nc, p2=p1+sst, p3=p2+env, p4=p3+rec, p5=p4+audit;
+            var bg = 'conic-gradient(#2196F3 0% '+p1+'%,#10B981 '+p1+'% '+p2+'%,#FF9800 '+p2+'% '+p3+'%,#EF4444 '+p3+'% '+p4+'%,#7C3AED '+p4+'% '+p5+'%,#64748B '+p5+'% 100%)';
             this.$('.dir-pie').css('background', bg);
             this.$('.dir-pie-title').text(title);
-
-            var dot = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:';
-            var legendHtml = active.map(function(t){
-                return '<div><span style="' + dot + t.color + '"></span> ' + t.label + ' ' + (types[t.key] || 0) + '%</div>';
-            }).join('');
             this.$('.dir-pie-legend').html(
-                legendHtml || '<div style="color:#94a3b8;font-size:10px">Aucun type renseigné</div>'
+                '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2196F3"></span> NC Produit '+nc+'%</div>' +
+                '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10B981"></span> SST '+sst+'%</div>' +
+                '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF9800"></span> Env. '+env+'%</div>' +
+                '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#EF4444"></span> Réclam. '+rec+'%</div>' +
+                '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7C3AED"></span> Audit '+audit+'%</div>' +
+                '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#64748B"></span> Autres '+autres+'%</div>'
             );
         },
 
@@ -473,7 +439,7 @@ odoo.define('nc_management.dashboard', function(require){
                 html += '<div style="border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden">';
                 // En-tête FNC
                 html += '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f8fafc">'
-                      + '<div class="nc-avatar avatar-blue avatar-clickable" data-model="nc_management.nonconformity" data-id="' + fnc.id + '" title="Voir émetteur">' + _.escape(fnc.initials || 'FN') + '</div>'
+                      + '<div class="nc-avatar avatar-blue">' + _.escape(fnc.initials || 'FN') + '</div>'
                       + '<div style="flex:1;min-width:0">'
                       + '<div style="display:flex;justify-content:space-between;align-items:center">'
                       + '<div class="nc-notif-ref">' + _.escape(fnc.name || '') + ' · ' + _.escape(fnc.type || '') + '</div>'
@@ -489,7 +455,7 @@ odoo.define('nc_management.dashboard', function(require){
                 g.facs.forEach(function(fac){
                     html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px 8px 16px;border-top:1px solid #f1f5f9;background:white">'
                           + '<div style="width:2px;background:#EF4444;border-radius:2px;align-self:stretch;flex-shrink:0;margin-top:4px"></div>'
-                          + '<div class="nc-avatar avatar-red avatar-clickable" style="width:28px;height:28px;font-size:10px" data-model="nc_management.corrective_action" data-id="' + fac.id + '" title="Voir émetteur">' + _.escape(fac.initials || 'FA') + '</div>'
+                          + '<div class="nc-avatar avatar-red" style="width:28px;height:28px;font-size:10px">' + _.escape(fac.initials || 'FA') + '</div>'
                           + '<div style="flex:1;min-width:0">'
                           + '<div style="display:flex;justify-content:space-between;align-items:center">'
                           + '<div style="font-size:11px;font-weight:600;color:#1e293b">' + _.escape(fac.name || '') + ' · Action corrective</div>'
@@ -508,7 +474,7 @@ odoo.define('nc_management.dashboard', function(require){
             // FAC orphelines (sans FNC dans la liste courante)
             orphFacs.forEach(function(item){
                 html += '<div class="nc-notif">'
-                      + '<div class="nc-avatar avatar-red avatar-clickable" data-model="nc_management.corrective_action" data-id="' + item.id + '" title="Voir émetteur">' + _.escape(item.initials || 'FA') + '</div>'
+                      + '<div class="nc-avatar avatar-red">' + _.escape(item.initials || 'FA') + '</div>'
                       + '<div class="nc-notif-body">'
                       + '<div style="display:flex;justify-content:space-between;align-items:center">'
                       + '<div class="nc-notif-ref">' + _.escape(item.name || '') + ' · Action corrective</div>'
@@ -524,40 +490,19 @@ odoo.define('nc_management.dashboard', function(require){
 
             // Plans SMI
             plans.forEach(function(item){
-                var stateMap = {
-                    soumis:    {label: 'En attente',  color: '#7c3aed', bg: '#f5f3ff'},
-                    integre:   {label: 'Intégré',     color: '#059669', bg: '#f0fdf4'},
-                    cloture:   {label: 'Clôturé',     color: '#64748b', bg: '#f1f5f9'},
-                    brouillon: {label: 'Brouillon',   color: '#94a3b8', bg: '#f8fafc'},
-                };
-                var st = stateMap[item.submission_state] || null;
-                var stateBadge = st
-                    ? '<span class="badge" style="background:' + st.bg + ';color:' + st.color + ';border:1px solid ' + st.color + '33">' + st.label + '</span>'
-                    : '';
-
-                var infoLine = [];
-                if (item.sent_by_name) infoLine.push('De : <strong>' + _.escape(item.sent_by_name) + '</strong>');
-                if (item.date)         infoLine.push(_.escape(item.date));
-                var echeanceLine = item.date_prevue
-                    ? '<div class="nc-notif-info" style="color:#94a3b8">Échéance : ' + _.escape(item.date_prevue) + '</div>'
-                    : '';
-
-                html += '<div style="border:1px solid #e9d5ff;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#faf5ff">'
-                      + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;">'
-                      + '<div class="nc-avatar avatar-purple avatar-clickable" data-model="nc_management.plan_action_smi" data-id="' + item.id + '" title="Voir émetteur">' + _.escape(item.initials || 'PL') + '</div>'
-                      + '<div style="flex:1;min-width:0">'
-                      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'
-                      + '<div class="nc-notif-ref" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _.escape(item.name || '') + '</div>'
-                      + '<div style="display:flex;gap:4px;flex-shrink:0"><span class="badge purple">PLAN</span>' + stateBadge + '</div>'
+                html += '<div class="nc-notif">'
+                      + '<div class="nc-avatar avatar-purple">' + _.escape(item.initials || 'PL') + '</div>'
+                      + '<div class="nc-notif-body">'
+                      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                      + '<div class="nc-notif-ref">' + _.escape(item.name || '') + ' · ' + _.escape(item.type || '') + '</div>'
+                      + '<span class="badge purple">Plan</span>'
                       + '</div>'
-                      + '<div class="nc-notif-info" style="margin-top:3px;color:#6d28d9">' + _.escape(item.type || 'Plan action') + (item.department ? ' · ' + _.escape(item.department) : '') + '</div>'
-                      + '<div class="nc-notif-info">' + infoLine.join(' · ') + '</div>'
-                      + echeanceLine
+                      + '<div class="nc-notif-info">' + _.escape(item.department || '') + ' · ' + _.escape(item.date || '') + '</div>'
                       + '<div class="nc-notif-actions">'
-                      + '<div class="btn-sm primary btn-open" style="background:#7c3aed;border-color:#7c3aed" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
+                      + '<div class="btn-sm btn-open" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
                       + '<div class="btn-sm btn-reply" data-model="nc_management.plan_action_smi" data-id="' + item.id + '" data-partner-id="">Répondre</div>'
                       + '</div>'
-                      + '</div></div></div>';
+                      + '</div></div>';
             });
 
             if(!html) html = '<div class="nc-empty">Aucun document reçu.</div>';
@@ -571,23 +516,15 @@ odoo.define('nc_management.dashboard', function(require){
         },
 
         _renderDirectionPie: function(direction, kind){
-            kind = kind || 'fnc';
-            if(!direction){
-                var globalTypes = kind === 'fac'
-                    ? (this.stats.global_fac_types || {})
-                    : (this.stats.global_fnc_types || {});
-                this.$('.dir-pie-scope').text(
-                    'Types ' + (kind === 'fac' ? 'FAC' : 'FNC') + ' — Vue globale');
-                this._renderPie(globalTypes, 'Toutes directions');
-                return;
-            }
             var stats = this.stats.direction_stats || [];
             if(!stats.length) return;
-            var selected = null;
-            stats.forEach(function(item){
-                if(item.name === direction) selected = item;
-            });
-            if(!selected) return;
+            var selected = stats[0];
+            if(direction){
+                stats.forEach(function(item){
+                    if(item.name === direction) selected = item;
+                });
+            }
+            kind = kind || 'fnc';
             var types = (kind === 'fac' ? selected.fac_types : selected.fnc_types) || {};
             this._renderPie(types, (kind === 'fac' ? 'FAC' : 'FNC') + ' · ' + selected.name);
         },
@@ -667,86 +604,6 @@ odoo.define('nc_management.dashboard', function(require){
                 ],
                 {padL:28,padR:16,padT:16,padB:20,depth:7,groupGap:0.28}
             );
-        },
-
-        _onAvatarClick: function(model, id) {
-            var self = this;
-            this._rpc({
-                model:  'nc_management.dashboard',
-                method: 'get_sender_info',
-                args:   [model, id],
-            }).then(function(data) {
-                self._showSenderModal(data);
-            });
-        },
-
-        _showSenderModal: function(data) {
-            $('#nc-sender-modal').remove();
-            $(document).off('keydown.nsm');
-
-            var name = data.name || 'Inconnu';
-            var initials = name.split(' ').slice(0, 2).map(function(w) {
-                return (w[0] || '').toUpperCase();
-            }).join('') || '?';
-
-            function row(label, val) {
-                if (!val) return '';
-                return '<div class="nsm-row">'
-                     + '<span class="nsm-label">' + label + '</span>'
-                     + '<span class="nsm-val">' + _.escape(val) + '</span>'
-                     + '</div>';
-            }
-
-            var rows = row('Fonction',    data.job)
-                     + row('Direction',   data.direction)
-                     + row('Département', data.department)
-                     + row('Service',     data.service)
-                     + row("Date d'envoi", data.send_date);
-
-            var msgHtml = '';
-            if (data.message) {
-                msgHtml = '<div class="nsm-msg-box">'
-                        + '<div class="nsm-msg-label">Message</div>'
-                        + '<div class="nsm-msg-body">' + _.escape(data.message) + '</div>'
-                        + '</div>';
-            }
-
-            var emptyInfo = !data.job && !data.direction && !data.department && !data.service && !data.send_date;
-            if (emptyInfo && !data.message) {
-                rows = '<div class="nsm-row"><span class="nsm-val" style="color:#94a3b8;font-style:italic">Aucune information disponible.</span></div>';
-            }
-
-            var modal = $(
-                '<div id="nc-sender-modal" class="nsm-overlay">'
-              + '<div class="nsm-card">'
-              + '<button class="nsm-close" title="Fermer">&times;</button>'
-              + '<div class="nsm-avatar-lg">' + _.escape(initials) + '</div>'
-              + '<div class="nsm-name">' + _.escape(name) + '</div>'
-              + '<div class="nsm-rows">' + rows + '</div>'
-              + msgHtml
-              + '</div>'
-              + '</div>'
-            );
-
-            $('body').append(modal);
-            modal[0].offsetHeight;
-            modal.addClass('nsm-visible');
-
-            function closeModal() {
-                modal.removeClass('nsm-visible');
-                $(document).off('keydown.nsm');
-                setTimeout(function() { modal.remove(); }, 260);
-            }
-
-            modal.on('click', function(e) {
-                if ($(e.target).is('#nc-sender-modal') || $(e.target).hasClass('nsm-close')) {
-                    closeModal();
-                }
-            });
-
-            $(document).on('keydown.nsm', function(e) {
-                if (e.key === 'Escape') { closeModal(); }
-            });
         },
     });
 

@@ -10,7 +10,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">10</field>
     <field name="arch" type="xml">
-        <tree string="Mes Plans"
+        <tree string="Mes Plans" import="false"
               decoration-success="is_integrated == 'Oui'"
               decoration-danger="is_late == True">
             <field name="name"            string="Référence"/>
@@ -36,7 +36,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">16</field>
     <field name="arch" type="xml">
-        <tree string="Plans Reçus" create="false" delete="false" edit="false"
+        <tree string="Plans Reçus" import="false" create="false" delete="false" edit="false"
               decoration-success="submission_state == 'integre'"
               decoration-info="submission_state == 'soumis'">
             <field name="name"/>
@@ -60,7 +60,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">16</field>
     <field name="arch" type="xml">
-        <tree string="Plans d'Action d'Amélioration SMI"
+        <tree string="Plans d'Action d'Amélioration SMI" import="false"
               decoration-muted="submission_state == 'cloture'">
             <field name="name"/>
             <field name="mois_reception"    string="Date création"/>
@@ -282,7 +282,7 @@
                 <notebook>
                     <page string="Plans intégrés">
                         <field name="child_plan_ids" readonly="1">
-                            <tree string="Plans intégrés"
+                            <tree string="Plans intégrés" import="false"
                                   decoration-success="state == 'done'"
                                   decoration-danger="is_late == True"
                                   decoration-muted="submission_state == 'integre'">
@@ -438,7 +438,7 @@
     <field name="res_model">nc_management.plan_action_smi</field>
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_global', '=', False)]</field>
-    <field name="context">{'search_default_mes_plans': 1}</field>
+    <field name="context">{'search_default_mes_plans': 1, 'no_import': True}</field>
     <field name="view_ids" eval="[(5, 0, 0),
         (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_mes_plans')}),
         (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form')})]"/>
@@ -454,7 +454,7 @@
     <field name="domain">[('sent_to_rmqse', '=', True),
                           ('is_global', '=', False),
                           ('create_uid', '!=', uid)]</field>
-    <field name="context">{'search_default_group_direction': 1}</field>
+    <field name="context">{'search_default_group_direction': 1, 'no_import': True}</field>
     <field name="view_ids" eval="[(5, 0, 0),
         (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_recus')}),
         (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form')})]"/>
@@ -467,6 +467,7 @@
     <field name="res_model">nc_management.plan_action_smi</field>
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_global', '=', True)]</field>
+    <field name="context">{'no_import': True}</field>
     <field name="view_ids" eval="[(5, 0, 0),
         (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_global')}),
         (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form_global')})]"/>
@@ -480,7 +481,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">18</field>
     <field name="arch" type="xml">
-        <tree string="Analyses d'Efficacité" create="false" delete="false">
+        <tree string="Analyses d'Efficacité" import="false" create="false" delete="false">
             <field name="name"              string="Plan d'Amélioration"/>
             <field name="mois_reception"    string="Période"/>
             <field name="date_maj"          string="Date de clôture"/>
@@ -532,6 +533,7 @@
     <field name="res_model">nc_management.plan_action_smi</field>
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_global', '=', True), ('submission_state', '=', 'cloture')]</field>
+    <field name="context">{'no_import': True}</field>
     <field name="view_ids" eval="[(5, 0, 0),
         (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_analyses')}),
         (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form_analyse')})]"/>

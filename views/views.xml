@@ -11,7 +11,7 @@
     <field name="name">nc_management.nonconformity.tree</field>
     <field name="model">nc_management.nonconformity</field>
     <field name="arch" type="xml">
-        <tree string="Fiches Non-Conformité">
+        <tree string="Fiches Non-Conformité" create="0">
             <field name="name"/>
             <field name="date"/>
             <field name="direction_id"/>
@@ -29,13 +29,8 @@
     <field name="name">nc_management.nonconformity.form</field>
     <field name="model">nc_management.nonconformity</field>
     <field name="arch" type="xml">
-        <form string="Fiche de Non-Conformité">
+        <form string="Fiche de Non-Conformité" create="0">
             <header>
-                <button name="action_open_number_wizard"
-                        string="Générer Numéro"
-                        type="object"
-                        class="oe_highlight"
-                        attrs="{'invisible': [('name','!=','New')]}"/>
                 <button name="action_open_send_wizard"
                         string="Envoyer"
                         type="object"
@@ -61,8 +56,7 @@
                     <group>
                         <field name="direction_id"
                                options="{'no_create': True, 'no_create_edit': True}"
-                               attrs="{'readonly': [('state','!=','draft')]}"
-                               required="1"/>
+                               attrs="{'readonly': [('state','!=','draft')]}"/>
                         <field name="department_id"
                                options="{'no_create': True, 'no_create_edit': True}"
                                attrs="{'readonly': [('state','!=','draft')],
@@ -422,6 +416,13 @@
 <!--  ACTIONS ET MENUS                                             -->
 <!-- ============================================================ -->
 
+<record model="ir.actions.act_window" id="action_new_fnc_wizard">
+    <field name="name">Nouvelle FNC</field>
+    <field name="res_model">nc_management.number_generator_wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+</record>
+
 <record model="ir.actions.act_window" id="action_nonconformity">
     <field name="name">Non-Conformités</field>
     <field name="res_model">nc_management.nonconformity</field>
@@ -440,11 +441,17 @@
           id="nc_management.menu_root"
           sequence="10"/>
 
+<menuitem name="Nouvelle FNC"
+          id="nc_management.menu_new_fnc"
+          parent="nc_management.menu_root"
+          action="action_new_fnc_wizard"
+          sequence="10"/>
+
 <menuitem name="Non-Conformités"
           id="nc_management.menu_nonconformity"
           parent="nc_management.menu_root"
           action="action_nonconformity"
-          sequence="10"/>
+          sequence="20"/>
 
 <menuitem name="Actions Correctives"
           id="nc_management.menu_corrective"

@@ -18,7 +18,7 @@
 
                 <!-- Tableau par catégorie -->
                 <field name="line_ids" readonly="1" nolabel="1">
-                    <tree string="Analyse par catégorie"
+                    <tree string="Analyse par catégorie" import="false"
                           decoration-success="taux &gt;= 75"
                           decoration-warning="taux &gt;= 50 and taux &lt; 75"
                           decoration-danger="taux &lt; 50 and total &gt; 0">

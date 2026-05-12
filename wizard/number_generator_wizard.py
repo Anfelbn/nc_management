@@ -39,13 +39,13 @@ class NumberGeneratorWizard(models.TransientModel):
         self.ensure_one()
         abr = self.nc_type_id.code
         year = datetime.now().year
-        
-        # Utilisation d'une séquence basée sur l'abréviation
+
         seq_code = 'nc_management.fnc.%s' % abr.lower()
-        sequence = self.env['ir.sequence'].search([('code', '=', seq_code)], limit=1)
-        
+        seq_env = self.env['ir.sequence'].sudo()
+        sequence = seq_env.search([('code', '=', seq_code)], limit=1)
+
         if not sequence:
-            sequence = self.env['ir.sequence'].create({
+            sequence = seq_env.create({
                 'name': 'Séquence FNC %s' % abr,
                 'code': seq_code,
                 'prefix': '',
@@ -53,15 +53,14 @@ class NumberGeneratorWizard(models.TransientModel):
                 'number_next': 1,
                 'number_increment': 1,
             })
-            
+
         seq_number = sequence.next_by_id()
         generated_name = "%s-%s %s" % (abr, seq_number, year)
-        
-        # Mise à jour de la FNC parente
+
         vals = {
             'name': generated_name,
             self.category: True,
         }
         self.fnc_id.write(vals)
-        
+
         return {'type': 'ir.actions.act_window_close'}

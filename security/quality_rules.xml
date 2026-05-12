@@ -19,7 +19,8 @@
         <field name="name">FNC: Utilisateur voit ses fiches</field>
         <field name="model_id" ref="model_nc_management_nonconformity"/>
         <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
-        <field name="domain_force">['|',
+        <field name="domain_force">['|', '|',
+            ('create_uid','=',user.id),
             ('submitted_by_id','=',user.id),
             ('assigned_to_id.user_id','=',user.id)
         ]</field>
@@ -46,7 +47,8 @@
         <field name="name">FAC: Utilisateur voit ses FAC</field>
         <field name="model_id" ref="model_nc_management_corrective_action"/>
         <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
-        <field name="domain_force">['|',
+        <field name="domain_force">['|', '|',
+            ('create_uid','=',user.id),
             ('fnc_id.submitted_by_id','=',user.id),
             ('fnc_id.assigned_to_id.user_id','=',user.id)
         ]</field>

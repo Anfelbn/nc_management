@@ -104,6 +104,30 @@ canvas{display:block;width:100%}
 .dir-pill.active{background:#1e40af;color:white;border-color:#1e40af}
 .dir-pill.dept-pill.active{background:#059669;border-color:#059669}
 .dir-pill.svc-pill.active{background:#7c3aed;border-color:#7c3aed}
+/* ── Boutons compteurs audit ──────────────────────────────── */
+.aud-btn{flex:1;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:7px 6px 6px;cursor:pointer;text-align:center;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.aud-btn:hover{border-color:#1e40af;background:#eff6ff;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.aud-btn-label{font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.aud-btn-val{font-size:20px;font-weight:700;line-height:1}
+/* ── Avatar cliquable ─────────────────────────────────────── */
+.avatar-clickable{cursor:pointer;transition:transform .15s,box-shadow .15s}
+.avatar-clickable:hover{transform:scale(1.12);box-shadow:0 3px 12px rgba(0,0,0,.28)}
+/* ── Modal émetteur ───────────────────────────────────────── */
+.nsm-overlay{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.52);display:flex;align-items:center;justify-content:center;z-index:99999;opacity:0;transition:opacity .22s}
+.nsm-overlay.nsm-visible{opacity:1}
+.nsm-card{background:white;border-radius:18px;padding:28px 24px 22px;width:360px;max-width:92vw;position:relative;transform:translateY(20px) scale(.97);transition:transform .26s cubic-bezier(.34,1.56,.64,1);box-shadow:0 12px 40px rgba(0,0,0,.2)}
+.nsm-overlay.nsm-visible .nsm-card{transform:translateY(0) scale(1)}
+.nsm-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;line-height:1;color:#94a3b8;cursor:pointer;padding:2px 7px;border-radius:6px;transition:background .15s,color .15s}
+.nsm-close:hover{background:#f1f5f9;color:#1e293b}
+.nsm-avatar-lg{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%);color:white;font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 4px 16px rgba(30,64,175,.35)}
+.nsm-name{text-align:center;font-size:17px;font-weight:700;color:#1e293b;margin-bottom:18px;letter-spacing:.2px}
+.nsm-rows{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+.nsm-row{display:flex;gap:12px;align-items:flex-start}
+.nsm-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;width:90px;flex-shrink:0;padding-top:2px}
+.nsm-val{font-size:13px;color:#1e293b;font-weight:500;line-height:1.4}
+.nsm-msg-box{border-top:1px solid #f1f5f9;padding-top:14px}
+.nsm-msg-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+.nsm-msg-body{font-size:13px;color:#334155;background:#f8fafc;border-radius:9px;padding:10px 13px;border:1px solid #e2e8f0;line-height:1.5;word-break:break-word}
 </style>
 
 <div class="nc-inner">
@@ -182,9 +206,9 @@ canvas{display:block;width:100%}
   </div>
 
   <div class="g2" style="align-items:stretch">
-    <div class="nc-card">
+    <div class="nc-card" style="display:flex;flex-direction:column">
       <div class="nc-card-title">Évolution FNC &amp; FAC — Créées par RMQSE</div>
-      <canvas id="evoChart" style="height:120px"></canvas>
+      <canvas id="evoChart" style="flex:1;min-height:130px"></canvas>
       <div style="display:flex;gap:12px;margin-top:6px;justify-content:flex-end">
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#C9443A"></div>FAC</div>
@@ -193,30 +217,48 @@ canvas{display:block;width:100%}
 
     <div class="g4">
 
-      <!-- 1. AUDIT INTERNE — FNC + FAC -->
+      <!-- 1. AUDIT INTERNE — compteurs FNC + FAC cliquables -->
       <div class="nc-kpi">
         <div class="nc-kpi-top" style="background:#7C3AED"></div>
         <div class="nc-kpi-label">Audit Interne</div>
-        <div class="nc-kpi-val" style="color:#5B21B6"><t t-esc="widget.stats.audit_interne_total"/></div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-          <span class="badge blue">FNC <t t-esc="widget.stats.fnc_audit_interne"/></span>
-          <span class="badge red">FAC <t t-esc="widget.stats.fac_audit_interne"/></span>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <div class="aud-btn btn-list"
+               data-model="nc_management.nonconformity"
+               data-domain='[["type_audit_interne","=",true]]'
+               data-context='{"search_default_mes_fnc":0,"default_type_audit_interne":true,"default_type_audit":true}'>
+            <div class="aud-btn-label">FNC</div>
+            <div class="aud-btn-val" style="color:#1d4ed8"><t t-esc="widget.stats.fnc_audit_interne"/></div>
+          </div>
+          <div class="aud-btn btn-list"
+               data-model="nc_management.corrective_action"
+               data-domain='[["fnc_id.type_audit_interne","=",true]]'
+               data-context='{"search_default_fac_audit_interne":1}'>
+            <div class="aud-btn-label">FAC</div>
+            <div class="aud-btn-val" style="color:#991b1b"><t t-esc="widget.stats.fac_audit_interne"/></div>
+          </div>
         </div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["type_audit_interne","=",true]]' style="margin-top:6px">↳ Voir FNC →</div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["fnc_id.type_audit_interne","=",true]]'>↳ Voir FAC →</div>
       </div>
 
-      <!-- 2. AUDIT EXTERNE — FNC + FAC -->
+      <!-- 2. AUDIT EXTERNE — compteurs FNC + FAC cliquables -->
       <div class="nc-kpi">
         <div class="nc-kpi-top" style="background:#FF9800"></div>
         <div class="nc-kpi-label">Audit Externe</div>
-        <div class="nc-kpi-val" style="color:#E65100"><t t-esc="widget.stats.audit_externe_total"/></div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-          <span class="badge blue">FNC <t t-esc="widget.stats.fnc_audit_externe"/></span>
-          <span class="badge red">FAC <t t-esc="widget.stats.fac_audit_externe"/></span>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <div class="aud-btn btn-list"
+               data-model="nc_management.nonconformity"
+               data-domain='[["type_audit_externe","=",true]]'
+               data-context='{"search_default_mes_fnc":0,"default_type_audit_externe":true,"default_type_audit":true}'>
+            <div class="aud-btn-label">FNC</div>
+            <div class="aud-btn-val" style="color:#1d4ed8"><t t-esc="widget.stats.fnc_audit_externe"/></div>
+          </div>
+          <div class="aud-btn btn-list"
+               data-model="nc_management.corrective_action"
+               data-domain='[["fnc_id.type_audit_externe","=",true]]'
+               data-context='{"search_default_fac_audit_externe":1}'>
+            <div class="aud-btn-label">FAC</div>
+            <div class="aud-btn-val" style="color:#991b1b"><t t-esc="widget.stats.fac_audit_externe"/></div>
+          </div>
         </div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["type_audit_externe","=",true]]' style="margin-top:6px">↳ Voir FNC →</div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["fnc_id.type_audit_externe","=",true]]'>↳ Voir FAC →</div>
       </div>
 
       <!-- 3. TOTAL FNC — Brouillon · Soumise · En cours · Validée -->
@@ -243,9 +285,27 @@ canvas{display:block;width:100%}
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
           <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
           <span class="badge" style="background:#fef9c3;color:#854d0e">Soumise <t t-esc="widget.stats.fac_submitted"/></span>
-          <span class="badge orange">En cours <t t-esc="widget.stats.fac_open"/></span>
-          <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fac_verif"/></span>
+          <span class="badge orange">Soumise <t t-esc="widget.stats.fac_open"/></span>
+          <span class="badge" style="background:#dbeafe;color:#1e40af">En cours <t t-esc="widget.stats.fac_verif"/></span>
+          <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fac_validated"/></span>
           <span class="badge green">Clôturée <t t-esc="widget.stats.fac_closed"/></span>
+        </div>
+      </div>
+
+      <!-- 5. PLANS SMI REÇUS — pleine largeur -->
+      <div class="nc-kpi" style="grid-column:1/-1;background:linear-gradient(135deg,#faf5ff 0%,#f5f3ff 100%);border-color:#e9d5ff">
+        <div class="nc-kpi-top" style="background:linear-gradient(90deg,#6d28d9,#7c3aed)"></div>
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div>
+            <div class="nc-kpi-label">Plans SMI reçus</div>
+            <div class="nc-kpi-val" style="color:#5B21B6"><t t-esc="widget.stats.plan_total"/></div>
+          </div>
+          <div style="height:36px;width:1px;background:#e9d5ff;flex-shrink:0"></div>
+          <div style="flex:1;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <span class="badge" style="background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe">En attente <t t-esc="widget.stats.plan_en_attente"/></span>
+            <span class="badge" style="background:#f0fdf4;color:#059669;border:1px solid #bbf7d0">Intégrés <t t-esc="widget.stats.plan_integres"/></span>
+          </div>
+          <div class="nc-kpi-sub btn-list" data-model="nc_management.plan_action_smi" data-domain='[["sent_to_rmqse","=",true],["is_global","=",false]]' style="flex-shrink:0;margin:0">↳ Voir tous →</div>
         </div>
       </div>
 

@@ -8,9 +8,9 @@ class NumberGeneratorWizard(models.TransientModel):
     fnc_id = fields.Many2one(
         'nc_management.nonconformity',
         string='FNC',
-        required=True,
+        required=False,
         ondelete='cascade')
-    
+
     category = fields.Selection([
         ('type_nc_produit', 'NC Produit'),
         ('type_reclamation', 'Réclamation clients / PI'),
@@ -34,16 +34,11 @@ class NumberGeneratorWizard(models.TransientModel):
         else:
             return {'domain': {'nc_type_id': []}}
 
-    @api.multi
-    def action_confirm(self):
-        self.ensure_one()
-        abr = self.nc_type_id.code
+    def _generate_name(self, abr):
         year = datetime.now().year
-
         seq_code = 'nc_management.fnc.%s' % abr.lower()
         seq_env = self.env['ir.sequence'].sudo()
         sequence = seq_env.search([('code', '=', seq_code)], limit=1)
-
         if not sequence:
             sequence = seq_env.create({
                 'name': 'Séquence FNC %s' % abr,
@@ -53,14 +48,39 @@ class NumberGeneratorWizard(models.TransientModel):
                 'number_next': 1,
                 'number_increment': 1,
             })
-
         seq_number = sequence.next_by_id()
-        generated_name = "%s-%s %s" % (abr, seq_number, year)
+        return "%s-%s %s" % (abr, seq_number, year)
+
+    @api.multi
+    def action_confirm(self):
+        self.ensure_one()
+        abr = self.nc_type_id.code
+        generated_name = self._generate_name(abr)
 
         vals = {
             'name': generated_name,
             self.category: True,
         }
-        self.fnc_id.write(vals)
 
-        return {'type': 'ir.actions.act_window_close'}
+        if self.fnc_id:
+            fnc = self.fnc_id
+            fnc.with_context(skip_fnc_validation=True).write(vals)
+            if not fnc.fac_ids:
+                self.env['nc_management.corrective_action'].create({
+                    'fnc_id': fnc.id,
+                    'direction_id': fnc.direction_id.id if fnc.direction_id else False,
+                    'rappel_nc': fnc.description,
+                    'analyse_causes': fnc.analyse_causes,
+                    'date_fnc': fnc.date,
+                })
+            return {'type': 'ir.actions.act_window_close'}
+
+        # Créer une nouvelle FNC directement depuis le wizard
+        fnc = self.env['nc_management.nonconformity'].with_context(skip_fnc_validation=True).create(vals)
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'nc_management.nonconformity',
+            'res_id': fnc.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }

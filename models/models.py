@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class HrDepartmentScaek(models.Model):
@@ -126,8 +126,13 @@ class Nonconformity(models.Model):
     impact         = fields.Text(string='Impact : coût, incidence, risque')
 
     # ── Références FAC ───────────────────────────────────────
-    fac_ids               = fields.One2many('nc_management.corrective_action', 'fnc_id', string="Fiches d'action liées")
-    fac_reference         = fields.Char(string="N° Fiche d'action")
+    fac_ids       = fields.One2many('nc_management.corrective_action', 'fnc_id', string="Fiches d'action liées")
+    fac_reference = fields.Many2one(
+        'nc_management.corrective_action',
+        string="N° Fiche d'action",
+        compute='_compute_fac_reference',
+        store=True,
+    )
     responsable_action_id = fields.Many2one('hr.employee', string="Responsable de l'action(s)",
                               context={'no_create': True, 'no_create_edit': True})
 
@@ -152,21 +157,58 @@ class Nonconformity(models.Model):
     # ── Statut ────────────────────────────────────────────────
     state = fields.Selection([
         ('draft',       'Brouillon'),
-        ('submitted',   'Soumise — En attente traitement'),
-        ('in_progress', 'En cours — En attente validation'),
-        ('validated',   'Validée — En attente clôture'),
-        ('closed',      'Clôturée'),
+        ('submitted',   'Soumise'),
+        ('in_progress', 'En cours'),
+        ('validated',   'Validée'),
     ], string='Statut', default='draft', track_visibility='onchange')
 
-    # ── Numérotation automatique et création FAC ──────────────
+    @api.depends('fac_ids')
+    def _compute_fac_reference(self):
+        for rec in self:
+            rec.fac_reference = rec.fac_ids[:1].id if rec.fac_ids else False
+
+    # ── Validation obligatoire à la sauvegarde ────────────────
+    # Déclenche sur ces champs uniquement ; le numéro FNC est géré
+    # séparément via le bouton "Générer Numéro FNC".
+    @api.constrains(
+        'direction_id', 'description',
+        'type_nc_produit', 'type_reclamation', 'type_sst', 'type_environnement',
+        'type_travaux', 'type_audit', 'type_audit_interne', 'type_audit_externe',
+        'type_achat', 'type_reception', 'type_dysfonctionnement', 'type_autre',
+    )
+    def _check_fnc_required(self):
+        if self.env.context.get('skip_fnc_validation'):
+            return
+        for rec in self:
+            if not rec.direction_id:
+                raise ValidationError(
+                    "La Direction / Emetteur est obligatoire."
+                )
+            has_type = any([
+                rec.type_nc_produit, rec.type_reclamation, rec.type_sst,
+                rec.type_environnement, rec.type_travaux, rec.type_audit,
+                rec.type_audit_interne, rec.type_audit_externe, rec.type_achat,
+                rec.type_reception, rec.type_dysfonctionnement, rec.type_autre,
+            ])
+            if not has_type:
+                raise ValidationError(
+                    "Veuillez sélectionner au moins un type de non-conformité."
+                )
+            if not (rec.description and rec.description.strip()):
+                raise ValidationError(
+                    "La description de la non-conformité est obligatoire."
+                )
+
+    # ── Création FAC ──────────────────────────────────────────
     @api.model
     def create(self, vals):
-        if vals.get('name', 'New') == 'New':
-            vals['name'] = self.env['ir.sequence'].next_by_code(
-                'nc_management.nonconformity') or 'New'
-        
+        # Le bouton "Générer Numéro FNC" déclenche un create() automatique pour
+        # obtenir un ID avant d'ouvrir le wizard (name reste 'New').
+        # On bypasse la contrainte à cette étape initiale.
+        if vals.get('name', 'New') == 'New' and not self.env.context.get('skip_fnc_validation'):
+            self = self.with_context(skip_fnc_validation=True)
         res = super(Nonconformity, self).create(vals)
-        
+
         # Création automatique de la première FAC liée
         self.env['nc_management.corrective_action'].create({
             'fnc_id': res.id,
@@ -179,6 +221,17 @@ class Nonconformity(models.Model):
 
     @api.multi
     def write(self, vals):
+        # ── Transitions d'état déclenchées après sauvegarde ──
+        if 'state' not in vals:
+            for rec in self:
+                if vals.get('fonction_visa') and rec.state == 'draft':
+                    vals = dict(vals, state='submitted')
+                elif vals.get('responsable_action_id') and rec.state == 'submitted':
+                    vals = dict(vals, state='in_progress')
+                elif vals.get('signature') and rec.state == 'in_progress':
+                    vals = dict(vals, state='validated')
+                break  # formulaire = un seul record à la fois
+
         # On mémorise les valeurs actuelles pour la comparaison "smart sync"
         records_data = {}
         if any(field in vals for field in ['description', 'analyse_causes', 'direction_id']):
@@ -221,6 +274,11 @@ class Nonconformity(models.Model):
     @api.multi
     def action_open_send_wizard(self):
         self.ensure_one()
+        if self.name == 'New':
+            raise UserError(
+                "Le numéro FNC doit être généré via le bouton "
+                "\"Générer Numéro FNC\" avant d'enregistrer la fiche."
+            )
         return {
             'type': 'ir.actions.act_window',
             'name': 'Envoyer la FNC',
@@ -279,6 +337,27 @@ class Nonconformity(models.Model):
     @api.onchange('section_id')
     def _onchange_section_id(self):
         self.equipe_id = False
+
+    # ── Sélection exclusive du type de NC ────────────────────
+    @api.onchange(
+        'type_nc_produit', 'type_reclamation', 'type_sst', 'type_environnement',
+        'type_travaux', 'type_audit', 'type_audit_interne', 'type_audit_externe',
+        'type_achat', 'type_reception', 'type_dysfonctionnement', 'type_autre',
+    )
+    def _onchange_type_exclusive(self):
+        _all = [
+            'type_nc_produit', 'type_reclamation', 'type_sst', 'type_environnement',
+            'type_travaux', 'type_audit', 'type_audit_interne', 'type_audit_externe',
+            'type_achat', 'type_reception', 'type_dysfonctionnement', 'type_autre',
+        ]
+        for field in _all:
+            # Champ qui vient d'être coché (True maintenant, False avant)
+            if getattr(self, field) and not getattr(self._origin, field, False):
+                for other in _all:
+                    if other != field:
+                        setattr(self, other, False)
+                break
+
 
 
 class CorrectiveAction(models.Model):
@@ -1154,7 +1233,7 @@ class NcDashboard(models.Model):
             ('state', '=', 'in_progress'),
             ('date', '<=', limit7),
             ('create_uid', '=', self.env.uid),
-        ], ['name', 'direction_id', 'service_dpt', 'date'], limit=10)
+        ], ['name', 'direction_id', 'service_id', 'date'], limit=10)
         fnc_retard = len(fnc_retard_recs)
 
         # FNC reçues des autres services (submitted_by != current user dept)
@@ -1400,8 +1479,8 @@ class NcDashboard(models.Model):
                 'fac': sum([d['fac_count'] for d in dept_list]),
             },
             'service': {
-                'fnc': fnc.search_count(received_fnc_period_domain + [('service_dpt', '!=', False)]),
-                'fac': fac.search_count(fac_received_period_domain + [('fnc_id.service_dpt', '!=', False)]),
+                'fnc': fnc.search_count(received_fnc_period_domain + [('service_id', '!=', False)]),
+                'fac': fac.search_count(fac_received_period_domain + [('fnc_id.service_id', '!=', False)]),
             },
         }
         result['calendar_year'] = today.year

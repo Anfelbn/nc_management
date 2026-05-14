@@ -11,7 +11,7 @@
     <field name="name">nc_management.nonconformity.tree</field>
     <field name="model">nc_management.nonconformity</field>
     <field name="arch" type="xml">
-        <tree string="Fiches Non-Conformité" create="0">
+        <tree string="Fiches Non-Conformité">
             <field name="name"/>
             <field name="date"/>
             <field name="direction_id"/>
@@ -29,26 +29,25 @@
     <field name="name">nc_management.nonconformity.form</field>
     <field name="model">nc_management.nonconformity</field>
     <field name="arch" type="xml">
-        <form string="Fiche de Non-Conformité" create="0">
+        <form string="Fiche de Non-Conformité">
             <header>
+                <button name="action_open_number_wizard"
+                        string="Générer Numéro FNC"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('name','!=','New')]}"/>
                 <button name="action_open_send_wizard"
                         string="Envoyer"
                         type="object"
                         class="oe_highlight"
-                        attrs="{'invisible': [('state','in',['validated','closed'])]}"/>
-                <button name="action_close"
-                        string="Clôturer"
-                        type="object"
-                        states="validated"
-                        class="oe_highlight"
-                        groups="nc_management.group_responsable_qualite"/>
+                        attrs="{'invisible': ['|', ('state','=','validated'), ('name','=','New')]}"/>
                 <field name="state" widget="statusbar"
-                       statusbar_visible="draft,submitted,in_progress,validated,closed"/>
+                       statusbar_visible="draft,submitted,in_progress,validated"/>
             </header>
             <sheet>
 
                 <div class="oe_title">
-                    <h1><field name="name" attrs="{'readonly': [('name','!=','New')]}"/></h1>
+                    <h1><field name="name" readonly="1"/></h1>
                 </div>
 
                 <!-- ── En-tête (Step 1) ─────────────────────── -->
@@ -77,8 +76,6 @@
                                attrs="{'readonly': [('state','!=','draft')],
                                        'invisible': [('section_id','=',False)]}"
                                domain="[('scaek_level','=','equipe'),('parent_id','=',section_id)]"/>
-                        <field name="service_dpt"
-                               attrs="{'readonly': [('state','!=','draft')]}"/>
                     </group>
                     <group>
                         <field name="date"
@@ -184,26 +181,25 @@
                            attrs="{'readonly': [('state','not in',['submitted'])]}"/>
                 </group>
 
-                <!-- ── Liaison FAC / Responsable (Step 1) ──────  -->
+                <!-- ── Liaison FAC / Responsable ───────────────  -->
                 <group string="Fiche d'Action Corrective">
                     <field name="assigned_to_id"
                            options="{'no_create': True, 'no_create_edit': True}"
-                           attrs="{'readonly': [('state','!=','draft')]}"/>
-                    <field name="fac_reference"
-                           attrs="{'readonly': [('state','not in',['validated'])]}"/>
+                           attrs="{'readonly': [('state','not in',['draft','submitted'])]}"/>
+                    <field name="fac_reference" readonly="1"/>
                     <field name="responsable_action_id"
                            options="{'no_create': True, 'no_create_edit': True}"
-                           attrs="{'readonly': [('state','not in',['validated'])]}"/>
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress','validated'])]}"/>
                 </group>
 
-                <!-- ── Validation hiérarchique (Step 3) ─────────  -->
+                <!-- ── Validation hiérarchique ──────────────────  -->
                 <group string="Validation hiérarchique">
                     <group>
                         <field name="superieur_id"
                                options="{'no_create': True, 'no_create_edit': True}"
-                               attrs="{'readonly': [('state','not in',['in_progress'])]}"/>
+                               attrs="{'readonly': [('state','not in',['in_progress','validated'])]}"/>
                         <field name="date_validation"
-                               attrs="{'readonly': [('state','not in',['in_progress'])]}"/>
+                               attrs="{'readonly': [('state','not in',['in_progress','validated'])]}"/>
                     </group>
                     <group>
                         <field name="signature"
@@ -345,67 +341,65 @@
     <field name="model">nc_management.nonconformity</field>
     <field name="arch" type="xml">
         <search string="Rechercher FNC">
-            <field name="name" string="N° FNC"/>
-            <field name="direction_id" string="Direction"
+
+            <!-- ── Champs de recherche rapide ──────────────────── -->
+            <field name="name"          string="N° FNC"/>
+            <field name="direction_id"  string="Direction"
                    domain="[('scaek_level','=','direction')]"/>
             <field name="department_id" string="Département"
                    domain="[('scaek_level','=','departement')]"/>
-            <field name="service_id" string="Service"
+            <field name="service_id"    string="Service"
                    domain="[('scaek_level','=','service')]"/>
-            <field name="service_dpt" string="Service / DPT (texte)"/>
-            <field name="signale_par_id" string="Signalé par"/>
-            <field name="assigned_to_id" string="Responsable action"/>
+            <field name="signale_par_id"  string="Signalé par"/>
+            <field name="assigned_to_id"  string="Responsable action"/>
 
-            <!-- Filtre "Mes FNC" activé par défaut via search_default_mes_fnc -->
+            <!-- ── Origine ─────────────────────────────────────── -->
             <filter string="Mes FNC" name="mes_fnc"
-                    domain="[('create_uid', '=', uid)]"/>
-
-            <!-- Filtre "Toutes les FNC" réservé au Responsable Qualité -->
-            <filter string="Toutes les FNC" name="toutes_fnc"
-                    domain="[]"
-                    groups="nc_management.group_responsable_qualite"/>
+                    domain="[('create_uid','=',uid)]"/>
+            <filter string="FNC Reçues" name="fnc_recues"
+                    domain="[('create_uid','!=',uid)]"/>
 
             <separator/>
 
-            <!-- Filtres par statut -->
-            <filter string="Brouillon"   name="etat_brouillon"
+            <!-- ── Type d'audit (reçus) ────────────────────────── -->
+            <filter string="Audit Interne" name="audit_interne"
+                    domain="[('type_audit_interne','=',True)]"/>
+            <filter string="Audit Externe" name="audit_externe"
+                    domain="[('type_audit_externe','=',True)]"/>
+
+            <separator/>
+
+            <!-- ── État ────────────────────────────────────────── -->
+            <filter string="Brouillon"  name="etat_brouillon"
                     domain="[('state','=','draft')]"/>
-            <filter string="Soumises"    name="etat_soumise"
+            <filter string="Soumises"   name="etat_soumise"
                     domain="[('state','=','submitted')]"/>
-            <filter string="En cours"    name="etat_en_cours"
+            <filter string="En cours"   name="etat_en_cours"
                     domain="[('state','=','in_progress')]"/>
-            <filter string="Validées"    name="etat_validee"
+            <filter string="Validées"   name="etat_validee"
                     domain="[('state','=','validated')]"/>
-            <filter string="Clôturées"   name="etat_cloturee"
-                    domain="[('state','=','closed')]"/>
 
             <separator/>
 
-            <!-- Filtres périmètre hiérarchiques -->
-            <filter string="Avec Direction" name="par_direction"
-                    domain="[('direction_id','!=',False)]"
-                    groups="nc_management.group_responsable_qualite"/>
-            <filter string="Avec Département" name="par_departement"
-                    domain="[('department_id','!=',False)]"
-                    groups="nc_management.group_responsable_qualite"/>
-            <filter string="Avec Service"   name="par_service"
-                    domain="[('service_id','!=',False)]"
-                    groups="nc_management.group_responsable_qualite"/>
+            <!-- ── Périmètre hiérarchique ──────────────────────── -->
+            <filter string="Par Direction"   name="par_direction"
+                    domain="[('direction_id','!=',False)]"/>
+            <filter string="Par Département" name="par_departement"
+                    domain="[('department_id','!=',False)]"/>
+            <filter string="Par Service"     name="par_service"
+                    domain="[('service_id','!=',False)]"/>
 
-            <!-- Regroupements -->
+            <!-- ── Regrouper par ───────────────────────────────── -->
             <group expand="0" string="Regrouper par">
-                <filter string="Direction" name="group_direction"
-                        context="{'group_by': 'direction_id'}"
-                        groups="nc_management.group_responsable_qualite"/>
+                <filter string="Direction"   name="group_direction"
+                        context="{'group_by': 'direction_id'}"/>
                 <filter string="Département" name="group_departement"
-                        context="{'group_by': 'department_id'}"
-                        groups="nc_management.group_responsable_qualite"/>
-                <filter string="Service" name="group_service"
-                        context="{'group_by': 'service_id'}"
-                        groups="nc_management.group_responsable_qualite"/>
-                <filter string="Statut" name="group_state"
+                        context="{'group_by': 'department_id'}"/>
+                <filter string="Service"     name="group_service"
+                        context="{'group_by': 'service_id'}"/>
+                <filter string="Statut"      name="group_state"
                         context="{'group_by': 'state'}"/>
-                <filter string="Date" name="group_date"
+                <filter string="Date"        name="group_date"
                         context="{'group_by': 'date:month'}"/>
             </group>
         </search>
@@ -415,13 +409,6 @@
 <!-- ============================================================ -->
 <!--  ACTIONS ET MENUS                                             -->
 <!-- ============================================================ -->
-
-<record model="ir.actions.act_window" id="action_new_fnc_wizard">
-    <field name="name">Nouvelle FNC</field>
-    <field name="res_model">nc_management.number_generator_wizard</field>
-    <field name="view_mode">form</field>
-    <field name="target">new</field>
-</record>
 
 <record model="ir.actions.act_window" id="action_nonconformity">
     <field name="name">Non-Conformités</field>
@@ -439,12 +426,6 @@
 
 <menuitem name="NC Management"
           id="nc_management.menu_root"
-          sequence="10"/>
-
-<menuitem name="Nouvelle FNC"
-          id="nc_management.menu_new_fnc"
-          parent="nc_management.menu_root"
-          action="action_new_fnc_wizard"
           sequence="10"/>
 
 <menuitem name="Non-Conformités"

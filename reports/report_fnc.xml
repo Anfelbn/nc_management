@@ -150,7 +150,11 @@
                             <tr class="cell-sm">
                                 <td>
                                     <span>Sce /DPT : </span>
-                                    <t t-esc="doc.service_dpt or ''"/>
+                                    <t t-if="doc.service_id and doc.department_id">
+                                        <t t-esc="doc.service_id.name"/> / <t t-esc="doc.department_id.name"/>
+                                    </t>
+                                    <t t-elif="doc.service_id"><t t-esc="doc.service_id.name"/></t>
+                                    <t t-elif="doc.department_id"><t t-esc="doc.department_id.name"/></t>
                                 </td>
                                 <td colspan="2">
                                     <span>N° FNC : </span>

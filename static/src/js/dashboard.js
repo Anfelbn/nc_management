@@ -473,7 +473,7 @@ odoo.define('nc_management.dashboard', function(require){
                 html += '<div style="border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden">';
                 // En-tête FNC
                 html += '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f8fafc">'
-                      + '<div class="nc-avatar avatar-blue avatar-clickable" data-model="nc_management.nonconformity" data-id="' + fnc.id + '" title="Voir émetteur">' + _.escape(fnc.initials || 'FN') + '</div>'
+                      + '<div class="nc-avatar avatar-blue avatar-clickable" data-model="nc_management.nonconformity" data-id="' + fnc.id + '" title="' + _.escape(fnc.sender_name || 'Émetteur') + '">' + _.escape(fnc.sender_initials || '?') + '</div>'
                       + '<div style="flex:1;min-width:0">'
                       + '<div style="display:flex;justify-content:space-between;align-items:center">'
                       + '<div class="nc-notif-ref">' + _.escape(fnc.name || '') + ' · ' + _.escape(fnc.type || '') + '</div>'
@@ -489,7 +489,7 @@ odoo.define('nc_management.dashboard', function(require){
                 g.facs.forEach(function(fac){
                     html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px 8px 16px;border-top:1px solid #f1f5f9;background:white">'
                           + '<div style="width:2px;background:#EF4444;border-radius:2px;align-self:stretch;flex-shrink:0;margin-top:4px"></div>'
-                          + '<div class="nc-avatar avatar-red avatar-clickable" style="width:28px;height:28px;font-size:10px" data-model="nc_management.corrective_action" data-id="' + fac.id + '" title="Voir émetteur">' + _.escape(fac.initials || 'FA') + '</div>'
+                          + '<div class="nc-avatar avatar-red avatar-clickable" style="width:28px;height:28px;font-size:10px" data-model="nc_management.corrective_action" data-id="' + fac.id + '" title="' + _.escape(fac.sender_name || 'Émetteur') + '">' + _.escape(fac.sender_initials || '?') + '</div>'
                           + '<div style="flex:1;min-width:0">'
                           + '<div style="display:flex;justify-content:space-between;align-items:center">'
                           + '<div style="font-size:11px;font-weight:600;color:#1e293b">' + _.escape(fac.name || '') + ' · Action corrective</div>'
@@ -508,7 +508,7 @@ odoo.define('nc_management.dashboard', function(require){
             // FAC orphelines (sans FNC dans la liste courante)
             orphFacs.forEach(function(item){
                 html += '<div class="nc-notif">'
-                      + '<div class="nc-avatar avatar-red avatar-clickable" data-model="nc_management.corrective_action" data-id="' + item.id + '" title="Voir émetteur">' + _.escape(item.initials || 'FA') + '</div>'
+                      + '<div class="nc-avatar avatar-red avatar-clickable" data-model="nc_management.corrective_action" data-id="' + item.id + '" title="' + _.escape(item.sender_name || 'Émetteur') + '">' + _.escape(item.sender_initials || '?') + '</div>'
                       + '<div class="nc-notif-body">'
                       + '<div style="display:flex;justify-content:space-between;align-items:center">'
                       + '<div class="nc-notif-ref">' + _.escape(item.name || '') + ' · Action corrective</div>'
@@ -544,7 +544,7 @@ odoo.define('nc_management.dashboard', function(require){
 
                 html += '<div style="border:1px solid #e9d5ff;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#faf5ff">'
                       + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;">'
-                      + '<div class="nc-avatar avatar-purple avatar-clickable" data-model="nc_management.plan_action_smi" data-id="' + item.id + '" title="Voir émetteur">' + _.escape(item.initials || 'PL') + '</div>'
+                      + '<div class="nc-avatar avatar-purple avatar-clickable" data-model="nc_management.plan_action_smi" data-id="' + item.id + '" title="' + _.escape(item.sender_name || 'Émetteur') + '">' + _.escape(item.sender_initials || '?') + '</div>'
                       + '<div style="flex:1;min-width:0">'
                       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'
                       + '<div class="nc-notif-ref" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _.escape(item.name || '') + '</div>'

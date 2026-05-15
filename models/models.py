@@ -1678,6 +1678,11 @@ class NcDashboard(models.Model):
             name = employee.name if employee else 'XX'
             return ''.join([w[0].upper() for w in name.split()[:2]]) or 'XX'
 
+        def _name_initials(name):
+            if not name:
+                return '??'
+            return ''.join([w[0].upper() for w in name.split()[:2]]) or '??'
+
         # FNC en retard alertes : créées par RMQSE, in_progress > 7 jours
         fnc_retard_list = []
         for fnc_rec in fnc.search([
@@ -1710,6 +1715,10 @@ class NcDashboard(models.Model):
                                   order='date desc, id desc', limit=20):
             responsible = fnc_rec.assigned_to_id or fnc_rec.responsable_action_id
             submitter = fnc_rec.submitted_by_id
+            signale = fnc_rec.signale_par_id
+            sender_name = (signale.name if signale
+                           else (submitter.name if submitter and submitter.id != self.env.uid
+                           else (fnc_rec.direction_id.name if fnc_rec.direction_id else '')))
             item = {
                 'id': fnc_rec.id,
                 'name': fnc_rec.name,
@@ -1721,6 +1730,8 @@ class NcDashboard(models.Model):
                 'responsible': responsible.name if responsible else '',
                 'date': _date_label(fnc_rec.date),
                 'initials': _initials(responsible),
+                'sender_name': sender_name,
+                'sender_initials': _name_initials(sender_name),
                 'submitted_by_partner_id': submitter.partner_id.id if submitter else None,
                 'submitted_by_name': submitter.name if submitter else '',
             }
@@ -1731,6 +1742,10 @@ class NcDashboard(models.Model):
         for fac_rec in fac.search(fac_received_period_domain, order='date desc, id desc', limit=20):
             responsible = fac_rec.responsable_actions_id
             fnc_submitter = fac_rec.fnc_id.submitted_by_id if fac_rec.fnc_id else None
+            fnc_signale = fac_rec.fnc_id.signale_par_id if fac_rec.fnc_id else None
+            fac_sender_name = (fnc_signale.name if fnc_signale
+                               else (fnc_submitter.name if fnc_submitter and fnc_submitter.id != self.env.uid
+                               else (fac_rec.direction_id.name if fac_rec.direction_id else '')))
             item = {
                 'id': fac_rec.id,
                 'name': fac_rec.name,
@@ -1742,6 +1757,8 @@ class NcDashboard(models.Model):
                 'responsible': responsible.name if responsible else '',
                 'date': _date_label(fac_rec.date),
                 'initials': _initials(responsible),
+                'sender_name': fac_sender_name,
+                'sender_initials': _name_initials(fac_sender_name),
                 'fnc_id': fac_rec.fnc_id.id if fac_rec.fnc_id else None,
                 'state': fac_rec.state,
                 'submitted_by_partner_id': fnc_submitter.partner_id.id if fnc_submitter else None,
@@ -1754,6 +1771,8 @@ class NcDashboard(models.Model):
         for plan_rec in plan_this_period:
             plan_date = plan_rec.date_lancement or plan_rec.date_prevue
             responsible = plan_rec.responsable_id
+            plan_sender_name = (plan_rec.sent_by.name if plan_rec.sent_by
+                                else (plan_rec.direction_id.name if plan_rec.direction_id else ''))
             item = {
                 'id': plan_rec.id,
                 'name': plan_rec.name,
@@ -1761,10 +1780,15 @@ class NcDashboard(models.Model):
                 'kind': 'Plan',
                 'badge': 'purple',
                 'model': 'nc_management.plan_action_smi',
-                'department': plan_rec.fnc_id.direction_id.name if plan_rec.fnc_id and plan_rec.fnc_id.direction_id else '',
+                'department': plan_rec.fnc_id.direction_id.name if plan_rec.fnc_id and plan_rec.fnc_id.direction_id else (plan_rec.direction_id.name if plan_rec.direction_id else ''),
                 'responsible': responsible.name if responsible else '',
                 'date': _date_label(plan_date),
                 'initials': _initials(responsible),
+                'sender_name': plan_sender_name,
+                'sender_initials': _name_initials(plan_sender_name),
+                'sent_by_name': plan_rec.sent_by.name if plan_rec.sent_by else '',
+                'date_prevue': _date_label(plan_rec.date_prevue),
+                'submission_state': plan_rec.submission_state or 'brouillon',
             }
             received_docs.append(item)
             if plan_date:
@@ -1869,3 +1893,103 @@ class NcDashboard(models.Model):
             'fac_types': _pct(dir_fac_recs.mapped('fnc_id')),
             'departments': dept_data,
         }
+
+    @api.model
+    def get_sender_info(self, model, record_id):
+        from odoo.tools import html2plaintext
+
+        result = {
+            'name': '',
+            'job': '',
+            'direction': '',
+            'department': '',
+            'service': '',
+            'send_date': '',
+            'message': '',
+        }
+
+        def _get_first_message(mod, rid):
+            msg = self.env['mail.message'].sudo().search([
+                ('res_id', '=', rid),
+                ('model', '=', mod),
+                ('message_type', 'in', ['comment', 'notification']),
+                ('body', 'not in', [False, '', '<p><br></p>', '<p></p>']),
+            ], order='id asc', limit=1)
+            if msg:
+                return html2plaintext(msg.body or '').strip()
+            return ''
+
+        def _emp_job(user_id):
+            emp = self.env['hr.employee'].sudo().search(
+                [('user_id', '=', user_id)], limit=1)
+            return emp.job_id.name if emp and emp.job_id else ''
+
+        try:
+            if model == 'nc_management.nonconformity':
+                rec = self.env[model].sudo().browse(record_id)
+                if not rec.exists():
+                    return result
+                # L'émetteur réel = signale_par_id (la personne du département qui a signalé la NC)
+                if rec.signale_par_id:
+                    emp = rec.signale_par_id
+                    result['name'] = emp.name or ''
+                    result['job'] = emp.job_id.name if emp.job_id else ''
+                elif rec.submitted_by_id:
+                    result['name'] = rec.submitted_by_id.name or ''
+                    result['job'] = _emp_job(rec.submitted_by_id.id)
+                elif rec.create_uid and rec.create_uid.id != self.env.uid:
+                    result['name'] = rec.create_uid.name or ''
+                    result['job'] = _emp_job(rec.create_uid.id)
+                result['direction'] = rec.direction_id.name if rec.direction_id else ''
+                result['department'] = rec.department_id.name if rec.department_id else ''
+                result['service'] = rec.service_id.name if rec.service_id else ''
+                result['send_date'] = rec.date.strftime('%d/%m/%Y') if rec.date else ''
+                result['message'] = _get_first_message(model, record_id)
+
+            elif model == 'nc_management.corrective_action':
+                rec = self.env[model].sudo().browse(record_id)
+                if not rec.exists():
+                    return result
+                # Pour FAC : l'émetteur = signale_par_id de la FNC parente
+                fnc = rec.fnc_id
+                if fnc and fnc.signale_par_id:
+                    emp = fnc.signale_par_id
+                    result['name'] = emp.name or ''
+                    result['job'] = emp.job_id.name if emp.job_id else ''
+                elif fnc and fnc.submitted_by_id:
+                    result['name'] = fnc.submitted_by_id.name or ''
+                    result['job'] = _emp_job(fnc.submitted_by_id.id)
+                elif rec.responsable_actions_id:
+                    emp = rec.responsable_actions_id
+                    result['name'] = emp.name or ''
+                    result['job'] = emp.job_id.name if emp.job_id else ''
+                result['direction'] = rec.direction_id.name if rec.direction_id else ''
+                result['department'] = (fnc.department_id.name if fnc and fnc.department_id else '')
+                result['service'] = (fnc.service_id.name if fnc and fnc.service_id else '')
+                result['send_date'] = rec.date.strftime('%d/%m/%Y') if rec.date else ''
+                result['message'] = _get_first_message(model, record_id)
+
+            elif model == 'nc_management.plan_action_smi':
+                rec = self.env[model].sudo().browse(record_id)
+                if not rec.exists():
+                    return result
+                # Pour Plan : sent_by est explicitement l'émetteur
+                if rec.sent_by:
+                    result['name'] = rec.sent_by.name or ''
+                    result['job'] = _emp_job(rec.sent_by.id)
+                elif rec.responsable_id:
+                    result['name'] = rec.responsable_id.name or ''
+                    result['job'] = rec.responsable_id.job_id.name if rec.responsable_id.job_id else ''
+                result['direction'] = rec.direction_id.name if rec.direction_id else ''
+                result['department'] = rec.department_id.name if rec.department_id else ''
+                result['service'] = rec.service_id.name if rec.service_id else ''
+                if rec.date_envoi:
+                    result['send_date'] = rec.date_envoi.strftime('%d/%m/%Y')
+                elif rec.date_lancement:
+                    result['send_date'] = rec.date_lancement.strftime('%d/%m/%Y')
+                result['message'] = _get_first_message(model, record_id)
+
+        except Exception:
+            pass
+
+        return result

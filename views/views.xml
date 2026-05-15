@@ -255,17 +255,19 @@
 
             <filter string="Mes FAC" name="mes_fac"
                     domain="[('responsable_id','=',uid)]"/>
-            <filter string="Toutes les FAC" name="toutes_fac"
+            <filter string="FAC reçus" name="toutes_fac"
                     domain="[]"/>
 
             <separator/>
 
             <filter string="Brouillon"  name="etat_brouillon"
                     domain="[('state','=','draft')]"/>
-            <filter string="Ouvertes"   name="etat_open"
-                    domain="[('state','=','open')]"/>
-            <filter string="Vérifiées"  name="etat_verified"
-                    domain="[('state','=','verified')]"/>
+            <filter string="Soumises"   name="etat_soumise"
+                    domain="[('state','=','submitted')]"/>
+            <filter string="En cours"   name="etat_en_cours"
+                    domain="[('state','=','in_progress')]"/>
+            <filter string="Validées"   name="etat_validee"
+                    domain="[('state','=','validated')]"/>
             <filter string="Clôturées"  name="etat_closed"
                     domain="[('state','=','closed')]"/>
 
@@ -290,14 +292,8 @@
     <field name="arch" type="xml">
         <form string="Fiche d'Action Corrective">
             <header>
-                <button name="action_open"   string="Ouvrir"    type="object"
-                        states="draft"     class="oe_highlight"/>
-                <button name="action_verify" string="Vérifier"  type="object"
-                        states="open"/>
-                <button name="action_close"  string="Clôturer"  type="object"
-                        states="verified"  class="oe_highlight"/>
                 <field name="state" widget="statusbar"
-                       statusbar_visible="draft,open,verified,closed"/>
+                       statusbar_visible="draft,submitted,in_progress,validated,closed"/>
             </header>
             <sheet>
 

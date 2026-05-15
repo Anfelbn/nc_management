@@ -270,6 +270,27 @@ class Nonconformity(models.Model):
                     "avant d'affecter la fonction et visa."
                 )
 
+    # ── Valeurs par défaut depuis le compte employé ───────────
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super(Nonconformity, self).default_get(fields_list)
+        employee = self.env['hr.employee'].search(
+            [('user_id', '=', self.env.uid)], limit=1)
+        if employee:
+            if 'signale_par_id' in fields_list:
+                defaults['signale_par_id'] = employee.id
+            dept = employee.department_id
+            while dept:
+                level = dept.scaek_level
+                if level == 'direction' and 'direction_id' in fields_list:
+                    defaults['direction_id'] = dept.id
+                elif level == 'departement' and 'department_id' in fields_list:
+                    defaults['department_id'] = dept.id
+                elif level == 'service' and 'service_id' in fields_list:
+                    defaults['service_id'] = dept.id
+                dept = dept.parent_id
+        return defaults
+
     # ── Création FAC ──────────────────────────────────────────
     @api.model
     def create(self, vals):
@@ -347,15 +368,25 @@ class Nonconformity(models.Model):
                     if updates:
                         fac.write(updates)
 
-        # Sync responsable_id sur les FAC quand assigned_to_id change
+        # Sync responsable_id + responsable_analyse_id sur les FAC quand assigned_to_id change
         if 'assigned_to_id' in vals:
             employee = self.env['hr.employee'].browse(vals['assigned_to_id'])
             user = employee.user_id if employee else False
             for rec in self:
                 for fac in rec.sudo().fac_ids:
-                    fac.sudo().write({'responsable_id': user.id if user else False})
+                    fac.sudo().write({
+                        'responsable_id': user.id if user else False,
+                        'responsable_analyse_id': employee.id if employee else False,
+                    })
 
         return res
+
+    @api.multi
+    def unlink(self):
+        if not self.env.user.has_group('nc_management.group_responsable_qualite'):
+            if any(rec.create_uid.id != self.env.uid for rec in self):
+                raise UserError("Vous ne pouvez supprimer que vos propres fiches FNC.")
+        return super(Nonconformity, self).unlink()
 
     # ── Boutons workflow ──────────────────────────────────────
     @api.multi
@@ -520,11 +551,27 @@ class CorrectiveAction(models.Model):
 
     # ── Statut ────────────────────────────────────────────────
     state = fields.Selection([
-        ('draft',    'Brouillon'),
-        ('open',     'Ouverte'),
-        ('verified', 'Vérifiée'),
-        ('closed',   'Clôturée'),
+        ('draft',      'Brouillon'),
+        ('submitted',  'Soumise'),
+        ('in_progress','En cours'),
+        ('validated',  'Validée'),
+        ('closed',     'Clôturée'),
     ], string='Statut', default='draft', track_visibility='onchange')
+
+    # ── Valeurs par défaut depuis le compte employé ───────────
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super(CorrectiveAction, self).default_get(fields_list)
+        employee = self.env['hr.employee'].search(
+            [('user_id', '=', self.env.uid)], limit=1)
+        if employee:
+            dept = employee.department_id
+            while dept:
+                if dept.scaek_level == 'direction' and 'direction_id' in fields_list:
+                    defaults['direction_id'] = dept.id
+                    break
+                dept = dept.parent_id
+        return defaults
 
     # ── Remplissage auto via FNC ──────────────────────────────
     @api.onchange('fnc_id')
@@ -534,6 +581,7 @@ class CorrectiveAction(models.Model):
             self.analyse_causes = self.fnc_id.analyse_causes
             self.direction_id = self.fnc_id.direction_id
             self.date_fnc = self.fnc_id.date
+            self.responsable_analyse_id = self.fnc_id.assigned_to_id
 
     # ── Numérotation automatique ──────────────────────────────
     @api.model
@@ -543,42 +591,38 @@ class CorrectiveAction(models.Model):
                 'nc_management.corrective_action') or 'New'
         return super(CorrectiveAction, self).create(vals)
 
-    # ── Boutons workflow ──────────────────────────────────────
+    # ── Transitions d'état automatiques ──────────────────────
     @api.multi
-    def action_open(self):
-        for rec in self:
-            rec.state = 'open'
-            rec.message_post(body='Fiche FAC ouverte.')
+    def write(self, vals):
+        if 'state' not in vals:
+            for rec in self:
+                new_visa_analyse  = vals.get('visa_analyse',  rec.visa_analyse)
+                new_visa_actions  = vals.get('visa_actions',  rec.visa_actions)
+                new_qse_visa      = vals.get('qse_visa',      rec.qse_visa)
+                new_visa_cloture  = vals.get('visa_cloture',  rec.visa_cloture)
+
+                if new_visa_cloture and rec.state != 'closed':
+                    employee = self.env['hr.employee'].search(
+                        [('user_id', '=', self.env.uid)], limit=1)
+                    vals = dict(vals, state='closed',
+                                cloture_par_id=employee.id if employee else False,
+                                date_cloture=fields.Date.today())
+                elif new_qse_visa and rec.state not in ('validated', 'closed'):
+                    vals = dict(vals, state='validated')
+                elif new_visa_actions and rec.state not in ('in_progress', 'validated', 'closed'):
+                    vals = dict(vals, state='in_progress')
+                elif new_visa_analyse and rec.state == 'draft':
+                    vals = dict(vals, state='submitted')
+                break  # formulaire = un seul record à la fois
+        return super(CorrectiveAction, self).write(vals)
 
     @api.multi
-    def action_verify(self):
-        for rec in self:
-            if not rec.action_line_ids:
-                raise UserError('Veuillez ajouter au moins une action corrective.')
-            rec.state = 'verified'
-            rec.message_post(body='Actions vérifiées.')
-
-    @api.multi
-    def action_close(self):
-        for rec in self:
-            if not rec.actions_efficaces:
-                raise UserError('Veuillez indiquer si les actions sont efficaces.')
-            rec.state = 'closed'
-            rec.cloture_par_id = self.env['hr.employee'].search(
-                [('user_id', '=', self.env.uid)], limit=1).id
-            rec.date_cloture = fields.Date.today()
-            rec.message_post(body='Fiche FAC clôturée par la Responsable Qualité.')
-
-    @api.multi
-    def action_next_stage(self):
-        self.ensure_one()
-        if self.state == 'draft':
-            self.action_open()
-        elif self.state == 'open':
-            self.action_verify()
-        elif self.state == 'verified':
-            self.action_close()
-        return True
+    def unlink(self):
+        if not self.env.user.has_group('nc_management.group_responsable_qualite'):
+            for rec in self:
+                if rec.responsable_id.id != self.env.uid and rec.create_uid.id != self.env.uid:
+                    raise UserError("Vous ne pouvez supprimer que les fiches FAC dont vous êtes responsable de l'action.")
+        return super(CorrectiveAction, self).unlink()
 
 
 class ActionLine(models.Model):

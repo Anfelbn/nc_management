@@ -114,13 +114,13 @@
                                     <div style="font-size:10px;">CEMENT COMPANY OF AIN EL KEBIRA</div>
                                 </td>
                                 <td style="width:30%; vertical-align:middle;">
-                                   <span>Référence : FNC 002/700</span>
+                                   <t t-set="valable_rev" t-value="env['nc_management.document_revision'].search([('doc_type', '=', 'fnc'), ('etat', '=', 'valable')], limit=1)"/>
+                                   <span>Référence : <t t-if="valable_rev and valable_rev.reference" t-esc="valable_rev.reference"/><t t-else="">FNC 002/700</t></span>
                                 </td>
                                 </tr>
                                 <tr style="height: 25px;">
                                 <td style="vertical-align:middle;">
-                                   <t t-set="latest_rev" t-value="env['nc_management.document_revision'].search([('doc_type', '=', 'fnc')], limit=1)"/>
-                                   <span>Révision N° : <t t-if="latest_rev" t-esc="'%02d' % latest_rev.revision_number"/><t t-else="">00</t></span>
+                                   <span>Révision N° : <t t-if="valable_rev" t-esc="'%02d' % valable_rev.revision_number"/><t t-else="">00</t></span>
                                 </td>
                                 </tr>
                                 <tr style="height: 45px;">
@@ -129,7 +129,7 @@
                                    <div style="font-size:10px; font-style:italic;">NON-CONFORMITY SHEET</div>
                                 </td>
                                 <td style="vertical-align:middle;">
-                                   <span>Date de révision : <t t-if="latest_rev" t-esc="latest_rev.revision_date"/><t t-else="">/</t></span>
+                                   <span>Date de révision : <t t-if="valable_rev" t-esc="valable_rev.revision_date"/><t t-else="">/</t></span>
                                 </td>
                                 </tr>
 

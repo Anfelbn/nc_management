@@ -503,11 +503,15 @@
     <field name="name">nc_management.document_revision.tree</field>
     <field name="model">nc_management.document_revision</field>
     <field name="arch" type="xml">
-        <tree string="Historique des Révisions" import="false">
+        <tree string="Historique des Révisions" import="false"
+              decoration-success="etat == 'valable'"
+              decoration-muted="etat == 'obsolete'">
             <field name="doc_type"/>
             <field name="revision_number_link" widget="html"/>
             <field name="revision_date"/>
+            <field name="reference"/>
             <field name="description"/>
+            <field name="etat"/>
         </tree>
     </field>
 </record>
@@ -519,10 +523,18 @@
         <form string="Révision de Document">
             <sheet>
                 <group>
-                    <field name="doc_type"/>
-                    <field name="revision_number"/>
-                    <field name="revision_date"/>
-                    <field name="description"/>
+                    <group>
+                        <field name="doc_type"/>
+                        <field name="revision_number"/>
+                        <field name="revision_date"/>
+                        <field name="reference"/>
+                    </group>
+                    <group>
+                        <field name="etat" string="État"/>
+                    </group>
+                </group>
+                <group string="Modification apportée">
+                    <field name="description" nolabel="1"/>
                 </group>
             </sheet>
         </form>

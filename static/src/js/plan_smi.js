@@ -61,38 +61,40 @@ odoo.define('nc_management.plan_smi', function(require) {
                     );
                 });
 
-                // ── Graphe barres Taux Efficacité% ──
-                if (self.$('#smi_chart').length) {
-                    var labels = d.categories.map(function(c){
-                        return c.label; });
-                    var tauxData = d.categories.map(function(c){
-                        return c.data.taux; });
-                    var bgColors = d.categories.map(function(c){
-                        return c.data.taux >= 70 ?
-                            'rgba(39,174,96,0.85)' :
-                            c.data.taux >= 50 ?
-                            'rgba(230,126,34,0.85)' :
-                            'rgba(231,76,60,0.85)';
-                    });
-                    var ctx = self.$('#smi_chart')[0].getContext('2d');
-                    new Chart(ctx, {
+                // ── Diagramme en bâtons — Taux d'efficacité par catégorie ──
+                var $cv = self.$('#smi_chart');
+                if ($cv.length && d.categories_chart && d.categories_chart.length) {
+                    var labels   = d.categories_chart.map(function(c){ return c.label; });
+                    var tauxData = d.categories_chart.map(function(c){ return c.taux;  });
+                    var cvEl     = $cv[0];
+                    var ctx2d    = cvEl.getContext('2d');
+
+                    // Dégradé vertical bleu clair → bleu foncé (palette dashboard)
+                    var grad = ctx2d.createLinearGradient(0, 0, 0, cvEl.height);
+                    grad.addColorStop(0, '#7AAFEE');
+                    grad.addColorStop(1, '#2A5A9A');
+
+                    new Chart(ctx2d, {
                         type: 'bar',
                         data: {
                             labels: labels,
                             datasets: [{
-                                label: 'Taux Efficacité %',
+                                label: "Taux d'efficacité %",
                                 data: tauxData,
-                                backgroundColor: bgColors,
-                                borderColor: bgColors,
-                                borderWidth: 1
+                                backgroundColor: grad,
+                                borderColor:     '#1e3a8a',
+                                borderWidth:     1,
                             }]
                         },
                         options: {
+                            responsive:          true,
+                            maintainAspectRatio: false,
                             title: {
-                                display: true,
-                                text: 'Taux efficacité en %',
-                                fontSize: 14,
-                                fontColor: '#2c3e50'
+                                display:   true,
+                                text:      "Taux d'efficacité par catégorie (%)",
+                                fontSize:  14,
+                                fontColor: '#2c3e50',
+                                fontStyle: 'bold',
                             },
                             legend: { display: false },
                             scales: {
@@ -100,11 +102,53 @@ odoo.define('nc_management.plan_smi', function(require) {
                                     ticks: {
                                         beginAtZero: true,
                                         max: 100,
-                                        callback: function(v){
-                                            return v + '%'; }
-                                    }
-                                }]
-                            }
+                                        stepSize: 25,
+                                        callback: function(v){ return v + '%'; },
+                                        fontColor: '#94a3b8',
+                                        fontSize:  11,
+                                    },
+                                    gridLines: {
+                                        color:     'rgba(0,0,0,0.06)',
+                                        zeroLineColor: '#cbd5e1',
+                                    },
+                                }],
+                                xAxes: [{
+                                    gridLines: { display: false },
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        fontColor:   '#64748b',
+                                        fontSize:    10,
+                                    },
+                                }],
+                            },
+                            // Valeur % affichée au-dessus de chaque barre
+                            animation: {
+                                onComplete: function() {
+                                    var c    = this.chart.ctx;
+                                    var ds   = this.data.datasets[0];
+                                    var meta = this.chart.getDatasetMeta(0);
+                                    meta.data.forEach(function(bar, idx) {
+                                        var val = ds.data[idx];
+                                        if (!val) { return; }
+                                        c.save();
+                                        c.fillStyle    = '#1e3a8a';
+                                        c.font         = 'bold 10px "Segoe UI", Arial';
+                                        c.textAlign    = 'center';
+                                        c.textBaseline = 'bottom';
+                                        c.fillText(val + '%', bar._model.x, bar._model.y - 2);
+                                        c.restore();
+                                    });
+                                },
+                            },
+                            tooltips: {
+                                callbacks: {
+                                    label: function(ti, data) {
+                                        return data.datasets[ti.datasetIndex]
+                                                   .data[ti.index] + '%';
+                                    },
+                                },
+                            },
                         }
                     });
                 }

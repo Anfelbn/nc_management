@@ -10,6 +10,7 @@ class ConsolidateWizard(models.TransientModel):
         string="Plan d'Amélioration",
         readonly=True,
         required=True,
+        ondelete='cascade',
     )
     plan_ids = fields.Many2many(
         'nc_management.plan_action_smi',

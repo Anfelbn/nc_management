@@ -520,14 +520,16 @@ canvas{display:block;width:100%}
     </table>
   </div>
 
-  <!-- Graphe Taux efficacité en % -->
+  <!-- Graphe Taux d'efficacité par catégorie (%) -->
   <div style="background:white;border-radius:8px;padding:20px;
               margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
     <h4 style="margin:0 0 14px;color:#2c3e50;
                border-bottom:2px solid #2c3e50;padding-bottom:8px;">
-        Taux efficacité en %
+        Taux d'efficacité par catégorie (%)
     </h4>
-    <canvas id="smi_chart" height="90"></canvas>
+    <div style="position:relative;height:320px;">
+      <canvas id="smi_chart"></canvas>
+    </div>
   </div>
 
   <!-- Table Taux réalisation processus -->

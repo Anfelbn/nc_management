@@ -1,10 +1,19 @@
 from odoo import models, fields, api
 
+# Les 12 natures du plan d'action — correspondent au champ nature de plan_action_smi
 CATEGORIES = [
-    ('reclamation_pi', 'Réclamation PI'),
-    ('nc_produit',     'NC Produit'),
-    ('environnement',  'Environnement'),
-    ('sst',            'SST'),
+    ('nc_produit',               'NC Produit'),
+    ('reclamation_pi',           'Réclamation Client ou PI'),
+    ('environnement',            'Environnement'),
+    ('sst',                      'SST'),
+    ('audit_externe',            'Audit Externe'),
+    ('audit_interne',            'Audit Interne'),
+    ('swot',                     'SWOT'),
+    ('risque',                   'Risque'),
+    ('objectif_non_atteint',     'Objectif non atteint'),
+    ('decision_revue_direction', 'Décision revue direction'),
+    ('amelioration',             'Amélioration'),
+    ('nc_reglementaire',         'NC réglementaire'),
 ]
 
 
@@ -93,16 +102,22 @@ class PlanEfficaciteWizard(models.TransientModel):
         if not plan_id:
             return res
 
-        child_plans = self.env['nc_management.plan_action_smi'].browse(
-            plan_id).child_plan_ids
+        # Plans intégrés dans ce plan d'action d'amélioration
+        global_plan  = self.env['nc_management.plan_action_smi'].browse(plan_id)
+        child_plans  = global_plan.child_plan_ids.filtered(
+            lambda p: p.submission_state == 'integre'
+        )
 
         lines = []
         for code, label in CATEGORIES:
-            cat = child_plans.filtered(lambda p: p.nature == code)
+            # Plans de cette nature intégrés dans le plan global
+            cat   = child_plans.filtered(lambda p, c=code: p.nature == c)
             total = len(cat)
+
             if total:
                 eff     = sum(1 for p in cat if p.efficacite == 'oui')
                 non_eff = sum(1 for p in cat if p.efficacite == 'non')
+                # Réalisation basée sur l'état d'avancement
                 r100    = sum(1 for p in cat if p.avancement == 100)
                 r50p    = sum(1 for p in cat if 50 < p.avancement < 100)
                 r50m    = sum(1 for p in cat if p.avancement <= 50)

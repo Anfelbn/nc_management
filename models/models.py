@@ -1271,6 +1271,35 @@ class NcDashboard(models.Model):
              'data': get_categorie('type_sst')},
         ]
 
+        # 12 catégories pour le graphique — basées sur plan.nature
+        _CHART_NATURES = [
+            ('nc_produit',               'NC Produit'),
+            ('reclamation_pi',           'Réclamation Client'),
+            ('environnement',            'Environnement'),
+            ('sst',                      'SST'),
+            ('audit_externe',            'Audit Externe'),
+            ('audit_interne',            'Audit Interne'),
+            ('swot',                     'SWOT'),
+            ('risque',                   'Risque'),
+            ('objectif_non_atteint',     'Objectif non atteint'),
+            ('decision_revue_direction', 'Décision revue direction'),
+            ('amelioration',             'Amélioration'),
+            ('nc_reglementaire',         'NC réglementaire'),
+        ]
+        # Plans intégrés dans un plan global (submission_state == 'integre')
+        plan_model     = self.env['nc_management.plan_action_smi']
+        integrated_plans = plan_model.search([
+            ('is_global',        '=', False),
+            ('submission_state', '=', 'integre'),
+        ])
+        categories_chart = []
+        for code, label in _CHART_NATURES:
+            cat   = integrated_plans.filtered(lambda p, c=code: p.nature == c)
+            total = len(cat)
+            eff   = sum(1 for p in cat if p.efficacite == 'oui')
+            taux  = round(eff / total * 100, 1) if total else 0.0
+            categories_chart.append({'label': label, 'taux': taux})
+
         total_fac = fac.search_count([]) or 1
         closed_fac = fac.search_count([('state', '=', 'closed')])
 
@@ -1304,6 +1333,7 @@ class NcDashboard(models.Model):
         return {
             'categories': categories,
             'processus': processus,
+            'categories_chart': categories_chart,
         }
 
     @api.model

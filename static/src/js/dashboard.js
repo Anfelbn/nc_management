@@ -479,7 +479,6 @@ odoo.define('nc_management.dashboard', function(require){
                       + '<div class="nc-notif-ref">' + _.escape(fnc.name || '') + ' · ' + _.escape(fnc.type || '') + '</div>'
                       + '<span class="badge blue">FNC</span>'
                       + '</div>'
-                      + '<div class="nc-notif-info">' + _.escape(fnc.department || '') + (fnc.responsible ? ' · ' + _.escape(fnc.responsible) : '') + ' · ' + _.escape(fnc.date || '') + '</div>'
                       + '<div class="nc-notif-actions">'
                       + '<div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" data-id="' + fnc.id + '">Ouvrir FNC</div>'
                       + '<div class="btn-sm btn-reply" data-model="nc_management.nonconformity" data-id="' + fnc.id + '" data-partner-id="">Répondre</div>'
@@ -495,7 +494,6 @@ odoo.define('nc_management.dashboard', function(require){
                           + '<div style="font-size:11px;font-weight:600;color:#1e293b">' + _.escape(fac.name || '') + ' · Action corrective</div>'
                           + '<span class="badge red">FAC</span>'
                           + '</div>'
-                          + '<div class="nc-notif-info">' + _.escape(fac.department || '') + ' · ' + _.escape(fac.date || '') + '</div>'
                           + '<div class="nc-notif-actions">'
                           + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Ouvrir FAC</div>'
                           + '<div class="btn-sm btn-reply" data-model="nc_management.corrective_action" data-id="' + fac.id + '" data-partner-id="">Répondre</div>'
@@ -505,22 +503,6 @@ odoo.define('nc_management.dashboard', function(require){
                 html += '</div>';
             });
 
-            // FAC orphelines (sans FNC dans la liste courante)
-            orphFacs.forEach(function(item){
-                html += '<div class="nc-notif">'
-                      + '<div class="nc-avatar avatar-red avatar-clickable" data-model="nc_management.corrective_action" data-id="' + item.id + '" title="' + _.escape(item.sender_name || 'Émetteur') + '">' + _.escape(item.sender_initials || '?') + '</div>'
-                      + '<div class="nc-notif-body">'
-                      + '<div style="display:flex;justify-content:space-between;align-items:center">'
-                      + '<div class="nc-notif-ref">' + _.escape(item.name || '') + ' · Action corrective</div>'
-                      + '<span class="badge red">FAC</span>'
-                      + '</div>'
-                      + '<div class="nc-notif-info">' + _.escape(item.department || '') + ' · ' + _.escape(item.date || '') + '</div>'
-                      + '<div class="nc-notif-actions">'
-                      + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + item.id + '">Ouvrir FAC</div>'
-                      + '<div class="btn-sm btn-reply" data-model="nc_management.corrective_action" data-id="' + item.id + '" data-partner-id="">Répondre</div>'
-                      + '</div>'
-                      + '</div></div>';
-            });
 
             // Plans SMI
             plans.forEach(function(item){
@@ -535,9 +517,6 @@ odoo.define('nc_management.dashboard', function(require){
                     ? '<span class="badge" style="background:' + st.bg + ';color:' + st.color + ';border:1px solid ' + st.color + '33">' + st.label + '</span>'
                     : '';
 
-                var infoLine = [];
-                if (item.sent_by_name) infoLine.push('De : <strong>' + _.escape(item.sent_by_name) + '</strong>');
-                if (item.date)         infoLine.push(_.escape(item.date));
                 var echeanceLine = item.date_prevue
                     ? '<div class="nc-notif-info" style="color:#94a3b8">Échéance : ' + _.escape(item.date_prevue) + '</div>'
                     : '';
@@ -550,8 +529,7 @@ odoo.define('nc_management.dashboard', function(require){
                       + '<div class="nc-notif-ref" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _.escape(item.name || '') + '</div>'
                       + '<div style="display:flex;gap:4px;flex-shrink:0"><span class="badge purple">PLAN</span>' + stateBadge + '</div>'
                       + '</div>'
-                      + '<div class="nc-notif-info" style="margin-top:3px;color:#6d28d9">' + _.escape(item.type || 'Plan action') + (item.department ? ' · ' + _.escape(item.department) : '') + '</div>'
-                      + '<div class="nc-notif-info">' + infoLine.join(' · ') + '</div>'
+                      + '<div class="nc-notif-info" style="margin-top:3px;color:#6d28d9">' + _.escape(item.type || 'Plan action') + '</div>'
                       + echeanceLine
                       + '<div class="nc-notif-actions">'
                       + '<div class="btn-sm primary btn-open" style="background:#7c3aed;border-color:#7c3aed" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
@@ -684,8 +662,10 @@ odoo.define('nc_management.dashboard', function(require){
             $('#nc-sender-modal').remove();
             $(document).off('keydown.nsm');
 
-            var name = data.name || 'Inconnu';
-            var initials = name.split(' ').slice(0, 2).map(function(w) {
+            var nom    = data.nom    || '';
+            var prenom = data.prenom || '';
+            var fullName = (nom + ' ' + prenom).trim() || 'Inconnu';
+            var initials = fullName.split(' ').slice(0, 2).map(function(w) {
                 return (w[0] || '').toUpperCase();
             }).join('') || '?';
 
@@ -697,22 +677,27 @@ odoo.define('nc_management.dashboard', function(require){
                      + '</div>';
             }
 
-            var rows = row('Fonction',    data.job)
-                     + row('Direction',   data.direction)
-                     + row('Département', data.department)
-                     + row('Service',     data.service)
-                     + row("Date d'envoi", data.send_date);
+            // Construire "direction, service/département"
+            var orgParts = [];
+            if (data.direction)  orgParts.push(_.escape(data.direction));
+            var sdPart = [data.service, data.department].filter(Boolean).map(_.escape).join('/');
+            if (sdPart) orgParts.push(sdPart);
+            var orgLine = orgParts.join(', ');
+
+            var rows = row('Nom',        nom)
+                     + row('Prénom',     prenom)
+                     + (orgLine ? '<div class="nsm-row"><span class="nsm-label">Org.</span><span class="nsm-val">' + orgLine + '</span></div>' : '')
+                     + row('Envoyé le',  data.send_datetime);
 
             var msgHtml = '';
             if (data.message) {
                 msgHtml = '<div class="nsm-msg-box">'
-                        + '<div class="nsm-msg-label">Message</div>'
+                        + '<div class="nsm-msg-label">Message envoyé</div>'
                         + '<div class="nsm-msg-body">' + _.escape(data.message) + '</div>'
                         + '</div>';
             }
 
-            var emptyInfo = !data.job && !data.direction && !data.department && !data.service && !data.send_date;
-            if (emptyInfo && !data.message) {
+            if (!nom && !prenom && !orgLine && !data.send_datetime && !data.message) {
                 rows = '<div class="nsm-row"><span class="nsm-val" style="color:#94a3b8;font-style:italic">Aucune information disponible.</span></div>';
             }
 
@@ -721,7 +706,7 @@ odoo.define('nc_management.dashboard', function(require){
               + '<div class="nsm-card">'
               + '<button class="nsm-close" title="Fermer">&times;</button>'
               + '<div class="nsm-avatar-lg">' + _.escape(initials) + '</div>'
-              + '<div class="nsm-name">' + _.escape(name) + '</div>'
+              + '<div class="nsm-name">' + _.escape(fullName) + '</div>'
               + '<div class="nsm-rows">' + rows + '</div>'
               + msgHtml
               + '</div>'

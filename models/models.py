@@ -1308,11 +1308,10 @@ class NcDashboard(models.Model):
         ]
         received_fnc_period_domain = fnc_period_domain + [
             ('state', '!=', 'draft'),
-            '|', ('submitted_by_id', '=', False),
-                 ('submitted_by_id', '!=', self.env.uid),
+            ('create_uid', '!=', self.env.uid),
         ]
         received_fnc_ids = fnc.search(received_fnc_period_domain).ids
-        fac_received_period_domain = fac_period_domain + [
+        fac_received_period_domain = [
             ('fnc_id', 'in', received_fnc_ids),
         ]
 
@@ -1654,15 +1653,19 @@ class NcDashboard(models.Model):
             if k not in calendar_events:
                 calendar_events[k] = {'fnc': False, 'fac': False, 'plan': False}
             calendar_events[k]['fac'] = True
-        plan_domain = [('fnc_id', 'in', received_fnc_ids), '|',
-            '&', ('date_lancement', '>=', period_start.strftime('%Y-%m-%d')),
-                 ('date_lancement', '<', period_end.strftime('%Y-%m-%d')),
-            '&', ('date_lancement', '=', False),
-                 '&', ('date_prevue', '>=', period_start.strftime('%Y-%m-%d')),
-                      ('date_prevue', '<', period_end.strftime('%Y-%m-%d'))]
+        plan_domain = [
+            ('sent_to_rmqse', '=', True),
+            ('is_global', '=', False),
+            ('sent_by', '!=', self.env.uid),
+            ('date_envoi', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date_envoi', '<', period_end.strftime('%Y-%m-%d')),
+        ]
         plan_this_period = plan.search(plan_domain)
+        result['plan_total']      = len(plan_this_period)
+        result['plan_en_attente'] = len(plan_this_period.filtered(lambda p: p.submission_state == 'soumis'))
+        result['plan_integres']   = len(plan_this_period.filtered(lambda p: p.submission_state == 'integre'))
         for plan_rec in plan_this_period:
-            plan_date = plan_rec.date_lancement or plan_rec.date_prevue
+            plan_date = plan_rec.date_envoi or plan_rec.mois_reception
             if not plan_date:
                 continue
             k = str(plan_date)[:10]
@@ -1731,7 +1734,11 @@ class NcDashboard(models.Model):
         result['fnc_retard_list'] = fnc_retard_list
 
         def _date_label(value):
-            return fields.Date.from_string(value).strftime('%d/%m/%Y') if value else ''
+            if not value:
+                return ''
+            # Accepte Date, Datetime ou string YYYY-MM-DD[...]
+            v = str(value)[:10]
+            return fields.Date.from_string(v).strftime('%d/%m/%Y')
 
         def _append_received(day_key, item):
             if day_key not in received_by_date:
@@ -1793,11 +1800,16 @@ class NcDashboard(models.Model):
                 'submitted_by_name': fnc_submitter.name if fnc_submitter else '',
             }
             received_docs.append(item)
-            if fac_rec.date:
-                _append_received(str(fac_rec.date)[:10], item)
+            # Indexer sur la date de la FNC parente pour toujours apparaître groupée
+            fac_key = (str(fac_rec.fnc_id.date)[:10]
+                       if fac_rec.fnc_id and fac_rec.fnc_id.date
+                       else (str(fac_rec.date)[:10] if fac_rec.date else None))
+            if fac_key:
+                _append_received(fac_key, item)
 
         for plan_rec in plan_this_period:
-            plan_date = plan_rec.date_lancement or plan_rec.date_prevue
+            # date d'envoi = date réelle de réception par RMQSE
+            plan_date = plan_rec.date_envoi or plan_rec.mois_reception
             responsible = plan_rec.responsable_id
             plan_sender_name = (plan_rec.sent_by.name if plan_rec.sent_by
                                 else (plan_rec.direction_id.name if plan_rec.direction_id else ''))
@@ -1808,7 +1820,7 @@ class NcDashboard(models.Model):
                 'kind': 'Plan',
                 'badge': 'purple',
                 'model': 'nc_management.plan_action_smi',
-                'department': plan_rec.fnc_id.direction_id.name if plan_rec.fnc_id and plan_rec.fnc_id.direction_id else (plan_rec.direction_id.name if plan_rec.direction_id else ''),
+                'department': plan_rec.direction_id.name if plan_rec.direction_id else '',
                 'responsible': responsible.name if responsible else '',
                 'date': _date_label(plan_date),
                 'initials': _initials(responsible),
@@ -1924,98 +1936,98 @@ class NcDashboard(models.Model):
 
     @api.model
     def get_sender_info(self, model, record_id):
+        import re
         from odoo.tools import html2plaintext
+        from datetime import timedelta
 
-        result = {
-            'name': '',
-            'job': '',
-            'direction': '',
-            'department': '',
-            'service': '',
-            'send_date': '',
-            'message': '',
-        }
+        result = {'nom': '', 'prenom': '', 'direction': '', 'service': '', 'department': '', 'send_datetime': '', 'message': ''}
 
-        def _get_first_message(mod, rid):
+        def _split_name(full):
+            parts = (full or '').strip().split(' ', 1)
+            return parts[0], (parts[1] if len(parts) > 1 else '')
+
+        def _fmt_dt(dt):
+            if not dt:
+                return ''
+            try:
+                return (dt + timedelta(hours=1)).strftime('%d/%m/%Y à %H:%M')
+            except Exception:
+                return str(dt)[:16]
+
+        def _wizard_note(mod, rid):
+            msgs = self.env['mail.message'].sudo().search([
+                ('res_id', '=', rid),
+                ('model', '=', mod),
+                ('body', 'ilike', 'Message :'),
+            ], order='id asc', limit=1)
+            if not msgs:
+                return ''
+            plain = html2plaintext(msgs.body or '')
+            m = re.search(r'[Mm]essage\s*:\s*(.+)', plain, re.DOTALL)
+            return m.group(1).strip() if m else ''
+
+        def _first_msg_dt(mod, rid):
             msg = self.env['mail.message'].sudo().search([
                 ('res_id', '=', rid),
                 ('model', '=', mod),
                 ('message_type', 'in', ['comment', 'notification']),
-                ('body', 'not in', [False, '', '<p><br></p>', '<p></p>']),
+                ('body', 'not in', [False, '', '<p><br></p>']),
             ], order='id asc', limit=1)
-            if msg:
-                return html2plaintext(msg.body or '').strip()
-            return ''
-
-        def _emp_job(user_id):
-            emp = self.env['hr.employee'].sudo().search(
-                [('user_id', '=', user_id)], limit=1)
-            return emp.job_id.name if emp and emp.job_id else ''
+            return _fmt_dt(msg.date) if msg else ''
 
         try:
             if model == 'nc_management.nonconformity':
                 rec = self.env[model].sudo().browse(record_id)
                 if not rec.exists():
                     return result
-                # L'émetteur réel = signale_par_id (la personne du département qui a signalé la NC)
                 if rec.signale_par_id:
-                    emp = rec.signale_par_id
-                    result['name'] = emp.name or ''
-                    result['job'] = emp.job_id.name if emp.job_id else ''
+                    full = rec.signale_par_id.name or ''
                 elif rec.submitted_by_id:
-                    result['name'] = rec.submitted_by_id.name or ''
-                    result['job'] = _emp_job(rec.submitted_by_id.id)
+                    full = rec.submitted_by_id.name or ''
                 elif rec.create_uid and rec.create_uid.id != self.env.uid:
-                    result['name'] = rec.create_uid.name or ''
-                    result['job'] = _emp_job(rec.create_uid.id)
-                result['direction'] = rec.direction_id.name if rec.direction_id else ''
+                    full = rec.create_uid.name or ''
+                else:
+                    full = ''
+                result['nom'], result['prenom'] = _split_name(full)
+                result['direction']  = rec.direction_id.name  if rec.direction_id  else ''
+                result['service']    = rec.service_id.name    if rec.service_id    else ''
                 result['department'] = rec.department_id.name if rec.department_id else ''
-                result['service'] = rec.service_id.name if rec.service_id else ''
-                result['send_date'] = rec.date.strftime('%d/%m/%Y') if rec.date else ''
-                result['message'] = _get_first_message(model, record_id)
+                result['send_datetime'] = _first_msg_dt(model, record_id)
+                result['message'] = _wizard_note(model, record_id)
 
             elif model == 'nc_management.corrective_action':
                 rec = self.env[model].sudo().browse(record_id)
                 if not rec.exists():
                     return result
-                # Pour FAC : l'émetteur = signale_par_id de la FNC parente
                 fnc = rec.fnc_id
                 if fnc and fnc.signale_par_id:
-                    emp = fnc.signale_par_id
-                    result['name'] = emp.name or ''
-                    result['job'] = emp.job_id.name if emp.job_id else ''
+                    full = fnc.signale_par_id.name or ''
                 elif fnc and fnc.submitted_by_id:
-                    result['name'] = fnc.submitted_by_id.name or ''
-                    result['job'] = _emp_job(fnc.submitted_by_id.id)
+                    full = fnc.submitted_by_id.name or ''
                 elif rec.responsable_actions_id:
-                    emp = rec.responsable_actions_id
-                    result['name'] = emp.name or ''
-                    result['job'] = emp.job_id.name if emp.job_id else ''
-                result['direction'] = rec.direction_id.name if rec.direction_id else ''
+                    full = rec.responsable_actions_id.name or ''
+                else:
+                    full = ''
+                result['nom'], result['prenom'] = _split_name(full)
+                result['direction']  = rec.direction_id.name if rec.direction_id else ''
+                result['service']    = (fnc.service_id.name    if fnc and fnc.service_id    else '')
                 result['department'] = (fnc.department_id.name if fnc and fnc.department_id else '')
-                result['service'] = (fnc.service_id.name if fnc and fnc.service_id else '')
-                result['send_date'] = rec.date.strftime('%d/%m/%Y') if rec.date else ''
-                result['message'] = _get_first_message(model, record_id)
+                src_mod = 'nc_management.nonconformity' if fnc else model
+                src_id  = fnc.id if fnc else record_id
+                result['send_datetime'] = _first_msg_dt(src_mod, src_id)
+                result['message'] = _wizard_note(src_mod, src_id)
 
             elif model == 'nc_management.plan_action_smi':
                 rec = self.env[model].sudo().browse(record_id)
                 if not rec.exists():
                     return result
-                # Pour Plan : sent_by est explicitement l'émetteur
-                if rec.sent_by:
-                    result['name'] = rec.sent_by.name or ''
-                    result['job'] = _emp_job(rec.sent_by.id)
-                elif rec.responsable_id:
-                    result['name'] = rec.responsable_id.name or ''
-                    result['job'] = rec.responsable_id.job_id.name if rec.responsable_id.job_id else ''
-                result['direction'] = rec.direction_id.name if rec.direction_id else ''
+                full = rec.sent_by.name if rec.sent_by else (rec.responsable_id.name if rec.responsable_id else '')
+                result['nom'], result['prenom'] = _split_name(full)
+                result['direction']  = rec.direction_id.name  if rec.direction_id  else ''
+                result['service']    = rec.service_id.name    if rec.service_id    else ''
                 result['department'] = rec.department_id.name if rec.department_id else ''
-                result['service'] = rec.service_id.name if rec.service_id else ''
-                if rec.date_envoi:
-                    result['send_date'] = rec.date_envoi.strftime('%d/%m/%Y')
-                elif rec.date_lancement:
-                    result['send_date'] = rec.date_lancement.strftime('%d/%m/%Y')
-                result['message'] = _get_first_message(model, record_id)
+                result['send_datetime'] = _fmt_dt(rec.date_envoi) if rec.date_envoi else ''
+                result['message'] = rec.description or _wizard_note(model, record_id)
 
         except Exception:
             pass

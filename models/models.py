@@ -1118,14 +1118,18 @@ class DocumentRevision(models.Model):
     ], string='Type de Document', required=True)
     revision_number = fields.Integer(string='N° Révision', required=True)
     revision_date = fields.Date(string='Date de Révision', required=True, default=fields.Date.today)
+    reference = fields.Char(string='Référence')
     description = fields.Text(string='Modification apportée')
+    etat = fields.Selection([
+        ('valable', 'Valable'),
+        ('obsolete', 'Obsolète'),
+    ], string='État', default='obsolete', required=True)
 
     revision_number_link = fields.Html(string='N° Révision', compute='_compute_revision_number_link')
 
     @api.depends('revision_number', 'doc_type')
     def _compute_revision_number_link(self):
         for rec in self:
-            # Génère un lien HTML vers le rapport PDF d'Odoo
             url = '/report/pdf/nc_management.report_revision_template/%s' % rec.id
             rec.revision_number_link = '<a href="%s" target="_blank" style="font-weight:bold; color:#00A09D;">%s</a>' % (url, rec.revision_number)
 
@@ -1136,6 +1140,30 @@ class DocumentRevision(models.Model):
         for rec in self:
             type_str = 'FNC' if rec.doc_type == 'fnc' else 'FAC'
             rec.name = "%s - Rev %02d" % (type_str, rec.revision_number)
+
+    def _obsolete_others(self):
+        for rec in self:
+            if rec.etat == 'valable':
+                others = self.search([
+                    ('doc_type', '=', rec.doc_type),
+                    ('id', '!=', rec.id),
+                    ('etat', '=', 'valable'),
+                ])
+                if others:
+                    others.write({'etat': 'obsolete'})
+
+    @api.model
+    def create(self, vals):
+        rec = super(DocumentRevision, self).create(vals)
+        rec._obsolete_others()
+        return rec
+
+    @api.multi
+    def write(self, vals):
+        res = super(DocumentRevision, self).write(vals)
+        if vals.get('etat') == 'valable':
+            self._obsolete_others()
+        return res
 
 
 class NcDashboard(models.Model):

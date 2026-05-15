@@ -6,7 +6,9 @@
             <field name="doc_type">fnc</field>
             <field name="revision_number">3</field>
             <field name="revision_date">2025-02-03</field>
+            <field name="reference">FNC 002/700</field>
             <field name="description">Mise à jour du format de la fiche FNC</field>
+            <field name="etat">valable</field>
         </record>
 
         <!-- Révision FAC N° 2 -->
@@ -14,7 +16,9 @@
             <field name="doc_type">fac</field>
             <field name="revision_number">2</field>
             <field name="revision_date">2025-01-30</field>
+            <field name="reference">FAC 003/700</field>
             <field name="description">Mise à jour du format de la fiche FAC</field>
+            <field name="etat">valable</field>
         </record>
     </data>
 </odoo>

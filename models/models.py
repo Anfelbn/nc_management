@@ -582,6 +582,8 @@ class CorrectiveAction(models.Model):
             self.direction_id = self.fnc_id.direction_id
             self.date_fnc = self.fnc_id.date
             self.responsable_analyse_id = self.fnc_id.assigned_to_id
+            employee = self.fnc_id.assigned_to_id
+            self.responsable_id = employee.user_id if employee else False
 
     # ── Numérotation automatique ──────────────────────────────
     @api.model
@@ -589,6 +591,13 @@ class CorrectiveAction(models.Model):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'nc_management.corrective_action') or 'New'
+        if not vals.get('responsable_id'):
+            if vals.get('fnc_id'):
+                fnc = self.env['nc_management.nonconformity'].browse(vals['fnc_id'])
+                user = fnc.assigned_to_id.user_id if fnc.assigned_to_id else False
+                vals['responsable_id'] = user.id if user else self.env.uid
+            else:
+                vals['responsable_id'] = self.env.uid
         return super(CorrectiveAction, self).create(vals)
 
     # ── Transitions d'état automatiques ──────────────────────

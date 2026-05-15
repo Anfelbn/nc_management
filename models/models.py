@@ -294,22 +294,9 @@ class Nonconformity(models.Model):
                 dept = dept.parent_id
         return defaults
 
-    # ── Création FAC ──────────────────────────────────────────
     @api.model
     def create(self, vals):
-        res = super(Nonconformity, self).create(vals)
-
-        # Création automatique de la première FAC liée uniquement si le numéro FNC est déjà généré.
-        # Quand name='New' (sauvegarde intermédiaire avant le wizard), la FAC sera créée par le wizard.
-        if res.name != 'New':
-            self.env['nc_management.corrective_action'].sudo().create({
-                'fnc_id': res.id,
-                'direction_id': res.direction_id.id,
-                'rappel_nc': res.description,
-                'analyse_causes': res.analyse_causes,
-                'date_fnc': res.date,
-            })
-        return res
+        return super(Nonconformity, self).create(vals)
 
     @api.multi
     def write(self, vals):

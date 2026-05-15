@@ -240,6 +240,49 @@
     </field>
 </record>
 
+<!-- Vue Recherche FAC -->
+<record model="ir.ui.view" id="view_corrective_action_search">
+    <field name="name">nc_management.corrective_action.search</field>
+    <field name="model">nc_management.corrective_action</field>
+    <field name="arch" type="xml">
+        <search string="Rechercher FAC">
+
+            <field name="name"         string="N° FAC"/>
+            <field name="fnc_id"       string="N° FNC"/>
+            <field name="direction_id" string="Direction"
+                   domain="[('scaek_level','=','direction')]"/>
+            <field name="responsable_id" string="Responsable"/>
+
+            <filter string="Mes FAC" name="mes_fac"
+                    domain="[('responsable_id','=',uid)]"/>
+            <filter string="Toutes les FAC" name="toutes_fac"
+                    domain="[]"/>
+
+            <separator/>
+
+            <filter string="Brouillon"  name="etat_brouillon"
+                    domain="[('state','=','draft')]"/>
+            <filter string="Ouvertes"   name="etat_open"
+                    domain="[('state','=','open')]"/>
+            <filter string="Vérifiées"  name="etat_verified"
+                    domain="[('state','=','verified')]"/>
+            <filter string="Clôturées"  name="etat_closed"
+                    domain="[('state','=','closed')]"/>
+
+            <group expand="0" string="Regrouper par">
+                <filter string="Direction"   name="group_direction"
+                        context="{'group_by': 'direction_id'}"/>
+                <filter string="Responsable" name="group_responsable"
+                        context="{'group_by': 'responsable_id'}"/>
+                <filter string="Statut"      name="group_state"
+                        context="{'group_by': 'state'}"/>
+                <filter string="Date"        name="group_date"
+                        context="{'group_by': 'date:month'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
 <!-- Vue Formulaire FAC -->
 <record model="ir.ui.view" id="view_corrective_action_form">
     <field name="name">nc_management.corrective_action.form</field>
@@ -432,7 +475,8 @@
     <field name="name">Actions Correctives</field>
     <field name="res_model">nc_management.corrective_action</field>
     <field name="view_mode">tree,form</field>
-    <field name="domain">[('responsable_id', '=', uid)]</field>
+    <field name="search_view_id" ref="view_corrective_action_search"/>
+    <field name="context">{'search_default_mes_fac': 1}</field>
 </record>
 
 <menuitem name="NC Management"

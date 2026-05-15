@@ -69,14 +69,6 @@ class NumberGeneratorWizard(models.TransientModel):
                     "Le numéro FNC '%s' est définitif et ne peut pas être régénéré." % fnc.name
                 )
             fnc.with_context(skip_fnc_validation=True).write(vals)
-            if not fnc.sudo().fac_ids:
-                self.env['nc_management.corrective_action'].sudo().create({
-                    'fnc_id': fnc.id,
-                    'direction_id': fnc.direction_id.id if fnc.direction_id else False,
-                    'rappel_nc': fnc.description,
-                    'analyse_causes': fnc.analyse_causes,
-                    'date_fnc': fnc.date,
-                })
             return {'type': 'ir.actions.act_window_close'}
 
         # Créer une nouvelle FNC directement depuis le wizard

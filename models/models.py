@@ -206,6 +206,9 @@ class Nonconformity(models.Model):
         if self.env.context.get('skip_fnc_validation'):
             return
         for rec in self:
+            # Sauvegarde intermédiaire avant ouverture du wizard : le type sera défini par le wizard
+            if rec.name == 'New':
+                continue
             if not rec.direction_id:
                 raise ValidationError(
                     "La Direction / Emetteur est obligatoire."
@@ -251,7 +254,7 @@ class Nonconformity(models.Model):
     @api.constrains('fonction_visa')
     def _check_fonction_visa_requirements(self):
         for rec in self:
-            if not rec.fonction_visa:
+            if not rec.fonction_visa or rec.name == 'New':
                 continue
             has_type = any([
                 rec.type_nc_produit, rec.type_reclamation, rec.type_sst,
@@ -294,20 +297,18 @@ class Nonconformity(models.Model):
     # ── Création FAC ──────────────────────────────────────────
     @api.model
     def create(self, vals):
-        if vals.get('name', 'New') == 'New' and not self.env.context.get('skip_fnc_validation'):
-            raise ValidationError(
-                "Veuillez générer le numéro FNC avant de sauvegarder la fiche."
-            )
         res = super(Nonconformity, self).create(vals)
 
-        # Création automatique de la première FAC liée (sudo car assigned_to_id vide à ce stade)
-        self.env['nc_management.corrective_action'].sudo().create({
-            'fnc_id': res.id,
-            'direction_id': res.direction_id.id,
-            'rappel_nc': res.description,
-            'analyse_causes': res.analyse_causes,
-            'date_fnc': res.date,
-        })
+        # Création automatique de la première FAC liée uniquement si le numéro FNC est déjà généré.
+        # Quand name='New' (sauvegarde intermédiaire avant le wizard), la FAC sera créée par le wizard.
+        if res.name != 'New':
+            self.env['nc_management.corrective_action'].sudo().create({
+                'fnc_id': res.id,
+                'direction_id': res.direction_id.id,
+                'rappel_nc': res.description,
+                'analyse_causes': res.analyse_causes,
+                'date_fnc': res.date,
+            })
         return res
 
     @api.multi

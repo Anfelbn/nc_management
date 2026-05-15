@@ -193,7 +193,11 @@
                     <field name="assigned_to_id"
                            options="{'no_create': True, 'no_create_edit': True}"
                            attrs="{'readonly': [('state','not in',['submitted'])]}"/>
-                    <field name="fac_number_display" readonly="1"/>
+                    <field name="can_access_fac" invisible="1"/>
+                    <field name="fac_reference" readonly="1"
+                           attrs="{'invisible': [('can_access_fac','=',False)]}"/>
+                    <field name="fac_number_display" readonly="1"
+                           attrs="{'invisible': [('can_access_fac','=',True)]}"/>
                 </group>
 
                 <!-- ── Validation hiérarchique ──────────────────  -->

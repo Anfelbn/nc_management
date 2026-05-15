@@ -138,6 +138,10 @@ class Nonconformity(models.Model):
         string="N° FAC",
         compute='_compute_fac_number_display',
     )
+    # True si l'utilisateur courant peut accéder à la FAC (lien cliquable)
+    can_access_fac = fields.Boolean(
+        compute='_compute_can_access_fac',
+    )
     responsable_action_id = fields.Many2one('hr.employee', string="Responsable de l'action(s)",
                               context={'no_create': True, 'no_create_edit': True})
 
@@ -178,6 +182,16 @@ class Nonconformity(models.Model):
         for rec in self:
             fac = rec.sudo().fac_ids[:1]
             rec.fac_number_display = fac.name if fac else False
+
+    def _compute_can_access_fac(self):
+        user = self.env.user
+        is_rmqse = user.has_group('nc_management.group_responsable_qualite')
+        for rec in self:
+            if is_rmqse:
+                rec.can_access_fac = True
+            else:
+                fac = rec.sudo().fac_ids[:1]
+                rec.can_access_fac = bool(fac and fac.responsable_id.id == user.id)
 
     # ── Validation obligatoire à la sauvegarde ────────────────
     # Déclenche sur ces champs uniquement ; le numéro FNC est géré

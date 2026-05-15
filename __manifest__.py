@@ -25,6 +25,7 @@
         'reports/report_fnc.xml',
         'reports/report_fac.xml',
         'reports/report_revision.xml',
+        'views/assets.xml',
         'views/views.xml',
         'views/plan_action_smi.xml',
         'views/dashboard.xml',

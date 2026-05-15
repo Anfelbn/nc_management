@@ -133,6 +133,11 @@ class Nonconformity(models.Model):
         compute='_compute_fac_reference',
         store=True,
     )
+    # Numéro FAC affiché en texte : visible par tous y compris le créateur FNC
+    fac_number_display = fields.Char(
+        string="N° FAC",
+        compute='_compute_fac_number_display',
+    )
     responsable_action_id = fields.Many2one('hr.employee', string="Responsable de l'action(s)",
                               context={'no_create': True, 'no_create_edit': True})
 
@@ -165,7 +170,14 @@ class Nonconformity(models.Model):
     @api.depends('fac_ids')
     def _compute_fac_reference(self):
         for rec in self:
-            rec.fac_reference = rec.fac_ids[:1].id if rec.fac_ids else False
+            fac = rec.sudo().fac_ids[:1]
+            rec.fac_reference = fac.id if fac else False
+
+    @api.depends('fac_ids')
+    def _compute_fac_number_display(self):
+        for rec in self:
+            fac = rec.sudo().fac_ids[:1]
+            rec.fac_number_display = fac.name if fac else False
 
     # ── Validation obligatoire à la sauvegarde ────────────────
     # Déclenche sur ces champs uniquement ; le numéro FNC est géré
@@ -199,18 +211,62 @@ class Nonconformity(models.Model):
                     "La description de la non-conformité est obligatoire."
                 )
 
+    @api.onchange('fonction_visa')
+    def _onchange_fonction_visa(self):
+        if not self.fonction_visa:
+            return
+        has_type = any([
+            self.type_nc_produit, self.type_reclamation, self.type_sst,
+            self.type_environnement, self.type_travaux, self.type_audit,
+            self.type_audit_interne, self.type_audit_externe, self.type_achat,
+            self.type_reception, self.type_dysfonctionnement, self.type_autre,
+        ])
+        if not has_type:
+            self.fonction_visa = False
+            return {'warning': {
+                'title': 'Champ requis',
+                'message': "Veuillez sélectionner au moins un type de non-conformité avant d'affecter la fonction et visa.",
+            }}
+        if not (self.description and self.description.strip()):
+            self.fonction_visa = False
+            return {'warning': {
+                'title': 'Champ requis',
+                'message': "Veuillez remplir la description de la non-conformité avant d'affecter la fonction et visa.",
+            }}
+
+    @api.constrains('fonction_visa')
+    def _check_fonction_visa_requirements(self):
+        for rec in self:
+            if not rec.fonction_visa:
+                continue
+            has_type = any([
+                rec.type_nc_produit, rec.type_reclamation, rec.type_sst,
+                rec.type_environnement, rec.type_travaux, rec.type_audit,
+                rec.type_audit_interne, rec.type_audit_externe, rec.type_achat,
+                rec.type_reception, rec.type_dysfonctionnement, rec.type_autre,
+            ])
+            if not has_type:
+                raise ValidationError(
+                    "Veuillez sélectionner au moins un type de non-conformité "
+                    "avant d'affecter la fonction et visa."
+                )
+            if not (rec.description and rec.description.strip()):
+                raise ValidationError(
+                    "Veuillez remplir la description de la non-conformité "
+                    "avant d'affecter la fonction et visa."
+                )
+
     # ── Création FAC ──────────────────────────────────────────
     @api.model
     def create(self, vals):
-        # Le bouton "Générer Numéro FNC" déclenche un create() automatique pour
-        # obtenir un ID avant d'ouvrir le wizard (name reste 'New').
-        # On bypasse la contrainte à cette étape initiale.
         if vals.get('name', 'New') == 'New' and not self.env.context.get('skip_fnc_validation'):
-            self = self.with_context(skip_fnc_validation=True)
+            raise ValidationError(
+                "Veuillez générer le numéro FNC avant de sauvegarder la fiche."
+            )
         res = super(Nonconformity, self).create(vals)
 
-        # Création automatique de la première FAC liée
-        self.env['nc_management.corrective_action'].create({
+        # Création automatique de la première FAC liée (sudo car assigned_to_id vide à ce stade)
+        self.env['nc_management.corrective_action'].sudo().create({
             'fnc_id': res.id,
             'direction_id': res.direction_id.id,
             'rappel_nc': res.description,
@@ -221,6 +277,14 @@ class Nonconformity(models.Model):
 
     @api.multi
     def write(self, vals):
+        # Le numéro FNC est immuable une fois assigné
+        if 'name' in vals:
+            for rec in self:
+                if rec.name != 'New':
+                    raise ValidationError(
+                        "Le numéro FNC '%s' est définitif et ne peut pas être modifié." % rec.name
+                    )
+
         # ── Transitions d'état déclenchées après sauvegarde ──
         if 'state' not in vals:
             for rec in self:
@@ -268,6 +332,15 @@ class Nonconformity(models.Model):
                     
                     if updates:
                         fac.write(updates)
+
+        # Sync responsable_id sur les FAC quand assigned_to_id change
+        if 'assigned_to_id' in vals:
+            employee = self.env['hr.employee'].browse(vals['assigned_to_id'])
+            user = employee.user_id if employee else False
+            for rec in self:
+                for fac in rec.sudo().fac_ids:
+                    fac.sudo().write({'responsable_id': user.id if user else False})
+
         return res
 
     # ── Boutons workflow ──────────────────────────────────────
@@ -292,6 +365,10 @@ class Nonconformity(models.Model):
     @api.multi
     def action_open_number_wizard(self):
         self.ensure_one()
+        if self.name != 'New':
+            raise UserError(
+                "Le numéro FNC '%s' a déjà été assigné et ne peut pas être régénéré." % self.name
+            )
         return {
             'type': 'ir.actions.act_window',
             'name': 'Générer Numéro',
@@ -381,6 +458,9 @@ class CorrectiveAction(models.Model):
         index=True
     )
     date_fnc     = fields.Date(string='Date FNC')
+    responsable_id = fields.Many2one(
+        'res.users', string='Responsable de l\'action',
+        index=True)
 
     # ── Section 1 — Rappel NC ─────────────────────────────────
     rappel_nc = fields.Text(string='1- Rappel de la Non-Conformité')

@@ -4,6 +4,8 @@
         <xpath expr="." position="inside">
             <link rel="stylesheet" type="text/css"
                   href="/nc_management/static/src/css/nc_management.css"/>
+            <script type="text/javascript"
+                    src="/nc_management/static/src/js/fnc_form.js"/>
         </xpath>
     </template>
 </odoo>

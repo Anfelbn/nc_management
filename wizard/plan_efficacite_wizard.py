@@ -40,58 +40,87 @@ class PlanEfficaciteWizard(models.TransientModel):
                                  string="Plan d'Amélioration", readonly=True)
     line_ids   = fields.One2many('nc_management.plan_efficacite_line', 'wizard_id',
                                  string='Analyse par catégorie')
-    chart_html = fields.Html(string='Graphique', compute='_compute_chart_html')
+    chart_html = fields.Html(string='Graphique', compute='_compute_chart_html',
+                             sanitize_attributes=False, sanitize_tags=False)
 
     @api.depends('line_ids.taux', 'line_ids.categorie')
     def _compute_chart_html(self):
         for rec in self:
             lines = rec.line_ids
             if not lines:
-                rec.chart_html = '<p style="color:#888;">Aucune donnée disponible.</p>'
+                rec.chart_html = '<p style="color:#555;">Aucune donnée disponible.</p>'
                 continue
 
-            bar_w   = 70
-            gap     = 25
-            h_chart = 180
-            w_chart = gap + len(lines) * (bar_w + gap) + 30
+            bar_w       = 52
+            gap         = 18
+            h_chart     = 220
+            margin_left = 44
+            margin_bot  = 100
+            w_chart     = margin_left + len(lines) * (bar_w + gap) + gap
+            total_h     = h_chart + margin_bot
 
             def color(t):
-                if t >= 75:   return '#5cb85c'
-                if t >= 50:   return '#f0ad4e'
-                return '#d9534f'
+                if t >= 75:  return '#1e5c38'   # vert foncé industriel
+                if t >= 50:  return '#7a5200'   # ambre foncé
+                return '#6e1f1f'                 # rouge sombre
+
+            grid = ''
+            for pct in [25, 50, 75, 100]:
+                gy = h_chart - int(pct * h_chart / 100)
+                grid += (
+                    '<line x1="%d" y1="%d" x2="%d" y2="%d" '
+                    'stroke="#9aabaa" stroke-width="1" stroke-dasharray="4,3"/>'
+                    '<text x="%d" y="%d" text-anchor="end" '
+                    'font-size="9" fill="#6a7878">%d%%</text>'
+                    % (margin_left, gy, w_chart, gy,
+                       margin_left - 4, gy + 3, pct)
+                )
 
             bars = labels = pcts = ''
             for i, ln in enumerate(lines):
-                x      = gap + i * (bar_w + gap)
-                height = int(ln.taux * h_chart / 100)
-                y      = h_chart - height
-                c      = color(ln.taux)
-                bars  += ('<rect x="%d" y="%d" width="%d" height="%d" '
-                          'fill="%s" rx="4"/>' % (x, y, bar_w, height, c))
-                labels += ('<text x="%d" y="%d" text-anchor="middle" '
-                           'font-size="11" fill="#555">%s</text>'
-                           % (x + bar_w // 2, h_chart + 16, ln.categorie))
-                pcts  += ('<text x="%d" y="%d" text-anchor="middle" '
-                          'font-size="12" font-weight="bold" fill="%s">%d%%</text>'
-                          % (x + bar_w // 2, max(y - 6, 14), c, int(ln.taux)))
+                x  = margin_left + gap + i * (bar_w + gap)
+                cx = x + bar_w // 2
+                h  = max(int(ln.taux * h_chart / 100), 2) if ln.taux > 0 else 0
+                y  = h_chart - h
+                c  = color(ln.taux)
+
+                bars += (
+                    '<rect x="%d" y="%d" width="%d" height="%d" '
+                    'fill="%s" rx="3"/>'
+                    % (x, y, bar_w, h, c)
+                )
+                if ln.taux > 0:
+                    pcts += (
+                        '<text x="%d" y="%d" text-anchor="middle" '
+                        'font-size="10" font-weight="bold" fill="#e8ece8">%d%%</text>'
+                        % (cx, max(y + 13, 12), int(ln.taux))
+                    )
+                labels += (
+                    '<text transform="rotate(-42 %d %d)" '
+                    'x="%d" y="%d" text-anchor="end" '
+                    'font-size="10" fill="#3a4a48">%s</text>'
+                    % (cx, h_chart + 10, cx, h_chart + 10, ln.categorie)
+                )
 
             svg = (
-                '<div style="margin-top:20px;">'
-                '<p style="font-weight:bold;font-size:14px;margin-bottom:8px;">'
+                '<div style="margin-top:20px;overflow-x:auto;">'
+                '<p style="font-weight:bold;font-size:14px;margin-bottom:10px;'
+                'color:#1a2e2c;letter-spacing:.3px;">'
                 'Taux d\'efficacité par catégorie (%)</p>'
-                '<svg width="{w}" height="{h}" style="overflow:visible;display:block;">'
-                '<line x1="24" y1="0" x2="24" y2="{hc}" stroke="#ddd" stroke-width="1"/>'
-                '<line x1="24" y1="{hc}" x2="{w}" y2="{hc}" stroke="#ddd" stroke-width="1"/>'
-                '<text x="20" y="10" text-anchor="end" font-size="9" fill="#aaa">100%</text>'
-                '<text x="20" y="{h50}" text-anchor="end" font-size="9" fill="#aaa">50%</text>'
-                '<text x="20" y="{hc}" text-anchor="end" font-size="9" fill="#aaa">0%</text>'
+                '<svg width="{w}" height="{h}" '
+                'style="display:block;background:#eef0ec;'
+                'border:1px solid #9aabaa;border-radius:4px;">'
+                '{grid}'
+                '<line x1="{ml}" y1="0" x2="{ml}" y2="{hc}" '
+                'stroke="#5a7070" stroke-width="1.5"/>'
+                '<line x1="{ml}" y1="{hc}" x2="{w}" y2="{hc}" '
+                'stroke="#5a7070" stroke-width="1.5"/>'
                 '{bars}{pcts}{labels}'
                 '</svg>'
                 '</div>'
             ).format(
-                w=w_chart, h=h_chart + 30, hc=h_chart,
-                h50=h_chart // 2 + 4,
-                bars=bars, pcts=pcts, labels=labels,
+                w=w_chart, h=total_h, hc=h_chart, ml=margin_left,
+                grid=grid, bars=bars, pcts=pcts, labels=labels,
             )
             rec.chart_html = svg
 

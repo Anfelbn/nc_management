@@ -763,33 +763,21 @@ class PlanActionSmi(models.Model):
         sanitize=False,
     )
 
-    _CAT_COLORS = {
-        'nc_produit':               '#007bff',  # bleu
-        'reclamation_pi':           '#fd7e14',  # orange
-        'environnement':            '#28a745',  # vert
-        'sst':                      '#6f42c1',  # violet
-        'audit_externe':            '#17a2b8',  # cyan
-        'audit_interne':            '#20c997',  # turquoise
-        'swot':                     '#e83e8c',  # rose
-        'risque':                   '#dc3545',  # rouge
-        'objectif_non_atteint':     '#ffc107',  # jaune
-        'decision_revue_direction': '#6c757d',  # gris
-        'amelioration':             '#0dcaf0',  # bleu clair
-        'nc_reglementaire':         '#d63384',  # magenta
-    }
+    # 4 couleurs en rotation pour les catégories (modérément sombres)
+    _CAT_COLORS = ['#2575b8', '#d44535', '#1fa255', '#cc8800']
 
     @api.depends('child_plan_ids.nature', 'child_plan_ids.efficacite',
                  'child_plan_ids.avancement', 'is_global', 'submission_state')
     def _compute_analyse_html(self):
         def badge(t):
-            if t > 80: return '#28a745'
-            if t >= 50: return '#fd7e14'
-            return '#dc3545'
+            if t > 80: return '#1fa255'
+            if t >= 50: return '#cc8800'
+            return '#d44535'
 
         th  = 'padding:10px 14px;text-align:center;white-space:nowrap;'
         thl = 'padding:10px 14px;text-align:left;'
-        tdc = 'padding:8px 14px;text-align:center;border-bottom:1px solid #dee2e6;'
-        tdl = 'padding:8px 14px;text-align:left;border-bottom:1px solid #dee2e6;'
+        tdc = 'padding:8px 14px;text-align:center;border-bottom:1px solid #ddd;'
+        tdl = 'padding:8px 14px;text-align:left;border-bottom:1px solid #ddd;'
 
         for rec in self:
             children = rec.child_plan_ids
@@ -820,7 +808,7 @@ class PlanActionSmi(models.Model):
 
             # ── Tableau ────────────────────────────────────────────
             thead = (
-                '<thead><tr style="background:#212529;color:white;font-weight:bold;">'
+                '<thead><tr style="background:#2c3e50;color:white;font-weight:bold;">'
                 '<th style="{thl}">Catégorie</th>'
                 '<th style="{th}">Efficace</th>'
                 '<th style="{th}">Non Efficace</th>'
@@ -834,9 +822,9 @@ class PlanActionSmi(models.Model):
 
             tbody = ''
             for i, r in enumerate(rows):
-                bg  = '#ffffff' if i % 2 == 0 else '#f8f9fa'
+                bg  = '#ffffff' if i % 2 == 0 else '#f4f4f4'
                 bc  = badge(r['taux'])
-                cc  = rec._CAT_COLORS.get(r['nat'], '#6c757d')
+                cc  = rec._CAT_COLORS[i % 4]
                 bdg = ('<span style="background:{bc};color:white;padding:3px 10px;'
                        'border-radius:12px;font-weight:bold;font-size:12px;">'
                        '{t:.1f}%</span>').format(bc=bc, t=r['taux'])
@@ -844,8 +832,8 @@ class PlanActionSmi(models.Model):
                     '<tr style="background:{bg};">'
                     '<td style="{tdl}"><span style="color:{cc};font-weight:bold;">'
                     '{label}</span></td>'
-                    '<td style="{tdc};color:#28a745;font-weight:bold;">{eff}</td>'
-                    '<td style="{tdc};color:#dc3545;font-weight:bold;">{neff}</td>'
+                    '<td style="{tdc};color:#1fa255;font-weight:bold;">{eff}</td>'
+                    '<td style="{tdc};color:#d44535;font-weight:bold;">{neff}</td>'
                     '<td style="{tdc}">{r100}</td>'
                     '<td style="{tdc}">{r50p}</td>'
                     '<td style="{tdc}">{r50m}</td>'
@@ -863,32 +851,43 @@ class PlanActionSmi(models.Model):
                 '{thead}<tbody>{tbody}</tbody></table>'
             ).format(thead=thead, tbody=tbody)
 
-            # ── Graphique CSS ──────────────────────────────────────
-            bars = ''
-            for r in rows:
-                bc  = badge(r['taux'])
-                cc  = rec._CAT_COLORS.get(r['nat'], '#6c757d')
-                pct = min(int(r['taux']), 100)
-                bars += (
-                    '<div style="display:flex;align-items:center;margin-bottom:12px;">'
-                    '<span style="width:160px;font-size:13px;color:{cc};'
-                    'font-weight:bold;flex-shrink:0;">{label}</span>'
-                    '<div style="flex:1;background:#f0f0f0;border-radius:6px;'
-                    'height:28px;position:relative;overflow:hidden;">'
-                    '<div style="width:{pct}%;background:{bc};height:28px;'
-                    'border-radius:6px;"></div>'
+            # ── Graphique barres verticales ────────────────────────
+            chart_h = 160  # hauteur max des barres (px)
+            label_h = 80   # hauteur réservée aux étiquettes (px)
+
+            cols = ''
+            for i, r in enumerate(rows):
+                cc    = rec._CAT_COLORS[i % 4]
+                pct   = min(int(r['taux']), 100)
+                bar_h = int(pct * chart_h / 100) if pct > 0 else 0
+                cols += (
+                    '<div style="display:flex;flex-direction:column;align-items:center;'
+                    'flex:1;min-width:28px;">'
+                    '<span style="font-size:9px;font-weight:bold;color:{cc};'
+                    'min-height:14px;line-height:14px;">{taux:.0f}%</span>'
+                    '<div style="width:70%;height:{bh}px;background:{cc};'
+                    'border-radius:3px 3px 0 0;min-width:16px;"></div>'
+                    '<div style="height:{lh}px;display:flex;justify-content:center;'
+                    'align-items:flex-start;padding-top:4px;overflow:hidden;">'
+                    '<span style="writing-mode:vertical-rl;transform:rotate(180deg);'
+                    'font-size:9px;color:#444;font-weight:bold;">{label}</span>'
                     '</div>'
-                    '<span style="width:50px;text-align:right;font-size:13px;'
-                    'font-weight:bold;color:{bc};padding-left:8px;">{taux:.1f}%</span>'
                     '</div>'
-                ).format(cc=cc, bc=bc, label=r['label'], pct=pct, taux=r['taux'])
+                ).format(cc=cc, taux=r['taux'], bh=bar_h, lh=label_h,
+                         label=r['label'])
 
             chart = (
                 '<div style="margin-top:24px;">'
-                '<p style="font-weight:bold;font-size:14px;margin-bottom:12px;'
-                'color:#212529;">Taux d\'efficacité par catégorie (%)</p>'
-                '{bars}</div>'
-            ).format(bars=bars)
+                '<p style="font-weight:bold;font-size:14px;margin-bottom:10px;'
+                'color:#2c3e50;">Taux d\'efficacité par catégorie (%)</p>'
+                '<div style="display:flex;align-items:flex-end;gap:4px;'
+                'padding:10px 10px 0 10px;background:white;'
+                'border-radius:4px 4px 0 0;'
+                'border-left:2px solid #dee2e6;border-top:1px solid #dee2e6;">'
+                '{cols}</div>'
+                '<div style="height:2px;background:#dee2e6;margin-left:2px;"></div>'
+                '</div>'
+            ).format(cols=cols)
 
             rec.analyse_html = (
                 '<div style="font-family:Arial,sans-serif;padding:16px;">'

@@ -476,7 +476,12 @@ canvas{display:block;width:100%}
           Cimenterie de Sétif · Catégories liées aux FNC
       </p>
     </div>
-    <button class="btn btn-primary o_export_smi" style="font-size:13px; font-weight:bold;">
+    <button class="o_export_smi"
+            style="background:#1e40af;color:white;border:1px solid #1e40af;
+                   border-radius:6px;padding:5px 14px;font-size:12px;
+                   font-weight:700;cursor:pointer;transition:background .15s;"
+            onmouseover="this.style.background='#1d4ed8'"
+            onmouseout="this.style.background='#1e40af'">
         <i class="fa fa-file-excel-o"></i> Export
     </button>
   </div>
@@ -527,7 +532,7 @@ canvas{display:block;width:100%}
                border-bottom:2px solid #2c3e50;padding-bottom:8px;">
         Taux d'efficacité par catégorie (%)
     </h4>
-    <div style="position:relative;height:320px;">
+    <div style="position:relative;overflow-x:auto;">
       <canvas id="smi_chart"></canvas>
     </div>
   </div>

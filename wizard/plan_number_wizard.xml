@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<record id="view_plan_number_wizard_form" model="ir.ui.view">
+    <field name="name">nc_management.plan_number_wizard.form</field>
+    <field name="model">nc_management.plan_number_wizard</field>
+    <field name="arch" type="xml">
+        <form string="Générer le numéro du plan">
+            <sheet>
+                <p class="oe_grey">
+                    Saisissez le numéro de référence à attribuer à ce plan d'action.
+                </p>
+                <group>
+                    <field name="plan_id" invisible="1"/>
+                    <field name="reference" placeholder="Ex : PLAN-001-2026"/>
+                </group>
+            </sheet>
+            <footer>
+                <button name="action_confirm"
+                        string="Confirmer"
+                        type="object"
+                        class="btn-primary"/>
+                <button string="Annuler"
+                        class="btn-secondary"
+                        special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+</data>
+</odoo>

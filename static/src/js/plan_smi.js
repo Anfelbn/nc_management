@@ -26,21 +26,22 @@ odoo.define('nc_management.plan_smi', function(require) {
                 // ── Table efficacité ──
                 var tbody = self.$('#smi_body');
                 tbody.empty();
-                var colors = ['#2980b9','#e74c3c','#27ae60','#e67e22'];
+                // 4 couleurs modérément sombres en rotation : bleu, rouge, vert, ambre
+                var colors = ['#2575b8', '#d44535', '#1fa255', '#cc8800'];
                 d.categories.forEach(function(cat, i) {
                     var data = cat.data;
-                    var tc = data.taux >= 70 ? '#27ae60' :
-                             data.taux >= 50 ? '#e67e22' : '#e74c3c';
+                    var tc = data.taux >= 70 ? '#1fa255' :
+                             data.taux >= 50 ? '#cc8800' : '#d44535';
                     tbody.append(
                         '<tr>' +
                         '<td style="padding:8px;border:1px solid #dee2e6;' +
-                            'font-weight:bold;color:' + colors[i] + '">' +
+                            'font-weight:bold;color:' + colors[i % 4] + '">' +
                             cat.label + '</td>' +
                         '<td style="padding:8px;border:1px solid #dee2e6;' +
-                            'text-align:center;color:#27ae60;font-weight:bold;">' +
+                            'text-align:center;color:#1fa255;font-weight:bold;">' +
                             data.efficace + '</td>' +
                         '<td style="padding:8px;border:1px solid #dee2e6;' +
-                            'text-align:center;color:#e74c3c;font-weight:bold;">' +
+                            'text-align:center;color:#d44535;font-weight:bold;">' +
                             data.non_efficace + '</td>' +
                         '<td style="padding:8px;border:1px solid #dee2e6;' +
                             'text-align:center;">' + data.realise_100 + '</td>' +
@@ -61,104 +62,118 @@ odoo.define('nc_management.plan_smi', function(require) {
                     );
                 });
 
-                // ── Diagramme en bâtons — Taux d'efficacité par catégorie ──
+                // ── Histogramme vertical moderne — Taux d'efficacité par catégorie ──
                 var $cv = self.$('#smi_chart');
                 if ($cv.length && d.categories_chart && d.categories_chart.length) {
-                    var labels   = d.categories_chart.map(function(c){ return c.label; });
-                    var tauxData = d.categories_chart.map(function(c){ return c.taux;  });
-                    var cvEl     = $cv[0];
-                    var ctx2d    = cvEl.getContext('2d');
+                    var smi_labels = d.categories_chart.map(function(c){ return c.label; });
+                    var smi_taux   = d.categories_chart.map(function(c){ return c.taux;  });
 
-                    // Dégradé vertical bleu clair → bleu foncé (palette dashboard)
-                    var grad = ctx2d.createLinearGradient(0, 0, 0, cvEl.height);
-                    grad.addColorStop(0, '#7AAFEE');
-                    grad.addColorStop(1, '#2A5A9A');
+                    setTimeout(function() {
+                        var canvas = $cv[0];
+                        var dpr    = window.devicePixelRatio || 1;
+                        var W      = Math.max($cv.parent().width() || 0, 700);
+                        var H      = 420;
+                        canvas.width        = W * dpr;
+                        canvas.height       = H * dpr;
+                        canvas.style.width  = W + 'px';
+                        canvas.style.height = H + 'px';
+                        var ctx = canvas.getContext('2d');
+                        ctx.scale(dpr, dpr);
 
-                    new Chart(ctx2d, {
-                        type: 'bar',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: "Taux d'efficacité %",
-                                data: tauxData,
-                                backgroundColor: grad,
-                                borderColor:     '#1e3a8a',
-                                borderWidth:     1,
-                            }]
-                        },
-                        options: {
-                            responsive:          true,
-                            maintainAspectRatio: false,
-                            title: {
-                                display:   true,
-                                text:      "Taux d'efficacité par catégorie (%)",
-                                fontSize:  14,
-                                fontColor: '#2c3e50',
-                                fontStyle: 'bold',
-                            },
-                            legend: { display: false },
-                            scales: {
-                                yAxes: [{
-                                    ticks: {
-                                        beginAtZero: true,
-                                        max: 100,
-                                        stepSize: 25,
-                                        callback: function(v){ return v + '%'; },
-                                        fontColor: '#94a3b8',
-                                        fontSize:  11,
-                                    },
-                                    gridLines: {
-                                        color:     'rgba(0,0,0,0.06)',
-                                        zeroLineColor: '#cbd5e1',
-                                    },
-                                }],
-                                xAxes: [{
-                                    gridLines: { display: false },
-                                    ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 45,
-                                        fontColor:   '#64748b',
-                                        fontSize:    10,
-                                    },
-                                }],
-                            },
-                            // Valeur % affichée au-dessus de chaque barre
-                            animation: {
-                                onComplete: function() {
-                                    var c    = this.chart.ctx;
-                                    var ds   = this.data.datasets[0];
-                                    var meta = this.chart.getDatasetMeta(0);
-                                    meta.data.forEach(function(bar, idx) {
-                                        var val = ds.data[idx];
-                                        if (!val) { return; }
-                                        c.save();
-                                        c.fillStyle    = '#1e3a8a';
-                                        c.font         = 'bold 10px "Segoe UI", Arial';
-                                        c.textAlign    = 'center';
-                                        c.textBaseline = 'bottom';
-                                        c.fillText(val + '%', bar._model.x, bar._model.y - 2);
-                                        c.restore();
-                                    });
-                                },
-                            },
-                            tooltips: {
-                                callbacks: {
-                                    label: function(ti, data) {
-                                        return data.datasets[ti.datasetIndex]
-                                                   .data[ti.index] + '%';
-                                    },
-                                },
-                            },
+                        var pL = 52, pR = 24, pT = 50, pB = 100;
+                        var cW = W - pL - pR, cH = H - pT - pB;
+                        var n  = smi_labels.length;
+                        var gW = cW / n;
+                        var bW = Math.min(gW * 0.48, 42);
+
+                        // Titre centré
+                        ctx.fillStyle = '#1e293b';
+                        ctx.font = 'bold 13px Segoe UI';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Taux efficacité en %', W / 2, 26);
+
+                        // Fond blanc
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(pL, pT, cW, cH);
+
+                        // Grilles horizontales grises
+                        for (var i = 0; i <= 4; i++) {
+                            var gy = pT + cH * (1 - i / 4);
+                            ctx.strokeStyle = i === 0 ? '#cbd5e1' : '#e2e8f0';
+                            ctx.lineWidth = i === 0 ? 1.2 : 0.8;
+                            ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cW, gy); ctx.stroke();
+                            // Graduation axe Y
+                            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1;
+                            ctx.beginPath(); ctx.moveTo(pL - 5, gy); ctx.lineTo(pL, gy); ctx.stroke();
+                            // Label axe Y
+                            ctx.fillStyle = '#64748b'; ctx.font = '10px Segoe UI'; ctx.textAlign = 'right';
+                            ctx.fillText(i * 25 + '%', pL - 8, gy + 3);
                         }
-                    });
+
+                        // Axe Y
+                        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+                        ctx.beginPath(); ctx.moveTo(pL, pT); ctx.lineTo(pL, pT + cH); ctx.stroke();
+                        // Axe X
+                        ctx.beginPath(); ctx.moveTo(pL, pT + cH); ctx.lineTo(pL + cW, pT + cH); ctx.stroke();
+
+                        // Barres avec coins arrondis en haut
+                        smi_taux.forEach(function(val, gi) {
+                            var bh  = (Math.min(val, 100) / 100) * cH;
+                            var x   = pL + gi * gW + (gW - bW) / 2;
+                            var y   = pT + cH - bh;
+                            var r   = Math.min(4, bh / 2);
+
+                            // Couleur selon taux (mêmes couleurs qu'avant)
+                            var cLight, cDark;
+                            if (val >= 70)      { cLight = '#7AAFEE'; cDark = '#3A72B8'; }
+                            else if (val >= 50) { cLight = '#F5C877'; cDark = '#C9920A'; }
+                            else                { cLight = '#E88080'; cDark = '#B03030'; }
+
+                            if (bh > 0) {
+                                // Dégradé vertical clair → foncé
+                                var grad = ctx.createLinearGradient(x, y, x, y + bh);
+                                grad.addColorStop(0, cLight);
+                                grad.addColorStop(1, cDark);
+                                ctx.fillStyle = grad;
+                                // Barre avec coins arrondis en haut
+                                ctx.beginPath();
+                                ctx.moveTo(x + r, y);
+                                ctx.lineTo(x + bW - r, y);
+                                ctx.quadraticCurveTo(x + bW, y, x + bW, y + r);
+                                ctx.lineTo(x + bW, y + bh);
+                                ctx.lineTo(x, y + bh);
+                                ctx.lineTo(x, y + r);
+                                ctx.quadraticCurveTo(x, y, x + r, y);
+                                ctx.closePath();
+                                ctx.fill();
+                            }
+
+                            // Valeur % au-dessus de la barre
+                            ctx.fillStyle = val >= 70 ? '#2A5A9A' : val >= 50 ? '#A07808' : '#8C2020';
+                            ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'center';
+                            ctx.fillText(val + '%', x + bW / 2, Math.max(y - 5, pT + 12));
+                        });
+
+                        // Labels axe X inclinés vers la gauche
+                        ctx.fillStyle = '#475569'; ctx.font = '10px Segoe UI';
+                        smi_labels.forEach(function(lbl, gi) {
+                            var cx = pL + gi * gW + gW / 2;
+                            ctx.save();
+                            ctx.translate(cx, pT + cH + 10);
+                            ctx.rotate(-Math.PI / 5);
+                            ctx.textAlign = 'right';
+                            ctx.fillText(lbl, 0, 0);
+                            ctx.restore();
+                        });
+                    }, 150);
                 }
 
                 // ── Table processus ──
                 var ptbody = self.$('#proc_body');
                 ptbody.empty();
                 d.processus.forEach(function(p) {
-                    var color = p.taux >= 70 ? '#27ae60' :
-                                p.taux >= 50 ? '#e67e22' : '#e74c3c';
+                    var color = p.taux >= 70 ? '#1fa255' :
+                                p.taux >= 50 ? '#cc8800' : '#d44535';
                     var bw = Math.min(p.taux, 100);
                     ptbody.append(
                         '<tr>' +

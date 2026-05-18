@@ -11,7 +11,6 @@
     <field name="priority">10</field>
     <field name="arch" type="xml">
         <tree string="Mes Plans" import="false"
-              decoration-success="is_integrated == 'Oui'"
               decoration-danger="is_late == True">
             <field name="name"            string="Référence"/>
             <field name="direction_id"    string="Direction"/>
@@ -36,9 +35,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">16</field>
     <field name="arch" type="xml">
-        <tree string="Plans Reçus" import="false" create="false" delete="false" edit="false"
-              decoration-success="submission_state == 'integre'"
-              decoration-info="submission_state == 'soumis'">
+        <tree string="Plans Reçus" import="false" create="false" delete="false" edit="false">
             <field name="name"/>
             <field name="direction_id"/>
             <field name="department_id"/>
@@ -85,6 +82,12 @@
     <field name="arch" type="xml">
         <form string="Plan d'Action Amélioration SMI">
             <header>
+                <!-- Générer le numéro de référence -->
+                <button name="action_generate_plan_number"
+                        string="Générer le numéro du plan"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': ['|', ('name', '!=', 'New'), ('is_global', '=', True)]}"/>
                 <!-- Bouton envoi : NC Utilisateur, plan encore brouillon, non global -->
                 <button name="action_envoyer_rmqse"
                         string="Envoyer à la Responsable Qualité"
@@ -137,8 +140,7 @@
                 <group string="Identification">
                     <group>
                         <field name="nature"
-                               attrs="{'readonly':  [('submission_state', '!=', 'brouillon')],
-                                       'required':  [('is_global', '=', False)]}"/>
+                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"/>
                         <field name="fnc_id"
                                attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
                                options="{'no_create': True, 'no_create_edit': True}"/>

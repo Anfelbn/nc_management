@@ -957,6 +957,22 @@ class PlanActionSmi(models.Model):
                     'nc_management.plan_action_smi') or 'New'
         return super(PlanActionSmi, self).create(vals)
 
+    @api.multi
+    def action_generate_plan_number(self):
+        self.ensure_one()
+        if self.name != 'New':
+            raise UserError(
+                "La référence '%s' a déjà été assignée." % self.name
+            )
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Générer le numéro du plan',
+            'res_model': 'nc_management.plan_number_wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_plan_id': self.id},
+        }
+
     @api.onchange('efficacite')
     def _onchange_efficacite(self):
         if self.efficacite:
@@ -1000,6 +1016,8 @@ class PlanActionSmi(models.Model):
             raise UserError("Ce plan a déjà été soumis à la Responsable Qualité.")
         if self.env.uid != self.create_uid.id:
             raise UserError("Seul le créateur peut soumettre ce plan.")
+        if not self.is_global and not self.nature:
+            raise UserError("Veuillez renseigner la Nature avant d'envoyer le plan.")
 
         self.write({
             'submission_state': 'soumis',

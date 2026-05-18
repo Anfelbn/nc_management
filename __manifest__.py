@@ -22,6 +22,7 @@
         'wizard/export_smi_analysis_wizard.xml',
         'wizard/consolidate_wizard.xml',
         'wizard/plan_efficacite_wizard.xml',
+        'wizard/plan_number_wizard.xml',
         'reports/report_fnc.xml',
         'reports/report_fac.xml',
         'reports/report_revision.xml',

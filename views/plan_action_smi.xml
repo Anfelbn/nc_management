@@ -82,6 +82,12 @@
     <field name="arch" type="xml">
         <form string="Plan d'Action Amélioration SMI">
             <header>
+                <!-- Générer le numéro de référence -->
+                <button name="action_generate_plan_number"
+                        string="Générer le numéro du plan"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': ['|', ('name', '!=', 'New'), ('is_global', '=', True)]}"/>
                 <!-- Bouton envoi : NC Utilisateur, plan encore brouillon, non global -->
                 <button name="action_envoyer_rmqse"
                         string="Envoyer à la Responsable Qualité"
@@ -134,8 +140,7 @@
                 <group string="Identification">
                     <group>
                         <field name="nature"
-                               attrs="{'readonly':  [('submission_state', '!=', 'brouillon')],
-                                       'required':  [('is_global', '=', False)]}"/>
+                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"/>
                         <field name="fnc_id"
                                attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
                                options="{'no_create': True, 'no_create_edit': True}"/>

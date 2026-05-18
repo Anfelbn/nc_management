@@ -1407,7 +1407,7 @@ class NcDashboard(models.Model):
             ('fnc_id', 'in', combined_fnc_ids),
         ]
 
-        # ── FNC counters (combiné : RMQSE créé + audits) ──
+        # ── FNC counters (RMQSE créé + audits) ──
         total_fnc     = len(combined_fnc_ids)
         fnc_cours     = fnc.search_count(combined_fnc_domain + [('state','=','in_progress')])
         fnc_envoyes   = fnc.search_count(combined_fnc_domain + [('state','=','submitted')])
@@ -1526,25 +1526,30 @@ class NcDashboard(models.Model):
             d['pct_fnc'] = round(d['fnc_count'] / max_dir_fnc * 100)
             d['pct_fac'] = round(d['fac_count'] / max_dir_fac * 100)
 
-        # ── FAC counters (combinées : liées aux FNC RMQSE + audits) ──
+        # ── FAC counters (liées aux FNC RMQSE + audits) ──
         total_fac          = fac.search_count(combined_fac_domain)
-        fac_open           = fac.search_count(combined_fac_domain + [('state','=','open')])
-        fac_verif          = fac.search_count(combined_fac_domain + [('state','=','verified')])
+        fac_open           = fac.search_count(combined_fac_domain + [('state','=','submitted')])
+        fac_verif          = fac.search_count(combined_fac_domain + [('state','=','in_progress')])
         fac_closed         = fac.search_count(combined_fac_domain + [('state','=','closed')])
         fac_brouillon      = fac.search_count(combined_fac_domain + [('state','=','draft')])
+        fac_validated      = fac.search_count(combined_fac_domain + [('state','=','validated')])
         fac_efficace       = fac.search_count(combined_fac_domain + [('actions_efficaces','=','oui')])
         taux_eff           = round(fac_efficace / total_fac * 100, 1) if total_fac else 0
         taux_validation_fac = round(fac_verif  / total_fac * 100, 1) if total_fac else 0
         taux_cloture_fac   = round(fac_closed  / total_fac * 100, 1) if total_fac else 0
-        # FAC audit split
-        fac_audit_interne  = fac.search_count(combined_fac_domain + [('fnc_id.type_audit_interne','=',True)])
-        fac_audit_externe  = fac.search_count(combined_fac_domain + [('fnc_id.type_audit_externe','=',True)])
+        # FAC audit split — direct sur toutes FAC de la période liées à une FNC audit
+        fac_audit_interne = fac.search_count([
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<',  period_end.strftime('%Y-%m-%d')),
+            ('fnc_id.type_audit_interne', '=', True),
+        ])
+        fac_audit_externe = fac.search_count([
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<',  period_end.strftime('%Y-%m-%d')),
+            ('fnc_id.type_audit_externe', '=', True),
+        ])
         audit_interne_total = fnc_audit_interne + fac_audit_interne
         audit_externe_total = fnc_audit_externe + fac_audit_externe
-        fac_submitted = fac.search_count(combined_fac_domain + [
-            ('state', '=', 'draft'),
-            ('fnc_id.state', 'in', ['submitted', 'in_progress']),
-        ])
 
         # FAC en retard (ouvertes > 7 jours — tout le système)
         fac_retard_recs = fac.search_read(
@@ -1597,6 +1602,8 @@ class NcDashboard(models.Model):
                 ('date', '>=', str(m_start)),
                 ('date', '<', str(m_end)),
                 ('create_uid', '=', self.env.uid),
+                ('type_audit_interne', '=', False),
+                ('type_audit_externe', '=', False),
             ])
             m_fnc_ids = m_fnc_recs.ids
             count_fac = fac.search_count([
@@ -1635,11 +1642,11 @@ class NcDashboard(models.Model):
             'fac_verif':          fac_verif,
             'fac_closed':         fac_closed,
             'fac_brouillon':      fac_brouillon,
+            'fac_validated':      fac_validated,
             'fac_audit_interne':   fac_audit_interne,
             'fac_audit_externe':   fac_audit_externe,
             'audit_interne_total': audit_interne_total,
             'audit_externe_total': audit_externe_total,
-            'fac_submitted':       fac_submitted,
             'fac_retard':         fac_retard,
             'fac_recues':         fac_recues_count,
             'taux_efficacite':    taux_eff,
@@ -1680,7 +1687,11 @@ class NcDashboard(models.Model):
         result['monthly_labels'] = monthly_labels
 
         result['fnc_audit'] = fnc.search_count(combined_fnc_domain + [('type_audit', '=', True)])
-        result['fac_audit'] = fac.search_count(combined_fac_domain + [('fnc_id.type_audit', '=', True)])
+        result['fac_audit'] = fac.search_count([
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<',  period_end.strftime('%Y-%m-%d')),
+            ('fnc_id.type_audit', '=', True),
+        ])
 
         # Totaux globaux (tout le système) pour l'en-tête du graphique direction
         result['global_fnc_total'] = fnc.search_count([

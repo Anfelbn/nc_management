@@ -70,7 +70,7 @@ odoo.define('nc_management.dashboard', function(require){
                 fnc_brouillon: 0,
                 fnc_validated: 0,
                 fac_brouillon: 0,
-                fac_submitted: 0,
+                fac_validated: 0,
                 taux_validation_fac: 0,
                 taux_cloture_fac: 0,
                 period: '1m',

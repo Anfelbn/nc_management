@@ -232,7 +232,7 @@ canvas{display:block;width:100%}
           <div class="aud-btn btn-list"
                data-model="nc_management.corrective_action"
                data-domain='[["fnc_id.type_audit_interne","=",true]]'
-               data-context='{"search_default_fac_audit_interne":1}'>
+               data-context='{"fnc_audit_domain":[["type_audit_interne","=",true]],"default_type_audit_interne":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FAC</div>
             <div class="aud-btn-val" style="color:#991b1b"><t t-esc="widget.stats.fac_audit_interne"/></div>
           </div>
@@ -254,7 +254,7 @@ canvas{display:block;width:100%}
           <div class="aud-btn btn-list"
                data-model="nc_management.corrective_action"
                data-domain='[["fnc_id.type_audit_externe","=",true]]'
-               data-context='{"search_default_fac_audit_externe":1}'>
+               data-context='{"fnc_audit_domain":[["type_audit_externe","=",true]],"default_type_audit_externe":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FAC</div>
             <div class="aud-btn-val" style="color:#991b1b"><t t-esc="widget.stats.fac_audit_externe"/></div>
           </div>
@@ -280,11 +280,10 @@ canvas{display:block;width:100%}
         <div class="nc-kpi-top" style="background:#10B981"></div>
         <div class="nc-kpi-label">Total FAC</div>
         <div class="nc-kpi-val" style="color:#065F46"><t t-esc="widget.stats.fac_total"/></div>
-        <div class="nc-kpi-txt">Taux efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["actions_efficaces","=","oui"]]'>↳ Taux efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
         <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["state","=","closed"]]'>↳ Taux clôture : <t t-esc="widget.stats.taux_cloture_fac"/>%</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
           <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
-          <span class="badge" style="background:#fef9c3;color:#854d0e">Soumise <t t-esc="widget.stats.fac_submitted"/></span>
           <span class="badge orange">Soumise <t t-esc="widget.stats.fac_open"/></span>
           <span class="badge" style="background:#dbeafe;color:#1e40af">En cours <t t-esc="widget.stats.fac_verif"/></span>
           <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fac_validated"/></span>

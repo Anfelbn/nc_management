@@ -947,14 +947,10 @@ class PlanActionSmi(models.Model):
 
     @api.model
     def create(self, vals):
-        if vals.get('name', 'New') == 'New':
-            if vals.get('is_global'):
-                from datetime import date as _date
-                today = _date.today()
-                vals['name'] = 'AMELIORATION-%02d-%04d' % (today.month, today.year)
-            else:
-                vals['name'] = self.env['ir.sequence'].next_by_code(
-                    'nc_management.plan_action_smi') or 'New'
+        if vals.get('name', 'New') == 'New' and vals.get('is_global'):
+            from datetime import date as _date
+            today = _date.today()
+            vals['name'] = 'SMI-%02d-%04d' % (today.month, today.year)
         return super(PlanActionSmi, self).create(vals)
 
     @api.multi
@@ -969,6 +965,8 @@ class PlanActionSmi(models.Model):
             'name': 'Générer le numéro du plan',
             'res_model': 'nc_management.plan_number_wizard',
             'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_plan_number_wizard_form').id,
             'target': 'new',
             'context': {'default_plan_id': self.id},
         }
@@ -1136,7 +1134,7 @@ class PlanActionSmi(models.Model):
         today = _date.today()
         first_of_current = today.replace(day=1)
         first_of_last = first_of_current - relativedelta(months=1)
-        ref = 'GLOBAL-%02d-%04d' % (first_of_last.month, first_of_last.year)
+        ref = 'SMI-%02d-%04d' % (first_of_last.month, first_of_last.year)
 
         if self.search([('is_global', '=', True), ('name', '=', ref)], limit=1):
             return True

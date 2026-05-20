@@ -30,17 +30,6 @@ class ConsolidateWizard(models.TransientModel):
         active_id = self.env.context.get('active_id')
         if active_id:
             res['global_plan_id'] = active_id
-            # Mes Plans (créés par l'utilisateur courant) + Plans Reçus (envoyés par d'autres)
-            plans = self.env['nc_management.plan_action_smi'].search([
-                ('is_global', '=', False),
-                ('global_plan_id', '=', False),
-                '|',
-                ('create_uid', '=', self.env.uid),
-                '&',
-                ('sent_to_rmqse', '=', True),
-                ('create_uid', '!=', self.env.uid),
-            ])
-            res['plan_ids'] = [(6, 0, plans.ids)]
         return res
 
     @api.multi

@@ -245,7 +245,7 @@
                         attrs="{'invisible': [('submission_state', '=', 'cloture')]}"/>
                 <!-- Clôturer : crée automatiquement le plan suivant -->
                 <button name="action_cloturer_plan"
-                        string="Clôturer et créer le suivant"
+                        string="Clôturer"
                         type="object"
                         confirm="Clôturer ce plan créera automatiquement un nouveau Plan d'Amélioration avec les plans récents. Continuer ?"
                         attrs="{'invisible': [('submission_state', '=', 'cloture')]}"

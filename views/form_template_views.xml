@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ============================================================ -->
+<!--  GABARITS DE FORMULAIRES FNC/FAC                             -->
+<!-- ============================================================ -->
+
+<record id="view_form_template_tree" model="ir.ui.view">
+    <field name="name">nc_management.form_template.tree</field>
+    <field name="model">nc_management.form_template</field>
+    <field name="arch" type="xml">
+        <tree string="Gabarits de formulaires"
+              decoration-success="is_active == True"
+              decoration-muted="is_active == False">
+            <field name="doc_type"/>
+            <field name="name"/>
+            <field name="revision_id" string="Révision"/>
+            <field name="section_count" string="Nb sections"/>
+            <field name="is_active" string="Actif"/>
+        </tree>
+    </field>
+</record>
+
+<record id="view_form_template_form" model="ir.ui.view">
+    <field name="name">nc_management.form_template.form</field>
+    <field name="model">nc_management.form_template</field>
+    <field name="arch" type="xml">
+        <form string="Gabarit de formulaire">
+            <header>
+                <button name="action_activate"
+                        string="Activer ce gabarit"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('is_active','=',True)]}"/>
+                <button name="action_new_revision"
+                        string="Nouvelle révision →"
+                        type="object"
+                        attrs="{'invisible': [('is_active','=',False)]}"/>
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <label for="name" class="oe_edit_only"/>
+                    <h1><field name="name"/></h1>
+                </div>
+                <group>
+                    <group>
+                        <field name="doc_type"/>
+                        <field name="revision_id"/>
+                    </group>
+                    <group>
+                        <field name="is_active" string="Gabarit actif"/>
+                        <field name="section_count" string="Nb sections"/>
+                    </group>
+                </group>
+
+                <notebook>
+                    <page string="Sections du formulaire">
+                        <p class="oe_grey" style="margin-bottom:8px;">
+                            Réordonnez les sections avec la poignée ⠿, activez/désactivez-les,
+                            puis cliquez sur une ligne pour éditer ses champs détaillés.
+                        </p>
+                        <field name="section_ids">
+                            <tree editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="name"/>
+                                <field name="section_layout" string="Disposition"/>
+                                <field name="show_title" string="Titre visible"/>
+                                <field name="is_active" string="Actif"/>
+                                <field name="line_count" string="Lignes"/>
+                            </tree>
+                            <form string="Section">
+                                <group>
+                                    <group>
+                                        <field name="name" placeholder="Titre affiché dans le PDF"/>
+                                        <field name="sequence"/>
+                                    </group>
+                                    <group>
+                                        <field name="section_layout"/>
+                                        <field name="show_title"/>
+                                        <field name="is_active"/>
+                                    </group>
+                                </group>
+                                <separator string="Lignes de contenu"/>
+                                <field name="line_ids">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="is_active"/>
+                                        <field name="line_type"/>
+                                        <!-- textarea -->
+                                        <field name="ta_field" string="Champ"
+                                               attrs="{'invisible':[('line_type','!=','textarea')],
+                                                       'required':[('line_type','=','textarea')]}"/>
+                                        <field name="ta_height" string="Hauteur"
+                                               attrs="{'invisible':[('line_type','!=','textarea')]}"/>
+                                        <field name="ta_label" string="Libellé au-dessus"
+                                               attrs="{'invisible':[('line_type','!=','textarea')]}"/>
+                                        <!-- row -->
+                                        <field name="col1_field" string="Champ 1"
+                                               attrs="{'invisible':[('line_type','!=','row')]}"/>
+                                        <field name="col1_label" string="Libellé 1"
+                                               attrs="{'invisible':[('line_type','!=','row')]}"/>
+                                        <field name="col2_field" string="Champ 2"
+                                               attrs="{'invisible':[('line_type','!=','row')]}"/>
+                                        <field name="col2_label" string="Libellé 2"
+                                               attrs="{'invisible':[('line_type','!=','row')]}"/>
+                                        <field name="col3_field" string="Champ 3"
+                                               attrs="{'invisible':[('line_type','!=','row')]}"/>
+                                        <field name="col3_label" string="Libellé 3"
+                                               attrs="{'invisible':[('line_type','!=','row')]}"/>
+                                        <!-- checkbox -->
+                                        <field name="cb_field" string="Champ"
+                                               attrs="{'invisible':[('line_type','!=','checkbox')],
+                                                       'required':[('line_type','=','checkbox')]}"/>
+                                        <field name="cb_label" string="Libellé"
+                                               attrs="{'invisible':[('line_type','!=','checkbox')]}"/>
+                                        <field name="cb_column" string="Colonne"
+                                               attrs="{'invisible':[('line_type','!=','checkbox')]}"/>
+                                        <field name="cb_extra_field" string="Champ extra"
+                                               attrs="{'invisible':[('line_type','!=','checkbox')]}"/>
+                                        <!-- custom_text -->
+                                        <field name="custom_text" string="Texte fixe"
+                                               attrs="{'invisible':[('line_type','!=','custom_text')],
+                                                       'required':[('line_type','=','custom_text')]}"/>
+                                        <!-- hidden computed -->
+                                        <field name="render_type_ta"   invisible="1"/>
+                                        <field name="render_type_col1" invisible="1"/>
+                                        <field name="render_type_col2" invisible="1"/>
+                                        <field name="render_type_col3" invisible="1"/>
+                                        <field name="render_type_cb"   invisible="1"/>
+                                        <field name="nb_cols"          invisible="1"/>
+                                    </tree>
+                                    <form string="Ligne du gabarit">
+                                        <group>
+                                            <group>
+                                                <field name="sequence"/>
+                                                <field name="is_active"/>
+                                            </group>
+                                            <group>
+                                                <field name="line_type"/>
+                                            </group>
+                                        </group>
+
+                                        <group string="Zone de texte"
+                                               attrs="{'invisible':[('line_type','!=','textarea')]}">
+                                            <field name="ta_field"/>
+                                            <field name="ta_height"/>
+                                            <field name="ta_label"
+                                                   placeholder="ex. - Impact : coût, incidence, risque :"/>
+                                        </group>
+
+                                        <group string="Rangée de champs (1 à 3 colonnes)"
+                                               attrs="{'invisible':[('line_type','!=','row')]}">
+                                            <group string="Colonne 1">
+                                                <field name="col1_field"/>
+                                                <field name="col1_label"/>
+                                            </group>
+                                            <group string="Colonne 2">
+                                                <field name="col2_field"/>
+                                                <field name="col2_label"/>
+                                            </group>
+                                            <group string="Colonne 3 (optionnel)">
+                                                <field name="col3_field"/>
+                                                <field name="col3_label"/>
+                                            </group>
+                                        </group>
+
+                                        <group string="Case à cocher"
+                                               attrs="{'invisible':[('line_type','!=','checkbox')]}">
+                                            <field name="cb_field"/>
+                                            <field name="cb_label"/>
+                                            <field name="cb_column"/>
+                                            <field name="cb_extra_field"/>
+                                            <field name="cb_extra_label"/>
+                                        </group>
+
+                                        <group string="Texte fixe"
+                                               attrs="{'invisible':[('line_type','!=','custom_text')]}">
+                                            <field name="custom_text"/>
+                                        </group>
+
+                                        <group invisible="1">
+                                            <field name="render_type_ta"/>
+                                            <field name="render_type_col1"/>
+                                            <field name="render_type_col2"/>
+                                            <field name="render_type_col3"/>
+                                            <field name="render_type_cb"/>
+                                            <field name="nb_cols"/>
+                                        </group>
+                                    </form>
+                                </field>
+                            </form>
+                        </field>
+                    </page>
+                </notebook>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<record id="action_form_template_list" model="ir.actions.act_window">
+    <field name="name">Gabarits de formulaires</field>
+    <field name="res_model">nc_management.form_template</field>
+    <field name="view_mode">tree,form</field>
+</record>
+
+<menuitem name="Gabarits FNC / FAC"
+          id="nc_management.menu_form_templates"
+          parent="nc_management.menu_config"
+          action="action_form_template_list"
+          sequence="20"/>
+
+</data>
+</odoo>

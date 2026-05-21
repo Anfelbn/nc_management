@@ -81,8 +81,21 @@ class Nonconformity(models.Model):
         'hr.department', string='Équipe',
         domain=[('scaek_level', '=', 'equipe')],
         context={'no_create': True, 'no_create_edit': True})
-    service_dpt   = fields.Char(string='Sce / DPT')
+    service_dpt       = fields.Char(string='Sce / DPT')
+    sce_dpt_computed  = fields.Char(
+        string='Sce / DPT (calculé)',
+        compute='_compute_sce_dpt', store=False)
     date          = fields.Date(string='Date', default=fields.Date.today)
+
+    @api.depends('service_id', 'department_id')
+    def _compute_sce_dpt(self):
+        for rec in self:
+            parts = []
+            if rec.service_id:
+                parts.append(rec.service_id.name)
+            if rec.department_id:
+                parts.append(rec.department_id.name)
+            rec.sce_dpt_computed = ' / '.join(parts) if parts else ''
 
     # ── Type de Non-Conformité ────────────────────────────────
     type_nc_produit        = fields.Boolean(string='NC Produit')

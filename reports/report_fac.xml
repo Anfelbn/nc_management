@@ -17,303 +17,232 @@
         <t t-call="web.html_container">
             <t t-call="web.basic_layout">
                 <style>
-                    @page {
-                        size: A4 portrait;
-                        margin: 0mm;
-                    }
-                    body {
-                        margin: 0;
-                        padding: 0;
-                    }
+                    @page { size: A4 portrait; margin: 0mm; }
+                    body { margin: 0; padding: 0; }
                     .page {
-                        width: 100%;
-                        min-height: 281mm;
-                        font-family: Arial, sans-serif;
-                        font-weight: bold;
-                        font-size: 11px;
-                        position: relative;
-                        padding: 8mm 4mm 5mm 4mm;
-                        box-sizing: border-box;
+                        width: 100%; min-height: 281mm;
+                        font-family: Arial, sans-serif; font-weight: bold; font-size: 11px;
+                        position: relative; padding: 8mm 4mm 5mm 4mm; box-sizing: border-box;
                     }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        table-layout: fixed;
-                        border: 2px solid black;
-                    }
-                    td {
-                        border: 2px solid black;
-                        padding: 4px 6px;
-                        word-wrap: break-word;
-                        vertical-align: middle;
-                        font-size: 11px;
-                    }
-                    .bg-blue {
-                        background-color: #d6e3f8;
-                        text-align: center;
-                        font-weight: bold;
-                    }
-                    .section-title {
-                        background-color: #d6e3f8;
-                        font-weight: bold;
-                        text-align: left;
-                        padding: 5px 6px;
-                        height: 25px;
-                    }
-                    .header-cell {
-                        text-align: center;
-                        vertical-align: middle;
-                    }
-                    .checkbox {
-                        font-size: 13px;
-                        display: inline;
-                    }
+                    table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid black; }
+                    td { border: 2px solid black; padding: 4px 6px; word-wrap: break-word; vertical-align: middle; font-size: 11px; }
+                    .bg-blue { background-color: #d6e3f8; text-align: center; font-weight: bold; }
+                    .section-title { background-color: #d6e3f8; font-weight: bold; text-align: left; padding: 5px 6px; height: 25px; }
+                    .header-cell { text-align: center; vertical-align: middle; }
+                    .checkbox { font-size: 13px; display: inline; }
                     .cell-sm { height: 32px; }
                     .cell-md { height: 80px; vertical-align: top; padding: 6px; }
                     .cell-lg { height: 100px; vertical-align: top; padding: 6px; }
-                    .footer-ref {
-                        text-align: right;
-                        font-size: 12px;
-                        font-weight: bold;
-                        margin-top: 18mm;
-                        padding-right: 5px;
-                    }
+                    .cell-xl { height: 180px; vertical-align: top; padding: 6px; }
+                    .footer-ref { text-align: right; font-size: 12px; font-weight: bold; margin-top: 18mm; padding-right: 5px; }
                 </style>
 
                 <t t-foreach="docs" t-as="doc">
                     <div class="page">
 
-                        <!-- ===== HEADER ===== -->
-                        <table style="margin-bottom: 6px;">
-                            <tr style="height: 70px;">
-                                <td rowspan="3" style="width:18%; text-align:center; vertical-align:middle;">
+                        <!-- ===== EN-TÊTE FIXE ===== -->
+                        <t t-set="valable_rev" t-value="env['nc_management.document_revision'].search(
+                            [('doc_type','=','fac'),('etat','=','valable')], limit=1)"/>
+                        <table style="margin-bottom:6px;">
+                            <tr style="height:70px;">
+                                <td rowspan="3" style="width:18%;text-align:center;vertical-align:middle;">
                                     <img t-if="env.user.company_id.logo"
                                          t-att-src="'data:image/png;base64,' + env.user.company_id.logo.decode('utf-8')"
-                                         style="max-width:110px; max-height:55px;"/>
+                                         style="max-width:110px;max-height:55px;"/>
                                 </td>
                                 <td rowspan="2" class="header-cell" style="width:52%;">
-                                    <div style="font-size:13px; margin-bottom:2px;">شركة الإسمنت عين الكبيرة</div>
+                                    <div style="font-size:13px;margin-bottom:2px;">شركة الإسمنت عين الكبيرة</div>
                                     <div style="font-size:11px;">SOCIETE DES CIMENTS DE AIN EL KEBIRA</div>
                                     <div style="font-size:10px;">CEMENT COMPANY OF AIN EL KEBIRA</div>
                                 </td>
-                                <td style="width:30%; vertical-align:middle;">
-                                   <t t-set="valable_rev" t-value="env['nc_management.document_revision'].search([('doc_type', '=', 'fac'), ('etat', '=', 'valable')], limit=1)"/>
-                                   <span>Référence : <t t-if="valable_rev and valable_rev.reference" t-esc="valable_rev.reference"/><t t-else="">FAC 003/700</t></span>
+                                <td style="width:30%;vertical-align:middle;">
+                                    <span>Référence : <t t-if="valable_rev and valable_rev.reference" t-esc="valable_rev.reference"/><t t-else="">FAC 003/700</t></span>
                                 </td>
-                                </tr>
-                                <tr style="height: 25px;">
+                            </tr>
+                            <tr style="height:25px;">
                                 <td style="vertical-align:middle;">
-                                   <span>Révision N° : <t t-if="valable_rev" t-esc="'%02d' % valable_rev.revision_number"/><t t-else="">00</t></span>
+                                    <span>Révision N° : <t t-if="valable_rev" t-esc="'%02d' % valable_rev.revision_number"/><t t-else="">00</t></span>
                                 </td>
-                                </tr>
-                                <tr style="height: 45px;">
-                                <td class="bg-blue" style="text-align:center; vertical-align:middle;">
-                                   <div style="font-size:12px; font-style:italic;">FICHE D'ACTION CORRECTIVE</div>
-                                   <div style="font-size:10px; font-style:italic;">CORRECTIVE ACTION SHEET</div>
+                            </tr>
+                            <tr style="height:45px;">
+                                <td class="bg-blue" style="text-align:center;vertical-align:middle;">
+                                    <div style="font-size:12px;font-style:italic;">FICHE D'ACTION CORRECTIVE</div>
+                                    <div style="font-size:10px;font-style:italic;">CORRECTIVE ACTION SHEET</div>
                                 </td>
                                 <td style="vertical-align:middle;">
-                                   <span>Date de révision : <t t-if="valable_rev" t-esc="valable_rev.revision_date"/><t t-else="">/</t></span>
-                                </td>
-                                </tr>
-
-                        </table>
-
-                        <!-- ===== INFOS GÉNÉRALES ===== -->
-                        <table style="margin-bottom: 6px;">
-                            <tr class="cell-sm">
-                                <td style="width:35%;">
-                                    <span>Direction : </span>
-                                    <t t-esc="doc.direction_id.name or ''"/>
-                                </td>
-                                <td style="width:30%;">
-                                    <span>Date : </span>
-                                    <t t-esc="doc.date or ''"/>
-                                </td>
-                                <td style="width:35%;">
-                                    <span>N° FAC : </span>
-                                    <t t-esc="doc.name or ''"/>
-                                </td>
-                            </tr>
-                            <tr class="cell-sm">
-                                <td colspan="2">
-                                    <span>N° FNC ou autre document : </span>
-                                    <t t-esc="doc.fnc_id.name or ''"/>
-                                </td>
-                                <td>
-                                    <span>Date : </span>
-                                    <t t-esc="doc.date_fnc or ''"/>
+                                    <span>Date de révision : <t t-if="valable_rev" t-esc="valable_rev.revision_date"/><t t-else="">/</t></span>
                                 </td>
                             </tr>
                         </table>
 
-                        <!-- ===== 1- RAPPEL NC ===== -->
-                        <table style="margin-bottom: 6px;">
-                            <tr>
-                                <td colspan="3" class="section-title">1- Rappel de la Non-Conformité</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="cell-lg">
-                                    <t t-esc="doc.rappel_nc or ''"/>
-                                </td>
-                            </tr>
-                        </table>
+                        <!-- ===== CORPS DYNAMIQUE ===== -->
+                        <t t-set="tpl" t-value="env['nc_management.form_template'].search(
+                            [('doc_type','=','fac'),('is_active','=',True)], limit=1)"/>
 
-                        <!-- ===== 2- ANALYSE DES CAUSES ===== -->
-                        <table style="margin-bottom: 6px;">
-                            <tr>
-                                <td colspan="3" class="section-title">2- Analyse des causes de la non-conformité</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="cell-lg">
-                                    <t t-esc="doc.analyse_causes or ''"/>
-                                </td>
-                            </tr>
-                            <tr class="cell-sm">
-                                <td style="width:50%;">
-                                    <span>Responsable : </span>
-                                    <t t-esc="doc.responsable_analyse_id.name or ''"/>
-                                </td>
-                                <td style="width:25%;">
-                                    <span>Date : </span>
-                                    <t t-esc="doc.date_analyse or ''"/>
-                                </td>
-                                <td style="width:25%;">
-                                    <span>Visa : </span>
-                                    <t t-esc="doc.visa_analyse or ''"/>
-                                </td>
-                            </tr>
-                        </table>
+                        <t t-if="tpl">
+                            <t t-foreach="tpl.section_ids.filtered(lambda s: s.is_active).sorted(lambda s: s.sequence)" t-as="sec">
 
-                        <!-- ===== 3- ACTIONS DÉCIDÉES ===== -->
-                        <table style="margin-bottom: 6px;">
-                            <tr>
-                                <td colspan="4" class="section-title">3- Action (s) décidée :</td>
-                            </tr>
-                            <tr style="height: 25px; text-align: center;">
-                                <td style="width:35%;">Action (s)</td>
-                                <td style="width:15%;">Date prévue</td>
-                                <td style="width:15%;">Date de réalisation</td>
-                                <td style="width:35%;">Responsable de l'action</td>
-                            </tr>
-                            <t t-foreach="doc.action_line_ids" t-as="line">
-                                <tr class="cell-sm">
-                                    <td><t t-esc="line.action_description or ''"/></td>
-                                    <td style="text-align: center;"><t t-esc="line.date_prevue or ''"/></td>
-                                    <td style="text-align: center;"><t t-esc="line.date_realisation or ''"/></td>
-                                    <td><t t-esc="line.responsable_id.name or ''"/></td>
-                                </tr>
-                            </t>
-                            <!-- Lignes vides pour compléter -->
-                            <t t-if="len(doc.action_line_ids) == 0">
-                                <tr class="cell-sm"><td>1-</td><td></td><td></td><td></td></tr>
-                                <tr class="cell-sm"><td>2-</td><td></td><td></td><td></td></tr>
-                            </t>
-                            <t t-if="len(doc.action_line_ids) == 1">
-                                <tr class="cell-sm"><td>2-</td><td></td><td></td><td></td></tr>
-                            </t>
-                        </table>
+                                <!-- == TABLEAU ACTIONS (layout spécial FAC) == -->
+                                <t t-if="sec.section_layout == 'action_lines'">
+                                    <table style="margin-bottom:6px;">
+                                        <tr><td colspan="4" class="section-title"><t t-esc="sec.name"/></td></tr>
+                                        <tr style="height:25px;text-align:center;">
+                                            <td style="width:35%;">Action(s)</td>
+                                            <td style="width:15%;">Date prévue</td>
+                                            <td style="width:15%;">Date de réalisation</td>
+                                            <td style="width:35%;">Responsable de l'action</td>
+                                        </tr>
+                                        <t t-foreach="doc.action_line_ids" t-as="al">
+                                            <tr class="cell-sm">
+                                                <td><t t-esc="al.action_description or ''"/></td>
+                                                <td style="text-align:center;"><t t-esc="al.date_prevue or ''"/></td>
+                                                <td style="text-align:center;"><t t-esc="al.date_realisation or ''"/></td>
+                                                <td><t t-esc="al.responsable_id.name if al.responsable_id else ''"/></td>
+                                            </tr>
+                                        </t>
+                                        <t t-if="len(doc.action_line_ids) == 0">
+                                            <tr class="cell-sm"><td>1-</td><td></td><td></td><td></td></tr>
+                                            <tr class="cell-sm"><td>2-</td><td></td><td></td><td></td></tr>
+                                        </t>
+                                        <t t-elif="len(doc.action_line_ids) == 1">
+                                            <tr class="cell-sm"><td>2-</td><td></td><td></td><td></td></tr>
+                                        </t>
+                                    </table>
+                                </t>
+                                <t t-else="">
+                                    <table style="margin-bottom:6px;">
+                                        <t t-if="sec.show_title">
+                                            <tr><td colspan="3" class="section-title"><t t-esc="sec.name"/></td></tr>
+                                        </t>
 
-                        <!-- ===== RESPONSABLE + EFFICACITÉ ===== -->
-                        <table style="margin-bottom: 6px;">
-                            <tr class="cell-sm">
-                                <td style="width:50%;">
-                                    <span>Responsable : </span>
-                                    <t t-esc="doc.responsable_actions_id.name or ''"/>
-                                </td>
-                                <td style="width:25%;">
-                                    <span>Date : </span>
-                                    <t t-esc="doc.date_actions or ''"/>
-                                </td>
-                                <td style="width:25%;">
-                                    <span>Visa : </span>
-                                    <t t-esc="doc.visa_actions or ''"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="width:50%; vertical-align: top; padding: 6px;">
-                                    <div style="margin-bottom: 4px;"><span>Action(s) efficace(s)</span></div>
-                                    <div>
-                                        <t t-if="doc.actions_efficaces == 'oui'"><span class="checkbox">&#9745;</span></t>
-                                        <t t-else=""><span class="checkbox">&#9744;</span></t>
-                                        <span>Oui</span>
-                                    </div>
-                                    <div>
-                                        <t t-if="doc.actions_efficaces == 'non'"><span class="checkbox">&#9745;</span></t>
-                                        <t t-else=""><span class="checkbox">&#9744;</span></t>
-                                        <span>Non</span>
-                                    </div>
-                                </td>
-                                <td colspan="2" style="vertical-align: top; padding: 6px;">
-                                    <span>Responsable : </span>
-                                    <t t-esc="doc.responsable_efficacite_id.name or ''"/>
-                                </td>
-                            </tr>
-                        </table>
+                                        <t t-foreach="sec.line_ids.filtered(lambda l: l.is_active).sorted(lambda l: l.sequence)" t-as="line">
 
-                        <!-- ===== 4- APPROBATION QSE ===== -->
-                        <table style="margin-bottom: 6px;">
-                            <tr>
-                                <td colspan="3" class="section-title">4- Approbation Responsable QSE :</td>
-                            </tr>
-                            <tr class="cell-sm">
-                                <td style="width:35%;">
-                                    <span>Nom : </span>
-                                    <t t-esc="doc.qse_nom_id.name or ''"/>
-                                </td>
-                                <td style="width:30%;">
-                                    <span>Date : </span>
-                                    <t t-esc="doc.qse_date or ''"/>
-                                </td>
-                                <td style="width:35%;">
-                                    <span>Visa : </span>
-                                    <t t-esc="doc.qse_visa or ''"/>
-                                </td>
-                            </tr>
-                        </table>
+                                            <!-- TEXTAREA -->
+                                            <t t-if="line.line_type == 'textarea'">
+                                                <t t-if="line.ta_label">
+                                                    <tr><td colspan="3" style="padding:6px;">
+                                                        <div style="margin-bottom:3px;font-weight:bold;"><t t-esc="line.ta_label"/></div>
+                                                        <div style="min-height:40px;">
+                                                            <t t-if="line.ta_field"><t t-esc="doc[line.ta_field] or ''"/></t>
+                                                        </div>
+                                                    </td></tr>
+                                                </t>
+                                                <t t-else="">
+                                                    <tr>
+                                                        <td colspan="3" t-attf-class="cell-#{line.ta_height or 'md'}">
+                                                            <t t-if="line.ta_field"><t t-esc="doc[line.ta_field] or ''"/></t>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </t>
+                                            <t t-elif="line.line_type == 'row'">
+                                                <tr class="cell-sm">
+                                                    <t t-if="line.col1_field">
+                                                        <td t-attf-style="width:#{34 if line.nb_cols == 3 else (50 if line.nb_cols == 2 else 100)}%;">
+                                                            <t t-if="line.render_type_col1 == 'boolean'">
+                                                                <t t-if="doc[line.col1_field]"><span class="checkbox">&#9745;</span></t>
+                                                                <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                                                <span> <t t-esc="line.col1_label or ''"/></span>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <t t-if="line.col1_label"><span><t t-esc="line.col1_label"/> : </span></t>
+                                                                <t t-if="line.render_type_col1 == 'many2one'"><t t-esc="doc[line.col1_field].name if doc[line.col1_field] else ''"/></t>
+                                                                <t t-else=""><t t-esc="doc[line.col1_field] or ''"/></t>
+                                                            </t>
+                                                        </td>
+                                                    </t>
+                                                    <t t-if="line.col2_field">
+                                                        <td t-attf-style="width:#{33 if line.nb_cols == 3 else 50}%;">
+                                                            <t t-if="line.render_type_col2 == 'boolean'">
+                                                                <t t-if="doc[line.col2_field]"><span class="checkbox">&#9745;</span></t>
+                                                                <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                                                <span> <t t-esc="line.col2_label or ''"/></span>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <t t-if="line.col2_label"><span><t t-esc="line.col2_label"/> : </span></t>
+                                                                <t t-if="line.render_type_col2 == 'many2one'"><t t-esc="doc[line.col2_field].name if doc[line.col2_field] else ''"/></t>
+                                                                <t t-else=""><t t-esc="doc[line.col2_field] or ''"/></t>
+                                                            </t>
+                                                        </td>
+                                                    </t>
+                                                    <t t-if="line.col3_field">
+                                                        <td style="width:33%;">
+                                                            <t t-if="line.render_type_col3 == 'boolean'">
+                                                                <t t-if="doc[line.col3_field]"><span class="checkbox">&#9745;</span></t>
+                                                                <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                                                <span> <t t-esc="line.col3_label or ''"/></span>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <t t-if="line.col3_label"><span><t t-esc="line.col3_label"/> : </span></t>
+                                                                <t t-if="line.render_type_col3 == 'many2one'"><t t-esc="doc[line.col3_field].name if doc[line.col3_field] else ''"/></t>
+                                                                <t t-else=""><t t-esc="doc[line.col3_field] or ''"/></t>
+                                                            </t>
+                                                        </td>
+                                                    </t>
+                                                </tr>
+                                            </t>
+                                            <t t-elif="line.line_type == 'checkbox'">
+                                                <tr class="cell-sm">
+                                                    <td colspan="3">
+                                                        <t t-if="line.cb_field">
+                                                            <t t-if="line.render_type_cb == 'selection_yes_no'">
+                                                                <span style="font-weight:bold;margin-right:8px;"><t t-esc="line.cb_label or ''"/></span>
+                                                                <t t-if="doc[line.cb_field] == 'oui'"><span class="checkbox">&#9745;</span></t>
+                                                                <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                                                <span> Oui</span>
+                                                                <span style="margin-left:15px;">
+                                                                    <t t-if="doc[line.cb_field] == 'non'"><span class="checkbox">&#9745;</span></t>
+                                                                    <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                                                    <span> Non</span>
+                                                                </span>
+                                                            </t>
+                                                            <t t-elif="line.render_type_cb == 'selection_non_oui'">
+                                                                <span style="margin-right:8px;"><t t-esc="line.cb_label or ''"/></span>
+                                                                <t t-if="doc[line.cb_field] == 'non'"><span class="checkbox">&#9745;</span></t>
+                                                                <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                                                <span> Non</span>
+                                                                <span style="margin-left:20px;">
+                                                                    <t t-if="doc[line.cb_field] == 'oui'"><span class="checkbox">&#9745;</span></t>
+                                                                    <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                                                    <span> Oui</span>
+                                                                </span>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <t t-if="doc[line.cb_field]"><span class="checkbox">&#9745;</span></t>
+                                                                <t t-else=""><span class="checkbox">&#9744;</span></t>
+                                                                <span> <t t-esc="line.cb_label or ''"/></span>
+                                                            </t>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <t t-elif="line.line_type == 'custom_text'">
+                                                <tr class="cell-sm">
+                                                    <td colspan="3"><t t-esc="line.custom_text or ''"/></td>
+                                                </tr>
+                                            </t>
+                                            <t t-elif="line.line_type == 'separator'">
+                                                <tr style="height:8px;">
+                                                    <td colspan="3" style="border-left:none;border-right:none;border-bottom:none;"></td>
+                                                </tr>
+                                            </t>
 
-                        <!-- ===== 5- VÉRIFICATION ===== -->
-                        <table style="margin-bottom: 0px;">
-                            <tr>
-                                <td colspan="3" class="section-title">5- Vérification de (s) de(s) action(s) effectuée(s) :</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="cell-md">
-                                    <div style="margin-bottom: 3px; font-weight: bold;">- Vérification de l'efficacité de l'action :</div>
-                                    <t t-esc="doc.verification_efficacite or ''"/>
-                                </td>
-                            </tr>
-                            <tr class="cell-sm">
-                                <td colspan="3">
-                                    <span>- Extension possible de l'action : </span>
-                                    <t t-if="doc.extension_possible == 'non'"><span class="checkbox">&#9745;</span></t>
-                                    <t t-else=""><span class="checkbox">&#9744;</span></t>
-                                    <span>Non</span>
-                                    <span style="margin-left: 20px;">
-                                        <t t-if="doc.extension_possible == 'oui'"><span class="checkbox">&#9745;</span></t>
-                                        <t t-else=""><span class="checkbox">&#9744;</span></t>
-                                        <span>Oui</span>
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr class="cell-sm">
-                                <td style="width:50%;">
-                                    <span>Clôturée par : </span>
-                                    <t t-esc="doc.cloture_par_id.name or ''"/>
-                                </td>
-                                <td style="width:25%;">
-                                    <span>Date : </span>
-                                    <t t-esc="doc.date_cloture or ''"/>
-                                </td>
-                                <td style="width:25%;">
-                                    <span>Visa : </span>
-                                    <t t-esc="doc.visa_cloture or ''"/>
-                                </td>
-                            </tr>
-                        </table>
+                                        </t><!-- /foreach lines -->
+                                    </table>
+                                </t>
 
-                        <!-- ===== FAC 003/700 À 6mm SOUS LE DERNIER TABLEAU ===== -->
+                            </t><!-- /foreach sections -->
+                        </t>
+
+                        <t t-else="">
+                            <p style="color:red;padding:10px;text-align:center;">
+                                Aucun gabarit FAC actif. Allez dans Configuration &gt; Gabarits FNC/FAC.
+                            </p>
+                        </t>
+
+                        <!-- ===== PIED DE PAGE DYNAMIQUE ===== -->
                         <div class="footer-ref">
-                            <span>FAC 003/700</span>
+                            <span><t t-if="valable_rev and valable_rev.reference" t-esc="valable_rev.reference"/><t t-else="">FAC 003/700</t></span>
                         </div>
 
                     </div>

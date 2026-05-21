@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="1">
+
+<!-- ═══════════════════════════════════════════════
+     GABARIT FNC — format initial (réplique exacte)
+     ═══════════════════════════════════════════════ -->
+<record id="form_template_fnc_default" model="nc_management.form_template">
+    <field name="name">FNC — Révision 03 (format initial)</field>
+    <field name="doc_type">fnc</field>
+    <field name="is_active" eval="True"/>
+    <field name="revision_id" ref="rev_fnc_03"/>
+</record>
+
+<!-- ── Section A : En-tête ── -->
+<record id="sec_fnc_a_entete" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fnc_default"/>
+    <field name="name">En-tête</field>
+    <field name="sequence">10</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="False"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fnc_a1" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_a_entete"/>
+    <field name="sequence">10</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">direction_id</field>
+    <field name="col1_label">Emetteur Direction</field>
+    <field name="col2_field">date</field>
+    <field name="col2_label">Date</field>
+</record>
+<record id="line_fnc_a2" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_a_entete"/>
+    <field name="sequence">20</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">sce_dpt_computed</field>
+    <field name="col1_label">Sce / DPT</field>
+    <field name="col2_field">name</field>
+    <field name="col2_label">N° FNC</field>
+</record>
+
+<!-- ── Section B : Type de Non-Conformité (checkboxes 2 colonnes) ── -->
+<record id="sec_fnc_b_type" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fnc_default"/>
+    <field name="name">Type de Non-Conformité</field>
+    <field name="sequence">20</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">checkboxes_2col</field>
+</record>
+<!-- gauche -->
+<record id="line_fnc_b_produit" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">10</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_nc_produit</field>
+    <field name="cb_label">NC Produit</field>
+    <field name="cb_column">left</field>
+</record>
+<record id="line_fnc_b_reclamation" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">20</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_reclamation</field>
+    <field name="cb_label">Réclamation clients/PI</field>
+    <field name="cb_column">left</field>
+</record>
+<record id="line_fnc_b_sst" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">30</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_sst</field>
+    <field name="cb_label">SST Accident</field>
+    <field name="cb_column">left</field>
+</record>
+<record id="line_fnc_b_enviro" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">40</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_environnement</field>
+    <field name="cb_label">Environnement</field>
+    <field name="cb_column">left</field>
+</record>
+<record id="line_fnc_b_travaux" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">50</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_travaux</field>
+    <field name="cb_label">Travaux</field>
+    <field name="cb_column">left</field>
+</record>
+<!-- droite -->
+<record id="line_fnc_b_audit" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">60</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_audit</field>
+    <field name="cb_label">Audit interne/Externe</field>
+    <field name="cb_column">right</field>
+</record>
+<record id="line_fnc_b_achat" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">70</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_achat</field>
+    <field name="cb_label">Achat</field>
+    <field name="cb_column">right</field>
+</record>
+<record id="line_fnc_b_reception" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">80</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_reception</field>
+    <field name="cb_label">Réception</field>
+    <field name="cb_column">right</field>
+</record>
+<record id="line_fnc_b_dysfonct" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">90</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_dysfonctionnement</field>
+    <field name="cb_label">Dysfonctionnement</field>
+    <field name="cb_column">right</field>
+</record>
+<record id="line_fnc_b_autre" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_b_type"/>
+    <field name="sequence">100</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">type_autre</field>
+    <field name="cb_label">Autre (préciser)</field>
+    <field name="cb_column">right</field>
+    <field name="cb_extra_field">type_autre_preciser</field>
+</record>
+
+<!-- ── Section C : 1- Description ── -->
+<record id="sec_fnc_c_description" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fnc_default"/>
+    <field name="name">1- Description de la non-conformité :</field>
+    <field name="sequence">30</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fnc_c_desc" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_c_description"/>
+    <field name="sequence">10</field>
+    <field name="line_type">textarea</field>
+    <field name="ta_field">description</field>
+    <field name="ta_height">lg</field>
+</record>
+<record id="line_fnc_c_signale" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_c_description"/>
+    <field name="sequence">20</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">signale_par_id</field>
+    <field name="col1_label">Nom de la personne qui signale</field>
+    <field name="col2_field">date_signalement</field>
+    <field name="col2_label">Date</field>
+    <field name="col3_field">fonction_visa</field>
+    <field name="col3_label">Fonction et visa</field>
+</record>
+
+<!-- ── Section D : Traitement ── -->
+<record id="sec_fnc_d_traitement" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fnc_default"/>
+    <field name="name">Traitement :</field>
+    <field name="sequence">40</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fnc_d1" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_d_traitement"/>
+    <field name="sequence">10</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">trait_reprise</field>
+    <field name="col1_label">Reprise pour mise en conformité</field>
+    <field name="col2_field">trait_declassement</field>
+    <field name="col2_label">Déclassement pour autre utilisation</field>
+    <field name="col3_field">trait_retour_fourn</field>
+    <field name="col3_label">Retour au fournisseur</field>
+</record>
+<record id="line_fnc_d2" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_d_traitement"/>
+    <field name="sequence">20</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">trait_recyclage</field>
+    <field name="col1_label">Recyclage</field>
+    <field name="col2_field">trait_reparation</field>
+    <field name="col2_label">Réparation</field>
+    <field name="col3_field">trait_autre</field>
+    <field name="col3_label">Autre</field>
+</record>
+
+<!-- ── Section E : 2- Action immédiate ── -->
+<record id="sec_fnc_e_action_imm" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fnc_default"/>
+    <field name="name">2- Action immédiate :</field>
+    <field name="sequence">50</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fnc_e_textarea" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_e_action_imm"/>
+    <field name="sequence">10</field>
+    <field name="line_type">textarea</field>
+    <field name="ta_field">action_immediate</field>
+    <field name="ta_height">md</field>
+</record>
+<record id="line_fnc_e_realise" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_e_action_imm"/>
+    <field name="sequence">20</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">realise_par_id</field>
+    <field name="col1_label">Réalisé par</field>
+    <field name="col2_field">date_realisation</field>
+    <field name="col2_label">Date</field>
+</record>
+
+<!-- ── Section F : 3- Analyse des causes ── -->
+<record id="sec_fnc_f_analyse" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fnc_default"/>
+    <field name="name">3- Analyse des causes</field>
+    <field name="sequence">60</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fnc_f_analyse" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_f_analyse"/>
+    <field name="sequence">10</field>
+    <field name="line_type">textarea</field>
+    <field name="ta_field">analyse_causes</field>
+    <field name="ta_height">md</field>
+</record>
+<record id="line_fnc_f_impact" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_f_analyse"/>
+    <field name="sequence">20</field>
+    <field name="line_type">textarea</field>
+    <field name="ta_field">impact</field>
+    <field name="ta_label">- Impact : coût, incidence, risque :</field>
+    <field name="ta_height">sm</field>
+</record>
+<record id="line_fnc_f_fac" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_f_analyse"/>
+    <field name="sequence">30</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">fac_number_display</field>
+    <field name="col1_label">N° Fiche d'action</field>
+    <field name="col2_field">responsable_action_id</field>
+    <field name="col2_label">Responsable de l'action(s)</field>
+</record>
+<record id="line_fnc_f_valid" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fnc_f_analyse"/>
+    <field name="sequence">40</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">superieur_id</field>
+    <field name="col1_label">Le supérieur hiérarchique</field>
+    <field name="col2_field">date_validation</field>
+    <field name="col2_label">Date</field>
+    <field name="col3_field">signature</field>
+    <field name="col3_label">Signature</field>
+</record>
+
+</data>
+</odoo>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record id="view_new_revision_wizard_form" model="ir.ui.view">
+        <field name="name">nc_management.new_revision_wizard.form</field>
+        <field name="model">nc_management.new_revision_wizard</field>
+        <field name="arch" type="xml">
+            <form string="Nouvelle révision de document">
+                <group>
+                    <field name="source_template_id" invisible="1"/>
+                    <field name="doc_type" readonly="1" string="Type de document"/>
+                    <field name="revision_number"/>
+                    <field name="revision_date"/>
+                    <field name="reference"
+                           placeholder="ex. FNC 002/700"/>
+                </group>
+                <group string="Modifications apportées par rapport à la version précédente">
+                    <field name="description_changes" nolabel="1"
+                           placeholder="Décrivez les changements de disposition, champs ajoutés/supprimés..."/>
+                </group>
+                <footer>
+                    <button name="action_confirm"
+                            string="Créer et éditer le nouveau gabarit"
+                            type="object" class="oe_highlight"/>
+                    <button string="Annuler" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</data>
+</odoo>

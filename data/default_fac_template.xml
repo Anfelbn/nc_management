@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="1">
+
+<!-- ═══════════════════════════════════════════════
+     GABARIT FAC — format initial (réplique exacte)
+     ═══════════════════════════════════════════════ -->
+<record id="form_template_fac_default" model="nc_management.form_template">
+    <field name="name">FAC — Révision 02 (format initial)</field>
+    <field name="doc_type">fac</field>
+    <field name="is_active" eval="True"/>
+    <field name="revision_id" ref="rev_fac_02"/>
+</record>
+
+<!-- ── Section A : En-tête ── -->
+<record id="sec_fac_a_entete" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fac_default"/>
+    <field name="name">En-tête</field>
+    <field name="sequence">10</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="False"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fac_a1" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_a_entete"/>
+    <field name="sequence">10</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">direction_id</field>
+    <field name="col1_label">Direction</field>
+    <field name="col2_field">date</field>
+    <field name="col2_label">Date</field>
+    <field name="col3_field">name</field>
+    <field name="col3_label">N° FAC</field>
+</record>
+<record id="line_fac_a2" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_a_entete"/>
+    <field name="sequence">20</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">fnc_id</field>
+    <field name="col1_label">N° FNC ou autre document</field>
+    <field name="col2_field">date_fnc</field>
+    <field name="col2_label">Date</field>
+</record>
+
+<!-- ── Section B : 1- Rappel NC ── -->
+<record id="sec_fac_b_rappel" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fac_default"/>
+    <field name="name">1- Rappel de la Non-Conformité</field>
+    <field name="sequence">20</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fac_b_rappel" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_b_rappel"/>
+    <field name="sequence">10</field>
+    <field name="line_type">textarea</field>
+    <field name="ta_field">rappel_nc</field>
+    <field name="ta_height">lg</field>
+</record>
+
+<!-- ── Section C : 2- Analyse des causes ── -->
+<record id="sec_fac_c_analyse" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fac_default"/>
+    <field name="name">2- Analyse des causes de la non-conformité</field>
+    <field name="sequence">30</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fac_c_analyse" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_c_analyse"/>
+    <field name="sequence">10</field>
+    <field name="line_type">textarea</field>
+    <field name="ta_field">analyse_causes</field>
+    <field name="ta_height">lg</field>
+</record>
+<record id="line_fac_c_responsable" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_c_analyse"/>
+    <field name="sequence">20</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">responsable_analyse_id</field>
+    <field name="col1_label">Responsable</field>
+    <field name="col2_field">date_analyse</field>
+    <field name="col2_label">Date</field>
+    <field name="col3_field">visa_analyse</field>
+    <field name="col3_label">Visa</field>
+</record>
+
+<!-- ── Section D : 3- Actions décidées (tableau spécial) ── -->
+<record id="sec_fac_d_actions" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fac_default"/>
+    <field name="name">3- Action(s) décidée(s) :</field>
+    <field name="sequence">40</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">action_lines</field>
+</record>
+
+<!-- ── Section E : Responsable + Efficacité ── -->
+<record id="sec_fac_e_efficacite" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fac_default"/>
+    <field name="name">Responsable et Efficacité</field>
+    <field name="sequence">50</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="False"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fac_e_resp" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_e_efficacite"/>
+    <field name="sequence">10</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">responsable_actions_id</field>
+    <field name="col1_label">Responsable</field>
+    <field name="col2_field">date_actions</field>
+    <field name="col2_label">Date</field>
+    <field name="col3_field">visa_actions</field>
+    <field name="col3_label">Visa</field>
+</record>
+<record id="line_fac_e_efficace" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_e_efficacite"/>
+    <field name="sequence">20</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">actions_efficaces</field>
+    <field name="cb_label">Action(s) efficace(s)</field>
+    <field name="cb_column">left</field>
+</record>
+<record id="line_fac_e_resp_eff" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_e_efficacite"/>
+    <field name="sequence">30</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">responsable_efficacite_id</field>
+    <field name="col1_label">Responsable efficacité</field>
+</record>
+
+<!-- ── Section F : 4- Approbation QSE ── -->
+<record id="sec_fac_f_qse" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fac_default"/>
+    <field name="name">4- Approbation Responsable QSE :</field>
+    <field name="sequence">60</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fac_f_qse" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_f_qse"/>
+    <field name="sequence">10</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">qse_nom_id</field>
+    <field name="col1_label">Nom</field>
+    <field name="col2_field">qse_date</field>
+    <field name="col2_label">Date</field>
+    <field name="col3_field">qse_visa</field>
+    <field name="col3_label">Visa</field>
+</record>
+
+<!-- ── Section G : 5- Vérification ── -->
+<record id="sec_fac_g_verif" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_fac_default"/>
+    <field name="name">5- Vérification de(s) action(s) effectuée(s) :</field>
+    <field name="sequence">70</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="True"/>
+    <field name="section_layout">standard</field>
+</record>
+<record id="line_fac_g_verif" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_g_verif"/>
+    <field name="sequence">10</field>
+    <field name="line_type">textarea</field>
+    <field name="ta_field">verification_efficacite</field>
+    <field name="ta_label">- Vérification de l'efficacité de l'action :</field>
+    <field name="ta_height">md</field>
+</record>
+<record id="line_fac_g_extension" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_g_verif"/>
+    <field name="sequence">20</field>
+    <field name="line_type">checkbox</field>
+    <field name="cb_field">extension_possible</field>
+    <field name="cb_label">- Extension possible de l'action</field>
+    <field name="cb_column">left</field>
+</record>
+<record id="line_fac_g_cloture" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_g_verif"/>
+    <field name="sequence">30</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">cloture_par_id</field>
+    <field name="col1_label">Clôturée par</field>
+    <field name="col2_field">date_cloture</field>
+    <field name="col2_label">Date</field>
+    <field name="col3_field">visa_cloture</field>
+    <field name="col3_label">Visa</field>
+</record>
+
+</data>
+</odoo>

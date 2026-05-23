@@ -1,0 +1,1213 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# * nc_management
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 11.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-22 00:00+0000\n"
+"PO-Revision-Date: 2026-05-22 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: nc_management
+#: model:ir.module.module,shortdesc:nc_management
+msgid "NC Management"
+msgstr "NC Management"
+
+#. module: nc_management
+#: model:ir.module.module,summary:nc_management
+msgid "NC Management module"
+msgstr "Module de gestion des non-conformités"
+
+#. module: nc_management
+#: model:ir.module.category,name:nc_management.module_nc_management
+msgid "NC Management"
+msgstr "NC Management"
+
+#. module: nc_management
+#: model:res.groups,name:nc_management.group_nc_utilisateur
+msgid "NC Utilisateur"
+msgstr "NC Utilisateur"
+
+#. module: nc_management
+#: model:res.groups,name:nc_management.group_responsable_qualite
+msgid "Responsable Qualité"
+msgstr "Responsable Qualité"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_root
+msgid "NC Management"
+msgstr "NC Management"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_nonconformity
+msgid "Non-Conformités"
+msgstr "Non-Conformités"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_corrective
+msgid "Actions Correctives"
+msgstr "Actions Correctives"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_revision
+msgid "Révision des documents"
+msgstr "Révision des documents"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_config
+msgid "Configuration"
+msgstr "Configuration"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_plan_smi_root
+msgid "Plan Action SMI"
+msgstr "Plan Action SMI"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_mes_plans_smi
+msgid "Mes Plans"
+msgstr "Mes Plans"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_plans_recus_smi
+msgid "Plans Reçus"
+msgstr "Plans Reçus"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_plan_global_smi
+msgid "Plan d'Action d'Amélioration SMI"
+msgstr "Plan d'Action d'Amélioration SMI"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_plan_smi_analyse
+msgid "Analyse d'Efficacité"
+msgstr "Analyse d'Efficacité"
+
+#. module: nc_management
+#: model:ir.actions.act_window,name:nc_management.action_nonconformity
+msgid "Non-Conformités"
+msgstr "Non-Conformités"
+
+#. module: nc_management
+#: model:ir.actions.act_window,name:nc_management.action_corrective
+msgid "Actions Correctives"
+msgstr "Actions Correctives"
+
+#. module: nc_management
+#: model:ir.actions.act_window,name:nc_management.action_document_revision
+msgid "Révision des documents"
+msgstr "Révision des documents"
+
+#. module: nc_management
+#: model:ir.actions.act_window,name:nc_management.action_mes_plans_smi
+msgid "Mes Plans SMI"
+msgstr "Mes Plans SMI"
+
+#. module: nc_management
+#: model:ir.actions.act_window,name:nc_management.action_plans_recus_smi
+msgid "Plans Reçus"
+msgstr "Plans Reçus"
+
+#. module: nc_management
+#: model:ir.actions.act_window,name:nc_management.action_plan_global_smi
+msgid "Plan d'Action d'Amélioration SMI"
+msgstr "Plan d'Action d'Amélioration SMI"
+
+#. module: nc_management
+#: model:ir.actions.act_window,name:nc_management.action_plan_smi_analyse_efficacite
+msgid "Analyses d'Efficacité"
+msgstr "Analyses d'Efficacité"
+
+#. module: nc_management
+#: model:ir.model,name:nc_management.model_nc_management_nonconformity
+msgid "Fiche de Non-Conformité"
+msgstr "Fiche de Non-Conformité"
+
+#. module: nc_management
+#: model:ir.model,name:nc_management.model_nc_management_corrective_action
+msgid "Fiche d'Action Corrective"
+msgstr "Fiche d'Action Corrective"
+
+#. module: nc_management
+#: model:ir.model,name:nc_management.model_nc_management_plan_action_smi
+msgid "Plan Action Amelioration SMI"
+msgstr "Plan d'Action Amélioration SMI"
+
+#. module: nc_management
+#: model:ir.model,name:nc_management.model_nc_management_document_revision
+msgid "Révision de Document"
+msgstr "Révision de Document"
+
+#. module: nc_management
+#: view:nc_management.nonconformity:nc_management.view_nonconformity_form
+msgid "Fiche de Non-Conformité"
+msgstr "Fiche de Non-Conformité"
+
+#. module: nc_management
+#: view:nc_management.nonconformity:nc_management.view_nonconformity_tree
+msgid "Fiches Non-Conformité"
+msgstr "Fiches Non-Conformité"
+
+#. module: nc_management
+#: view:nc_management.nonconformity:nc_management.view_nonconformity_form
+msgid "Générer Numéro FNC"
+msgstr "Générer Numéro FNC"
+
+#. module: nc_management
+#: view:nc_management.nonconformity:nc_management.view_nonconformity_form
+msgid "Envoyer"
+msgstr "Envoyer"
+
+#. module: nc_management
+msgid "En-tête"
+msgstr "En-tête"
+
+#. module: nc_management
+msgid "Type de Non-Conformité"
+msgstr "Type de Non-Conformité"
+
+#. module: nc_management
+msgid "1- Description de la non-conformité"
+msgstr "1- Description de la non-conformité"
+
+#. module: nc_management
+msgid "Traitement"
+msgstr "Traitement"
+
+#. module: nc_management
+msgid "2- Action immédiate"
+msgstr "2- Action immédiate"
+
+#. module: nc_management
+msgid "3- Analyse des causes"
+msgstr "3- Analyse des causes"
+
+#. module: nc_management
+msgid "Fiche d'Action Corrective"
+msgstr "Fiche d'Action Corrective"
+
+#. module: nc_management
+msgid "Validation hiérarchique"
+msgstr "Validation hiérarchique"
+
+#. module: nc_management
+msgid "Fiches Action Corrective"
+msgstr "Fiches Action Corrective"
+
+#. module: nc_management
+msgid "Rechercher FAC"
+msgstr "Rechercher FAC"
+
+#. module: nc_management
+msgid "1- Rappel de la Non-Conformité"
+msgstr "1- Rappel de la Non-Conformité"
+
+#. module: nc_management
+msgid "2- Analyse des causes de la non-conformité"
+msgstr "2- Analyse des causes de la non-conformité"
+
+#. module: nc_management
+msgid "3- Action(s) décidée(s)"
+msgstr "3- Action(s) décidée(s)"
+
+#. module: nc_management
+msgid "Action(s) efficace(s)"
+msgstr "Action(s) efficace(s)"
+
+#. module: nc_management
+msgid "4- Approbation Responsable QSE"
+msgstr "4- Approbation Responsable QSE"
+
+#. module: nc_management
+msgid "5- Vérification de(s) action(s) effectuée(s)"
+msgstr "5- Vérification de(s) action(s) effectuée(s)"
+
+#. module: nc_management
+msgid "Clôture"
+msgstr "Clôture"
+
+#. module: nc_management
+msgid "Rechercher FNC"
+msgstr "Rechercher FNC"
+
+#. module: nc_management
+msgid "Historique des Révisions"
+msgstr "Historique des Révisions"
+
+#. module: nc_management
+msgid "Révision de Document"
+msgstr "Révision de Document"
+
+#. module: nc_management
+msgid "Modification apportée"
+msgstr "Modification apportée"
+
+#. module: nc_management
+msgid "Mes Plans"
+msgstr "Mes Plans"
+
+#. module: nc_management
+msgid "Plans Reçus"
+msgstr "Plans Reçus"
+
+#. module: nc_management
+msgid "Plans d'Action d'Amélioration SMI"
+msgstr "Plans d'Action d'Amélioration SMI"
+
+#. module: nc_management
+msgid "Plan d'Action Amélioration SMI"
+msgstr "Plan d'Action Amélioration SMI"
+
+#. module: nc_management
+msgid "Plan d'Action d'Amélioration SMI"
+msgstr "Plan d'Action d'Amélioration SMI"
+
+#. module: nc_management
+msgid "Générer le numéro du plan"
+msgstr "Générer le numéro du plan"
+
+#. module: nc_management
+msgid "Envoyer à la Responsable Qualité"
+msgstr "Envoyer à la Responsable Qualité"
+
+#. module: nc_management
+msgid "Consolider des plans"
+msgstr "Consolider des plans"
+
+#. module: nc_management
+msgid "Clôturer"
+msgstr "Clôturer"
+
+#. module: nc_management
+msgid "Clôturer ce plan créera automatiquement un nouveau Plan d'Amélioration avec les plans récents. Continuer ?"
+msgstr "Clôturer ce plan créera automatiquement un nouveau Plan d'Amélioration avec les plans récents. Continuer ?"
+
+#. module: nc_management
+msgid "Plan clôturé."
+msgstr "Plan clôturé."
+
+#. module: nc_management
+msgid "Un nouveau Plan d'Action d'Amélioration a été créé automatiquement."
+msgstr "Un nouveau Plan d'Action d'Amélioration a été créé automatiquement."
+
+#. module: nc_management
+msgid "Synthèse"
+msgstr "Synthèse"
+
+#. module: nc_management
+msgid "Plans intégrés"
+msgstr "Plans intégrés"
+
+#. module: nc_management
+msgid "Organisation"
+msgstr "Organisation"
+
+#. module: nc_management
+msgid "Identification"
+msgstr "Identification"
+
+#. module: nc_management
+msgid "Brève description de la non-conformité, remarque et/ou point sensible / ou Objectif d'amélioration"
+msgstr "Brève description de la non-conformité, remarque et/ou point sensible / ou Objectif d'amélioration"
+
+#. module: nc_management
+msgid "Causes"
+msgstr "Causes"
+
+#. module: nc_management
+msgid "Action"
+msgstr "Action"
+
+#. module: nc_management
+msgid "Ressources"
+msgstr "Ressources"
+
+#. module: nc_management
+msgid "Dates"
+msgstr "Dates"
+
+#. module: nc_management
+msgid "Avancement"
+msgstr "Avancement"
+
+#. module: nc_management
+msgid "Critère d'Efficacité"
+msgstr "Critère d'Efficacité"
+
+#. module: nc_management
+msgid "Résultat"
+msgstr "Résultat"
+
+#. module: nc_management
+msgid "Analyse Efficacité Globale"
+msgstr "Analyse Efficacité Globale"
+
+#. module: nc_management
+msgid "Rechercher Plan Action SMI"
+msgstr "Rechercher Plan Action SMI"
+
+#. module: nc_management
+msgid "Répartition par état"
+msgstr "Répartition par état"
+
+#. module: nc_management
+msgid "Plans par Direction"
+msgstr "Plans par Direction"
+
+#. module: nc_management
+msgid "Analyse Plans SMI"
+msgstr "Analyse Plans SMI"
+
+#. module: nc_management
+msgid "Analyses d'Efficacité"
+msgstr "Analyses d'Efficacité"
+
+#. module: nc_management
+msgid "Envoyer la Fiche NC"
+msgstr "Envoyer la Fiche NC"
+
+#. module: nc_management
+msgid "Destinataire"
+msgstr "Destinataire"
+
+#. module: nc_management
+msgid "Annuler"
+msgstr "Annuler"
+
+#. module: nc_management
+msgid "Envoyer la FNC"
+msgstr "Envoyer la FNC"
+
+#. module: nc_management
+msgid "Sélectionner les plans à consolider"
+msgstr "Sélectionner les plans à consolider"
+
+#. module: nc_management
+msgid "Plans à consolider"
+msgstr "Plans à consolider"
+
+#. module: nc_management
+msgid "Consolider les plans sélectionnés"
+msgstr "Consolider les plans sélectionnés"
+
+#. module: nc_management
+msgid "Plan reçu"
+msgstr "Plan reçu"
+
+#. module: nc_management
+msgid "Nouvelle révision de document"
+msgstr "Nouvelle révision de document"
+
+#. module: nc_management
+msgid "Modifications apportées par rapport à la version précédente"
+msgstr "Modifications apportées par rapport à la version précédente"
+
+#. module: nc_management
+msgid "Créer et éditer le nouveau gabarit"
+msgstr "Créer et éditer le nouveau gabarit"
+
+#. module: nc_management
+msgid "Exporter le Plan d'Action"
+msgstr "Exporter le Plan d'Action"
+
+#. module: nc_management
+msgid "Exporter"
+msgstr "Exporter"
+
+#. module: nc_management
+msgid "Fermer"
+msgstr "Fermer"
+
+#. module: nc_management
+msgid "Exporter Plan Action SMI"
+msgstr "Exporter Plan Action SMI"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_name
+msgid "N° FNC"
+msgstr "N° FNC"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_direction_id
+msgid "Direction / Emetteur"
+msgstr "Direction / Emetteur"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_department_id
+msgid "Département"
+msgstr "Département"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_service_id
+msgid "Service"
+msgstr "Service"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_section_id
+msgid "Section"
+msgstr "Section"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_equipe_id
+msgid "Équipe"
+msgstr "Équipe"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_date
+msgid "Date"
+msgstr "Date"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_nc_produit
+msgid "NC Produit"
+msgstr "NC Produit"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_audit_interne
+msgid "Audit interne"
+msgstr "Audit interne"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_audit_externe
+msgid "Audit externe"
+msgstr "Audit externe"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_reclamation
+msgid "Réclamation clients / PI"
+msgstr "Réclamation clients / PI"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_achat
+msgid "Achat"
+msgstr "Achat"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_sst
+msgid "SST Accident"
+msgstr "SST Accident"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_reception
+msgid "Réception"
+msgstr "Réception"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_environnement
+msgid "Environnement"
+msgstr "Environnement"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_dysfonctionnement
+msgid "Dysfonctionnement"
+msgstr "Dysfonctionnement"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_travaux
+msgid "Travaux"
+msgstr "Travaux"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_autre
+msgid "Autre"
+msgstr "Autre"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_type_autre_preciser
+msgid "Préciser"
+msgstr "Préciser"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_signale_par_id
+msgid "Nom de la personne qui signale"
+msgstr "Nom de la personne qui signale"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_date_signalement
+msgid "Date de signalement"
+msgstr "Date de signalement"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_fonction_visa
+msgid "Fonction et visa"
+msgstr "Fonction et visa"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_trait_reprise
+msgid "Reprise pour mise en conformité"
+msgstr "Reprise pour mise en conformité"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_trait_declassement
+msgid "Déclassement pour autre utilisation"
+msgstr "Déclassement pour autre utilisation"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_trait_retour_fourn
+msgid "Retour au fournisseur"
+msgstr "Retour au fournisseur"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_trait_recyclage
+msgid "Recyclage"
+msgstr "Recyclage"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_trait_reparation
+msgid "Réparation"
+msgstr "Réparation"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_trait_autre_preciser
+msgid "Préciser (Traitement)"
+msgstr "Préciser (Traitement)"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_realise_par_id
+msgid "Réalisé par"
+msgstr "Réalisé par"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_date_realisation
+msgid "Date de réalisation"
+msgstr "Date de réalisation"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_analyse_causes
+msgid "3- Analyse des causes"
+msgstr "3- Analyse des causes"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_impact
+msgid "Impact : coût, incidence, risque"
+msgstr "Impact : coût, incidence, risque"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_assigned_to_id
+msgid "Responsable de l'action"
+msgstr "Responsable de l'action"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_superieur_id
+msgid "Le supérieur hiérarchique"
+msgstr "Le supérieur hiérarchique"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_date_validation
+msgid "Date validation"
+msgstr "Date validation"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_signature
+msgid "Signature"
+msgstr "Signature"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_nonconformity_state
+msgid "Statut"
+msgstr "Statut"
+
+#. module: nc_management
+#: selection:nc_management.nonconformity,state:draft
+msgid "Brouillon"
+msgstr "Brouillon"
+
+#. module: nc_management
+#: selection:nc_management.nonconformity,state:submitted
+msgid "Soumise"
+msgstr "Soumise"
+
+#. module: nc_management
+#: selection:nc_management.nonconformity,state:in_progress
+msgid "En cours"
+msgstr "En cours"
+
+#. module: nc_management
+#: selection:nc_management.nonconformity,state:validated
+msgid "Validée"
+msgstr "Validée"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_name
+msgid "N° FAC"
+msgstr "N° FAC"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_fnc_id
+msgid "N° FNC ou autre document"
+msgstr "N° FNC ou autre document"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_date_fnc
+msgid "Date FNC"
+msgstr "Date FNC"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_responsable_id
+msgid "Responsable de l'action"
+msgstr "Responsable de l'action"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_rappel_nc
+msgid "1- Rappel de la Non-Conformité"
+msgstr "1- Rappel de la Non-Conformité"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_analyse_causes
+msgid "2- Analyse des causes de la non-conformité"
+msgstr "2- Analyse des causes de la non-conformité"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_responsable_analyse_id
+msgid "Responsable analyse"
+msgstr "Responsable analyse"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_date_analyse
+msgid "Date analyse"
+msgstr "Date analyse"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_visa_analyse
+msgid "Visa analyse"
+msgstr "Visa analyse"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_action_line_ids
+msgid "Actions décidées"
+msgstr "Actions décidées"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_responsable_actions_id
+msgid "Responsable actions"
+msgstr "Responsable actions"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_date_actions
+msgid "Date actions"
+msgstr "Date actions"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_visa_actions
+msgid "Visa actions"
+msgstr "Visa actions"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_actions_efficaces
+msgid "Action(s) efficace(s)"
+msgstr "Action(s) efficace(s)"
+
+#. module: nc_management
+#: selection:nc_management.corrective_action,actions_efficaces:oui
+msgid "Oui"
+msgstr "Oui"
+
+#. module: nc_management
+#: selection:nc_management.corrective_action,actions_efficaces:non
+msgid "Non"
+msgstr "Non"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_responsable_efficacite_id
+msgid "Responsable efficacité"
+msgstr "Responsable efficacité"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_qse_nom_id
+msgid "Nom Responsable QSE"
+msgstr "Nom Responsable QSE"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_qse_date
+msgid "Date approbation QSE"
+msgstr "Date approbation QSE"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_qse_visa
+msgid "Visa QSE"
+msgstr "Visa QSE"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_verification_efficacite
+msgid "Vérification de l'efficacité de l'action"
+msgstr "Vérification de l'efficacité de l'action"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_extension_possible
+msgid "Extension possible de l'action"
+msgstr "Extension possible de l'action"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_cloture_par_id
+msgid "Clôturée par"
+msgstr "Clôturée par"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_date_cloture
+msgid "Date clôture"
+msgstr "Date clôture"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_corrective_action_visa_cloture
+msgid "Visa clôture"
+msgstr "Visa clôture"
+
+#. module: nc_management
+#: selection:nc_management.corrective_action,state:closed
+msgid "Clôturée"
+msgstr "Clôturée"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_name
+msgid "Référence"
+msgstr "Référence"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_nature
+msgid "Nature"
+msgstr "Nature"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:nc_produit
+msgid "NC Produit"
+msgstr "NC Produit"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:reclamation_pi
+msgid "Réclamation Client ou PI"
+msgstr "Réclamation Client ou PI"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:environnement
+msgid "Environnement"
+msgstr "Environnement"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:sst
+msgid "SST"
+msgstr "SST"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:audit_externe
+msgid "Audit Externe"
+msgstr "Audit Externe"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:audit_interne
+msgid "Audit Interne"
+msgstr "Audit Interne"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:swot
+msgid "SWOT"
+msgstr "SWOT"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:risque
+msgid "Risque"
+msgstr "Risque"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:objectif_non_atteint
+msgid "Objectif non atteint"
+msgstr "Objectif non atteint"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:decision_revue_direction
+msgid "Décision revue direction"
+msgstr "Décision revue direction"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:amelioration
+msgid "Amélioration"
+msgstr "Amélioration"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,nature:nc_reglementaire
+msgid "NC réglementaire"
+msgstr "NC réglementaire"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_is_late
+msgid "En retard"
+msgstr "En retard"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_responsable_id
+msgid "Responsable"
+msgstr "Responsable"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_moyens
+msgid "Moyens Nécessaires (matériels, financiers, humains)"
+msgstr "Moyens Nécessaires (matériels, financiers, humains)"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_duree_estimee
+msgid "Durée Estimée"
+msgstr "Durée Estimée"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_date_prevue
+msgid "Date Prévue"
+msgstr "Date Prévue"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_date_lancement
+msgid "Date de Lancement"
+msgstr "Date de Lancement"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_date_realisation
+msgid "Date de Réalisation"
+msgstr "Date de Réalisation"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_avancement
+msgid "État Avancement (%)"
+msgstr "État Avancement (%)"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_duree_reelle
+msgid "Durée Réelle"
+msgstr "Durée Réelle"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_critere_efficacite
+msgid "Critère d'Efficacité"
+msgstr "Critère d'Efficacité"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_efficacite
+msgid "Efficacité"
+msgstr "Efficacité"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,efficacite:oui
+msgid "OUI"
+msgstr "OUI"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,efficacite:non
+msgid "NON"
+msgstr "NON"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_remarque
+msgid "Remarque (si non efficace)"
+msgstr "Remarque (si non efficace)"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_state
+msgid "Avancement"
+msgstr "Avancement"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,state:draft
+msgid "Brouillon"
+msgstr "Brouillon"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,state:done
+msgid "Réalisé"
+msgstr "Réalisé"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_submission_state
+msgid "État"
+msgstr "État"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,submission_state:brouillon
+msgid "Brouillon"
+msgstr "Brouillon"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,submission_state:soumis
+msgid "Soumis à la Responsable Qualité"
+msgstr "Soumis à la Responsable Qualité"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,submission_state:integre
+msgid "Intégré au Plan d'Amélioration"
+msgstr "Intégré au Plan d'Amélioration"
+
+#. module: nc_management
+#: selection:nc_management.plan_action_smi,submission_state:cloture
+msgid "Plan clôturé"
+msgstr "Plan clôturé"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_date_envoi
+msgid "Date d'envoi"
+msgstr "Date d'envoi"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_sent_by
+msgid "Envoyé par"
+msgstr "Envoyé par"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_mois_reception
+msgid "Date de création"
+msgstr "Date de création"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_date_maj
+msgid "Dernière mise à jour"
+msgstr "Dernière mise à jour"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_child_plan_ids
+msgid "Plans intégrés"
+msgstr "Plans intégrés"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_nb_plans_integres
+msgid "Nb plans intégrés"
+msgstr "Nb plans intégrés"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_avancement_global
+msgid "Avancement global (%)"
+msgstr "Avancement global (%)"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_taux_realisation
+msgid "Taux de réalisation (%)"
+msgstr "Taux de réalisation (%)"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_plan_action_smi_taux_efficacite
+msgid "Taux d'efficacité (%)"
+msgstr "Taux d'efficacité (%)"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_document_revision_doc_type
+msgid "Type de Document"
+msgstr "Type de Document"
+
+#. module: nc_management
+#: selection:nc_management.document_revision,doc_type:fnc
+msgid "Fiche de Non-Conformité (FNC)"
+msgstr "Fiche de Non-Conformité (FNC)"
+
+#. module: nc_management
+#: selection:nc_management.document_revision,doc_type:fac
+msgid "Fiche d'Action Corrective (FAC)"
+msgstr "Fiche d'Action Corrective (FAC)"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_document_revision_revision_number
+msgid "N° Révision"
+msgstr "N° Révision"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_document_revision_revision_date
+msgid "Date de Révision"
+msgstr "Date de Révision"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_document_revision_reference
+msgid "Référence"
+msgstr "Référence"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_document_revision_description
+msgid "Modification apportée"
+msgstr "Modification apportée"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_document_revision_etat
+msgid "État"
+msgstr "État"
+
+#. module: nc_management
+#: selection:nc_management.document_revision,etat:valable
+msgid "Valable"
+msgstr "Valable"
+
+#. module: nc_management
+#: selection:nc_management.document_revision,etat:obsolete
+msgid "Obsolète"
+msgstr "Obsolète"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_hr_department_scaek_level
+msgid "Niveau hiérarchique"
+msgstr "Niveau hiérarchique"
+
+#. module: nc_management
+#: model:ir.model.fields,field_description:nc_management.field_hr_department_scaek_code
+msgid "Code"
+msgstr "Code"
+
+#. module: nc_management
+#: selection:hr.department,scaek_level:pdg
+msgid "P-DG"
+msgstr "P-DG"
+
+#. module: nc_management
+#: selection:hr.department,scaek_level:direction
+msgid "Direction"
+msgstr "Direction"
+
+#. module: nc_management
+#: selection:hr.department,scaek_level:departement
+msgid "Département"
+msgstr "Département"
+
+#. module: nc_management
+#: selection:hr.department,scaek_level:service
+msgid "Service"
+msgstr "Service"
+
+#. module: nc_management
+#: selection:hr.department,scaek_level:section
+msgid "Section"
+msgstr "Section"
+
+#. module: nc_management
+#: selection:hr.department,scaek_level:equipe
+msgid "Équipe"
+msgstr "Équipe"
+
+#. module: nc_management
+msgid "Mes FAC"
+msgstr "Mes FAC"
+
+#. module: nc_management
+msgid "FAC reçus"
+msgstr "FAC reçus"
+
+#. module: nc_management
+msgid "Brouillon"
+msgstr "Brouillon"
+
+#. module: nc_management
+msgid "Soumises"
+msgstr "Soumises"
+
+#. module: nc_management
+msgid "En cours"
+msgstr "En cours"
+
+#. module: nc_management
+msgid "Validées"
+msgstr "Validées"
+
+#. module: nc_management
+msgid "Clôturées"
+msgstr "Clôturées"
+
+#. module: nc_management
+msgid "Regrouper par"
+msgstr "Regrouper par"
+
+#. module: nc_management
+msgid "Direction"
+msgstr "Direction"
+
+#. module: nc_management
+msgid "Responsable"
+msgstr "Responsable"
+
+#. module: nc_management
+msgid "Statut"
+msgstr "Statut"
+
+#. module: nc_management
+msgid "Date"
+msgstr "Date"
+
+#. module: nc_management
+msgid "Mes FNC"
+msgstr "Mes FNC"
+
+#. module: nc_management
+msgid "FNC Reçues"
+msgstr "FNC Reçues"
+
+#. module: nc_management
+msgid "Audit Interne"
+msgstr "Audit Interne"
+
+#. module: nc_management
+msgid "Audit Externe"
+msgstr "Audit Externe"
+
+#. module: nc_management
+msgid "Par Direction"
+msgstr "Par Direction"
+
+#. module: nc_management
+msgid "Par Département"
+msgstr "Par Département"
+
+#. module: nc_management
+msgid "Par Service"
+msgstr "Par Service"
+
+#. module: nc_management
+msgid "Département"
+msgstr "Département"
+
+#. module: nc_management
+msgid "Service"
+msgstr "Service"
+
+#. module: nc_management
+msgid "En retard"
+msgstr "En retard"
+
+#. module: nc_management
+msgid "Soumis"
+msgstr "Soumis"
+
+#. module: nc_management
+msgid "Intégré"
+msgstr "Intégré"
+
+#. module: nc_management
+msgid "Réalisé"
+msgstr "Réalisé"
+
+#. module: nc_management
+msgid "Grouper par"
+msgstr "Grouper par"
+
+#. module: nc_management
+msgid "Nature"
+msgstr "Nature"
+
+#. module: nc_management
+msgid "État"
+msgstr "État"
+
+#. module: nc_management
+msgid "Ce mois"
+msgstr "Ce mois"
+
+#. module: nc_management
+msgid "En attente"
+msgstr "En attente"
+
+#. module: nc_management
+msgid "Intégrés"
+msgstr "Intégrés"
+
+#. module: nc_management
+msgid "Tous"
+msgstr "Tous"
+
+#. module: nc_management
+msgid "Mois de réception"
+msgstr "Mois de réception"

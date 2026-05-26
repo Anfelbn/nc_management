@@ -5,7 +5,7 @@ import base64
 from io import BytesIO
 
 class ExportSmiAnalysisWizard(models.TransientModel):
-    _name = 'nc_management.export_smi_analysis_wizard'
+    _name = 'smi_management.export_smi_analysis_wizard'
     _description = 'Export SMI Analysis as Excel'
 
     excel_file = fields.Binary('Fichier Excel', readonly=True)
@@ -14,7 +14,7 @@ class ExportSmiAnalysisWizard(models.TransientModel):
     @api.multi
     def action_export(self):
         # Get stats from dashboard model
-        stats = self.env['nc_management.dashboard'].get_plan_smi_stats()
+        stats = self.env['smi_management.dashboard'].get_plan_smi_stats()
 
         # Create workbook
         workbook = xlwt.Workbook(encoding='utf-8')
@@ -77,7 +77,7 @@ class ExportSmiAnalysisWizard(models.TransientModel):
 
         return {
             'type': 'ir.actions.act_window',
-            'res_model': 'nc_management.export_smi_analysis_wizard',
+            'res_model': 'smi_management.export_smi_analysis_wizard',
             'view_mode': 'form',
             'res_id': self.id,
             'target': 'new',

@@ -2,18 +2,18 @@ from odoo import models, fields, api
 
 
 class ConsolidateWizard(models.TransientModel):
-    _name = 'nc_management.consolidate_wizard'
+    _name = 'smi_management.consolidate_wizard'
     _description = 'Assistant de consolidation des plans'
 
     global_plan_id = fields.Many2one(
-        'nc_management.plan_action_smi',
+        'smi_management.plan_action_smi',
         string="Plan d'Amélioration",
         readonly=True,
         required=True,
         ondelete='cascade',
     )
     plan_ids = fields.Many2many(
-        'nc_management.plan_action_smi',
+        'smi_management.plan_action_smi',
         'nc_consolidate_wizard_plan_rel',
         'wizard_id',
         'plan_id',

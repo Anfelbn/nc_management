@@ -4,7 +4,7 @@
 
     <record id="mail_template_plan_smi_soumis" model="mail.template">
         <field name="name">Notification — Plan SMI soumis à la RMQSE</field>
-        <field name="model_id" ref="model_nc_management_plan_action_smi"/>
+        <field name="model_id" ref="model_smi_management_plan_action_smi"/>
         <field name="subject">Plan SMI ${object.name} soumis pour révision RMQSE</field>
         <field name="body_html"><![CDATA[
 <div style="font-family: Arial, sans-serif; padding: 20px;">

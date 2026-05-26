@@ -4,11 +4,11 @@
 
     <report
         id="action_report_revision"
-        model="nc_management.document_revision"
+        model="smi_management.document_revision"
         string="Révision de Document"
         report_type="qweb-pdf"
-        name="nc_management.report_revision_template"
-        file="nc_management.report_revision_template"
+        name="smi_management.report_revision_template"
+        file="smi_management.report_revision_template"
         attachment_use="False"
         menu="True"
     />
@@ -18,12 +18,12 @@
             <t t-call="web.basic_layout">
                 <t t-foreach="docs" t-as="rev">
                     <t t-if="rev.doc_type == 'fnc'">
-                        <t t-call="nc_management.report_fnc_revision_content">
+                        <t t-call="smi_management.report_fnc_revision_content">
                             <t t-set="doc_rev" t-value="rev"/>
                         </t>
                     </t>
                     <t t-if="rev.doc_type == 'fac'">
-                        <t t-call="nc_management.report_fac_revision_content">
+                        <t t-call="smi_management.report_fac_revision_content">
                             <t t-set="doc_rev" t-value="rev"/>
                         </t>
                     </t>

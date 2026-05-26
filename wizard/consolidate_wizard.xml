@@ -3,8 +3,8 @@
 <data>
 
 <record id="view_consolidate_wizard_form" model="ir.ui.view">
-    <field name="name">nc_management.consolidate_wizard.form</field>
-    <field name="model">nc_management.consolidate_wizard</field>
+    <field name="name">smi_management.consolidate_wizard.form</field>
+    <field name="model">smi_management.consolidate_wizard</field>
     <field name="arch" type="xml">
         <form string="Sélectionner les plans à consolider">
             <sheet>
@@ -41,7 +41,7 @@
 
 <record id="action_consolidate_wizard" model="ir.actions.act_window">
     <field name="name">Consolider des plans</field>
-    <field name="res_model">nc_management.consolidate_wizard</field>
+    <field name="res_model">smi_management.consolidate_wizard</field>
     <field name="view_mode">form</field>
     <field name="target">new</field>
 </record>

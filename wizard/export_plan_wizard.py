@@ -5,7 +5,7 @@ import base64
 from io import BytesIO
 
 class ExportPlanWizard(models.TransientModel):
-    _name = 'nc_management.export_plan_wizard'
+    _name = 'smi_management.export_plan_wizard'
     _description = 'Export Plan Action SMI as Excel'
 
     excel_file = fields.Binary('Fichier Excel', readonly=True)
@@ -31,7 +31,7 @@ class ExportPlanWizard(models.TransientModel):
             sheet.write(0, col, header, header_style)
 
         # Data
-        plans = self.env['nc_management.plan_action_smi'].search([])
+        plans = self.env['smi_management.plan_action_smi'].search([])
         for row, plan in enumerate(plans, start=1):
             sheet.write(row, 0, plan.name or '', data_style)
             sheet.write(row, 1, dict(plan._fields['nature'].selection).get(plan.nature, ''), data_style)
@@ -64,7 +64,7 @@ class ExportPlanWizard(models.TransientModel):
 
         return {
             'type': 'ir.actions.act_window',
-            'res_model': 'nc_management.export_plan_wizard',
+            'res_model': 'smi_management.export_plan_wizard',
             'view_mode': 'form',
             'res_id': self.id,
             'target': 'new',

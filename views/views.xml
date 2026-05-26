@@ -8,15 +8,15 @@
 
 <record model="ir.actions.act_window" id="action_fnc_number_wizard">
     <field name="name">Générer Numéro FNC</field>
-    <field name="res_model">nc_management.number_generator_wizard</field>
+    <field name="res_model">smi_management.number_generator_wizard</field>
     <field name="view_mode">form</field>
     <field name="target">new</field>
 </record>
 
 <!-- Vue Liste FNC -->
 <record model="ir.ui.view" id="view_nonconformity_tree">
-    <field name="name">nc_management.nonconformity.tree</field>
-    <field name="model">nc_management.nonconformity</field>
+    <field name="name">smi_management.nonconformity.tree</field>
+    <field name="model">smi_management.nonconformity</field>
     <field name="arch" type="xml">
         <tree string="Fiches Non-Conformité">
             <field name="name"/>
@@ -33,8 +33,8 @@
 
 <!-- Vue Formulaire FNC -->
 <record model="ir.ui.view" id="view_nonconformity_form">
-    <field name="name">nc_management.nonconformity.form</field>
-    <field name="model">nc_management.nonconformity</field>
+    <field name="name">smi_management.nonconformity.form</field>
+    <field name="model">smi_management.nonconformity</field>
     <field name="arch" type="xml">
         <form string="Fiche de Non-Conformité">
             <header>
@@ -226,8 +226,8 @@
 
 <!-- Vue Liste FAC -->
 <record model="ir.ui.view" id="view_corrective_action_tree">
-    <field name="name">nc_management.corrective_action.tree</field>
-    <field name="model">nc_management.corrective_action</field>
+    <field name="name">smi_management.corrective_action.tree</field>
+    <field name="model">smi_management.corrective_action</field>
     <field name="arch" type="xml">
         <tree string="Fiches Action Corrective">
             <field name="name"/>
@@ -242,8 +242,8 @@
 
 <!-- Vue Recherche FAC -->
 <record model="ir.ui.view" id="view_corrective_action_search">
-    <field name="name">nc_management.corrective_action.search</field>
-    <field name="model">nc_management.corrective_action</field>
+    <field name="name">smi_management.corrective_action.search</field>
+    <field name="model">smi_management.corrective_action</field>
     <field name="arch" type="xml">
         <search string="Rechercher FAC">
 
@@ -287,8 +287,8 @@
 
 <!-- Vue Formulaire FAC -->
 <record model="ir.ui.view" id="view_corrective_action_form">
-    <field name="name">nc_management.corrective_action.form</field>
-    <field name="model">nc_management.corrective_action</field>
+    <field name="name">smi_management.corrective_action.form</field>
+    <field name="model">smi_management.corrective_action</field>
     <field name="arch" type="xml">
         <form string="Fiche d'Action Corrective">
             <header>
@@ -387,8 +387,8 @@
 <!-- ============================================================ -->
 
 <record model="ir.ui.view" id="view_nonconformity_search">
-    <field name="name">nc_management.nonconformity.search</field>
-    <field name="model">nc_management.nonconformity</field>
+    <field name="name">smi_management.nonconformity.search</field>
+    <field name="model">smi_management.nonconformity</field>
     <field name="arch" type="xml">
         <search string="Rechercher FNC">
 
@@ -463,7 +463,7 @@
 
 <record model="ir.actions.act_window" id="action_nonconformity">
     <field name="name">Non-Conformités</field>
-    <field name="res_model">nc_management.nonconformity</field>
+    <field name="res_model">smi_management.nonconformity</field>
     <field name="view_mode">tree,form</field>
     <field name="search_view_id" ref="view_nonconformity_search"/>
     <field name="domain">[('type_audit_interne','=',False),('type_audit_externe','=',False)]</field>
@@ -472,7 +472,7 @@
 
 <record model="ir.actions.act_window" id="action_corrective">
     <field name="name">Actions Correctives</field>
-    <field name="res_model">nc_management.corrective_action</field>
+    <field name="res_model">smi_management.corrective_action</field>
     <field name="view_mode">tree,form</field>
     <field name="search_view_id" ref="view_corrective_action_search"/>
     <field name="domain">[('fnc_id.type_audit_interne','=',False),('fnc_id.type_audit_externe','=',False)]</field>
@@ -480,18 +480,18 @@
 </record>
 
 <menuitem name="NC Management"
-          id="nc_management.menu_root"
+          id="smi_management.menu_root"
           sequence="10"/>
 
 <menuitem name="Non-Conformités"
-          id="nc_management.menu_nonconformity"
-          parent="nc_management.menu_root"
+          id="smi_management.menu_nonconformity"
+          parent="smi_management.menu_root"
           action="action_nonconformity"
           sequence="20"/>
 
 <menuitem name="Actions Correctives"
-          id="nc_management.menu_corrective"
-          parent="nc_management.menu_root"
+          id="smi_management.menu_corrective"
+          parent="smi_management.menu_root"
           action="action_corrective"
           sequence="20"/>
 
@@ -500,8 +500,8 @@
 <!-- ============================================================ -->
 
 <record model="ir.ui.view" id="view_document_revision_tree">
-    <field name="name">nc_management.document_revision.tree</field>
-    <field name="model">nc_management.document_revision</field>
+    <field name="name">smi_management.document_revision.tree</field>
+    <field name="model">smi_management.document_revision</field>
     <field name="arch" type="xml">
         <tree string="Historique des Révisions" import="false"
               decoration-success="etat == 'valable'"
@@ -517,8 +517,8 @@
 </record>
 
 <record model="ir.ui.view" id="view_document_revision_form">
-    <field name="name">nc_management.document_revision.form</field>
-    <field name="model">nc_management.document_revision</field>
+    <field name="name">smi_management.document_revision.form</field>
+    <field name="model">smi_management.document_revision</field>
     <field name="arch" type="xml">
         <form string="Révision de Document">
             <sheet>
@@ -543,19 +543,19 @@
 
 <record model="ir.actions.act_window" id="action_document_revision">
     <field name="name">Révision des documents</field>
-    <field name="res_model">nc_management.document_revision</field>
+    <field name="res_model">smi_management.document_revision</field>
     <field name="view_mode">tree,form</field>
 </record>
 
 <menuitem name="Configuration"
-          id="nc_management.menu_config"
-          parent="nc_management.menu_root"
+          id="smi_management.menu_config"
+          parent="smi_management.menu_root"
           sequence="100"
-          groups="nc_management.group_responsable_qualite"/>
+          groups="smi_management.group_responsable_qualite"/>
 
 <menuitem name="Révision des documents"
-          id="nc_management.menu_revision"
-          parent="nc_management.menu_root"
+          id="smi_management.menu_revision"
+          parent="smi_management.menu_root"
           action="action_document_revision"
           sequence="30"/>
 

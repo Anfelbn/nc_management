@@ -1,6 +1,6 @@
 {
-    'name': 'NC Management',
-    'summary': 'NC Management module',
+    'name': 'SMI Management',
+    'summary': 'SMI Management module',
     'version': '11.0.0.2',
     'category': 'Tools',
     'author': 'Your Name',

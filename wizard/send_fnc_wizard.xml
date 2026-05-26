@@ -3,8 +3,8 @@
 <data>
 
     <record model="ir.ui.view" id="view_send_fnc_wizard">
-        <field name="name">nc_management.send_fnc_wizard.form</field>
-        <field name="model">nc_management.send_fnc_wizard</field>
+        <field name="name">smi_management.send_fnc_wizard.form</field>
+        <field name="model">smi_management.send_fnc_wizard</field>
         <field name="arch" type="xml">
             <form string="Envoyer la Fiche NC">
                 <group>
@@ -30,7 +30,7 @@
 
     <record model="ir.actions.act_window" id="action_send_fnc_wizard">
         <field name="name">Envoyer la FNC</field>
-        <field name="res_model">nc_management.send_fnc_wizard</field>
+        <field name="res_model">smi_management.send_fnc_wizard</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="view_send_fnc_wizard"/>
         <field name="target">new</field>

@@ -3,11 +3,11 @@ from odoo.exceptions import UserError
 
 
 class SendFncWizard(models.TransientModel):
-    _name = 'nc_management.send_fnc_wizard'
+    _name = 'smi_management.send_fnc_wizard'
     _description = 'Envoyer la FNC'
 
     fnc_id = fields.Many2one(
-        'nc_management.nonconformity',
+        'smi_management.nonconformity',
         string='FNC',
         readonly=True)
 

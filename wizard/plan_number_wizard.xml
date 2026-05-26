@@ -3,8 +3,8 @@
 <data>
 
 <record id="view_plan_number_wizard_form" model="ir.ui.view">
-    <field name="name">nc_management.plan_number_wizard.form</field>
-    <field name="model">nc_management.plan_number_wizard</field>
+    <field name="name">smi_management.plan_number_wizard.form</field>
+    <field name="model">smi_management.plan_number_wizard</field>
     <field name="arch" type="xml">
         <form string="Générer le numéro du plan">
             <sheet>

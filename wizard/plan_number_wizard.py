@@ -3,11 +3,11 @@ from odoo.exceptions import UserError
 
 
 class PlanNumberWizard(models.TransientModel):
-    _name = 'nc_management.plan_number_wizard'
+    _name = 'smi_management.plan_number_wizard'
     _description = 'Saisie du numéro de référence du plan'
 
     plan_id = fields.Many2one(
-        'nc_management.plan_action_smi',
+        'smi_management.plan_action_smi',
         string='Plan',
         required=True,
         ondelete='cascade',

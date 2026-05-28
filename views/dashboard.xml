@@ -2,15 +2,7 @@
 <odoo>
 <data>
 
-    <template id="assets_nc" name="smi_management_assets" inherit_id="web.assets_backend">
-        <xpath expr="//script[last()]" position="after">
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"/>
-            <script type="text/javascript" src="/smi_management/static/src/js/dashboard.js"/>
-            <script type="text/javascript" src="/smi_management/static/src/js/plan_smi.js"/>
-        </xpath>
-    </template>
-
-    <record model="ir.actions.client" id="action_nc_plan_smi">
+<record model="ir.actions.client" id="action_nc_plan_smi">
         <field name="name">Plan Action SMI</field>
         <field name="tag">nc_plan_smi</field>
     </record>
@@ -22,10 +14,10 @@
 
     <menuitem
         name="Dashboard"
-        id="smi_management.menu_dashboard"
-        parent="smi_management.menu_root"
+        id="nc_management.menu_dashboard"
+        parent="nc_management.menu_root"
         action="action_nc_dashboard"
-        groups="smi_management.group_responsable_qualite"
+        groups="nc_management.group_responsable_qualite"
         sequence="1"/>
 
 

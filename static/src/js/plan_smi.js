@@ -1,4 +1,4 @@
-odoo.define('smi_management.plan_smi', function(require) {
+odoo.define('nc_management.plan_smi', function(require) {
     'use strict';
     var Widget = require('web.Widget');
     var core = require('web.core');
@@ -11,14 +11,14 @@ odoo.define('smi_management.plan_smi', function(require) {
         },
 
         _onExportSmi: function() {
-            this.do_action('smi_management.action_export_smi_analysis_wizard');
+            this.do_action('nc_management.action_export_smi_analysis_wizard');
         },
 
         start: function() {
             var self = this;
             this._super.apply(this, arguments);
             rpc.query({
-                model: 'smi_management.dashboard',
+                model: 'nc_management.dashboard',
                 method: 'get_plan_smi_stats',
                 args: [], kwargs: {},
             }).then(function(d) {

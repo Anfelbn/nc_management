@@ -7,8 +7,8 @@
 <!-- ============================================================ -->
 
 <record id="view_form_template_tree" model="ir.ui.view">
-    <field name="name">smi_management.form_template.tree</field>
-    <field name="model">smi_management.form_template</field>
+    <field name="name">nc_management.form_template.tree</field>
+    <field name="model">nc_management.form_template</field>
     <field name="arch" type="xml">
         <tree string="Gabarits de formulaires"
               decoration-success="is_active == True"
@@ -23,8 +23,8 @@
 </record>
 
 <record id="view_form_template_form" model="ir.ui.view">
-    <field name="name">smi_management.form_template.form</field>
-    <field name="model">smi_management.form_template</field>
+    <field name="name">nc_management.form_template.form</field>
+    <field name="model">nc_management.form_template</field>
     <field name="arch" type="xml">
         <form string="Gabarit de formulaire">
             <header>
@@ -200,15 +200,17 @@
 
 <record id="action_form_template_list" model="ir.actions.act_window">
     <field name="name">Gabarits de formulaires</field>
-    <field name="res_model">smi_management.form_template</field>
+    <field name="res_model">nc_management.form_template</field>
     <field name="view_mode">tree,form</field>
 </record>
 
-<menuitem name="Gabarits FNC / FAC"
-          id="smi_management.menu_form_templates"
-          parent="smi_management.menu_config"
+<menuitem name="Révision Documents"
+          id="nc_management.menu_config"
+          parent="nc_management.menu_root"
           action="action_form_template_list"
-          sequence="20"/>
+          sequence="100"
+          groups="nc_management.group_responsable_qualite"/>
+
 
 </data>
 </odoo>

@@ -2,11 +2,11 @@ from odoo import models, fields, api
 from datetime import datetime
 
 class NumberGeneratorWizard(models.TransientModel):
-    _name = 'smi_management.number_generator_wizard'
+    _name = 'nc_management.number_generator_wizard'
     _description = 'Générateur de Numéro FNC'
 
     fnc_id = fields.Many2one(
-        'smi_management.nonconformity',
+        'nc_management.nonconformity',
         string='FNC',
         required=False,
         ondelete='cascade')
@@ -24,7 +24,7 @@ class NumberGeneratorWizard(models.TransientModel):
         ('type_autre', 'Autre'),
     ], string='Type de NC', required=True)
 
-    nc_type_id = fields.Many2one('smi_management.nc_type', string='Produit/Abréviation', required=True)
+    nc_type_id = fields.Many2one('nc_management.nc_type', string='Produit/Abréviation', required=True)
 
     @api.onchange('category')
     def _onchange_category(self):
@@ -36,7 +36,7 @@ class NumberGeneratorWizard(models.TransientModel):
 
     def _generate_name(self, abr):
         year = datetime.now().year
-        seq_code = 'smi_management.fnc.%s' % abr.lower()
+        seq_code = 'nc_management.fnc.%s' % abr.lower()
         seq_env = self.env['ir.sequence'].sudo()
         sequence = seq_env.search([('code', '=', seq_code)], limit=1)
         if not sequence:
@@ -72,10 +72,10 @@ class NumberGeneratorWizard(models.TransientModel):
             return {'type': 'ir.actions.act_window_close'}
 
         # Créer une nouvelle FNC directement depuis le wizard
-        fnc = self.env['smi_management.nonconformity'].with_context(skip_fnc_validation=True).create(vals)
+        fnc = self.env['nc_management.nonconformity'].with_context(skip_fnc_validation=True).create(vals)
         return {
             'type': 'ir.actions.act_window',
-            'res_model': 'smi_management.nonconformity',
+            'res_model': 'nc_management.nonconformity',
             'res_id': fnc.id,
             'view_mode': 'form',
             'target': 'current',

@@ -4,7 +4,7 @@
 
     <record id="seq_nonconformity" model="ir.sequence">
         <field name="name">FNC Sequence</field>
-        <field name="code">smi_management.nonconformity</field>
+        <field name="code">nc_management.nonconformity</field>
         <field name="prefix">FNC-</field>
         <field name="padding">4</field>
         <field name="number_next">1</field>
@@ -13,7 +13,7 @@
 
     <record id="seq_corrective_action" model="ir.sequence">
         <field name="name">FAC Sequence</field>
-        <field name="code">smi_management.corrective_action</field>
+        <field name="code">nc_management.corrective_action</field>
         <field name="prefix">FAC-</field>
         <field name="padding">4</field>
         <field name="number_next">1</field>
@@ -22,7 +22,7 @@
 
     <record id="seq_plan_action_smi" model="ir.sequence">
         <field name="name">Plan Action SMI</field>
-        <field name="code">smi_management.plan_action_smi</field>
+        <field name="code">nc_management.plan_action_smi</field>
         <field name="prefix">SMI-</field>
         <field name="padding">4</field>
         <field name="number_next">1</field>

@@ -3,9 +3,15 @@
     <template id="assets_backend" inherit_id="web.assets_backend">
         <xpath expr="." position="inside">
             <link rel="stylesheet" type="text/css"
-                  href="/smi_management/static/src/css/smi_management.css"/>
+                  href="/nc_management/static/src/css/nc_management.css"/>
             <script type="text/javascript"
-                    src="/smi_management/static/src/js/fnc_form.js"/>
+                    src="/nc_management/static/src/js/fnc_form.js"/>
+            <script type="text/javascript"
+                    src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"/>
+            <script type="text/javascript"
+                    src="/nc_management/static/src/js/dashboard.js"/>
+            <script type="text/javascript"
+                    src="/nc_management/static/src/js/plan_smi.js"/>
         </xpath>
     </template>
 </odoo>

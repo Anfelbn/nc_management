@@ -4,49 +4,49 @@
 
     <record id="rule_nonconformity_user_scope" model="ir.rule">
         <field name="name">FNC user scope</field>
-        <field name="model_id" ref="model_smi_management_nonconformity"/>
+        <field name="model_id" ref="model_nc_management_nonconformity"/>
         <field name="domain_force">
             ['|', ('create_uid', '=', user.id), ('direction_id', 'in', (user.employee_ids and user.employee_ids.mapped('department_id').ids or []))]
         </field>
-        <field name="groups" eval="[(4, ref('smi_management.group_nc_utilisateur'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
     </record>
 
     <record id="rule_nonconformity_manager_scope" model="ir.rule">
         <field name="name">FNC manager scope</field>
-        <field name="model_id" ref="model_smi_management_nonconformity"/>
+        <field name="model_id" ref="model_nc_management_nonconformity"/>
         <field name="domain_force">[(1, '=', 1)]</field>
-        <field name="groups" eval="[(4, ref('smi_management.group_responsable_qualite'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_responsable_qualite'))]"/>
     </record>
 
     <record id="rule_corrective_action_user_scope" model="ir.rule">
         <field name="name">FAC user scope</field>
-        <field name="model_id" ref="model_smi_management_corrective_action"/>
+        <field name="model_id" ref="model_nc_management_corrective_action"/>
         <field name="domain_force">['|', '|', ('create_uid', '=', user.id), ('responsable_id', '=', user.id), ('fnc_id.assigned_to_id.user_id', '=', user.id)]</field>
-        <field name="groups" eval="[(4, ref('smi_management.group_nc_utilisateur'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
     </record>
 
 
     <record id="rule_corrective_action_manager_scope" model="ir.rule">
         <field name="name">FAC manager scope</field>
-        <field name="model_id" ref="model_smi_management_corrective_action"/>
+        <field name="model_id" ref="model_nc_management_corrective_action"/>
         <field name="domain_force">[(1, '=', 1)]</field>
-        <field name="groups" eval="[(4, ref('smi_management.group_responsable_qualite'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_responsable_qualite'))]"/>
     </record>
 
     <record id="rule_action_line_user_scope" model="ir.rule">
         <field name="name">FAC action line user scope</field>
-        <field name="model_id" ref="model_smi_management_action_line"/>
+        <field name="model_id" ref="model_nc_management_action_line"/>
         <field name="domain_force">
             ['|', ('create_uid', '=', user.id), ('direction_id', 'in', (user.employee_ids and user.employee_ids.mapped('department_id').ids or []))]
         </field>
-        <field name="groups" eval="[(4, ref('smi_management.group_nc_utilisateur'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
     </record>
 
     <record id="rule_action_line_manager_scope" model="ir.rule">
         <field name="name">FAC action line manager scope</field>
-        <field name="model_id" ref="model_smi_management_action_line"/>
+        <field name="model_id" ref="model_nc_management_action_line"/>
         <field name="domain_force">[(1, '=', 1)]</field>
-        <field name="groups" eval="[(4, ref('smi_management.group_responsable_qualite'))]"/>
+        <field name="groups" eval="[(4, ref('nc_management.group_responsable_qualite'))]"/>
     </record>
 
 </data>

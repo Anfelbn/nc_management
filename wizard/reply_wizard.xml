@@ -3,8 +3,8 @@
 <data>
 
     <record model="ir.ui.view" id="view_reply_wizard">
-        <field name="name">smi_management.reply_wizard.form</field>
-        <field name="model">smi_management.reply_wizard</field>
+        <field name="name">nc_management.reply_wizard.form</field>
+        <field name="model">nc_management.reply_wizard</field>
         <field name="arch" type="xml">
             <form string="Répondre à la fiche">
                 <group>

@@ -6,7 +6,7 @@
          désormais via le bouton "Clôturer et créer le suivant" -->
     <record id="cron_auto_create_global_plan" model="ir.cron">
         <field name="name">Création Plan d'Amélioration SMI (désactivé)</field>
-        <field name="model_id" ref="model_smi_management_plan_action_smi"/>
+        <field name="model_id" ref="model_nc_management_plan_action_smi"/>
         <field name="state">code</field>
         <field name="code">model._auto_create_global_plan()</field>
         <field name="interval_number">1</field>

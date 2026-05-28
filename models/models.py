@@ -30,7 +30,7 @@ class HrJobScaek(models.Model):
 
 
 class NcType(models.Model):
-    _name = 'smi_management.nc_type'
+    _name = 'nc_management.nc_type'
     _description = 'Type de Non-Conformité (Abréviation)'
 
     name = fields.Char(string='Produit/Abréviation', required=True)
@@ -53,7 +53,7 @@ class NcType(models.Model):
     ]
 
 class Nonconformity(models.Model):
-    _name = 'smi_management.nonconformity'
+    _name = 'nc_management.nonconformity'
     _description = 'Fiche de Non-Conformité'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
@@ -139,9 +139,9 @@ class Nonconformity(models.Model):
     impact         = fields.Text(string='Impact : coût, incidence, risque')
 
     # ── Références FAC ───────────────────────────────────────
-    fac_ids       = fields.One2many('smi_management.corrective_action', 'fnc_id', string="Fiches d'action liées")
+    fac_ids       = fields.One2many('nc_management.corrective_action', 'fnc_id', string="Fiches d'action liées")
     fac_reference = fields.Many2one(
-        'smi_management.corrective_action',
+        'nc_management.corrective_action',
         string="N° Fiche d'action",
         compute='_compute_fac_reference',
         store=True,
@@ -196,9 +196,10 @@ class Nonconformity(models.Model):
             fac = rec.sudo().fac_ids[:1]
             rec.fac_number_display = fac.name if fac else False
 
+    @api.depends('fac_ids', 'fac_ids.responsable_id')
     def _compute_can_access_fac(self):
         user = self.env.user
-        is_rmqse = user.has_group('smi_management.group_responsable_qualite')
+        is_rmqse = user.has_group('nc_management.group_responsable_qualite')
         for rec in self:
             if is_rmqse:
                 rec.can_access_fac = True
@@ -384,7 +385,7 @@ class Nonconformity(models.Model):
 
     @api.multi
     def unlink(self):
-        if not self.env.user.has_group('smi_management.group_responsable_qualite'):
+        if not self.env.user.has_group('nc_management.group_responsable_qualite'):
             if any(rec.create_uid.id != self.env.uid for rec in self):
                 raise UserError("Vous ne pouvez supprimer que vos propres fiches FNC.")
         return super(Nonconformity, self).unlink()
@@ -401,9 +402,9 @@ class Nonconformity(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Envoyer la FNC',
-            'res_model': 'smi_management.send_fnc_wizard',
+            'res_model': 'nc_management.send_fnc_wizard',
             'view_mode': 'form',
-            'view_id': self.env.ref('smi_management.view_send_fnc_wizard').id,
+            'view_id': self.env.ref('nc_management.view_send_fnc_wizard').id,
             'target': 'new',
             'context': {'default_fnc_id': self.id},
         }
@@ -418,18 +419,11 @@ class Nonconformity(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Générer Numéro',
-            'res_model': 'smi_management.number_generator_wizard',
+            'res_model': 'nc_management.number_generator_wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {'default_fnc_id': self.id},
         }
-
-    @api.multi
-    def action_close(self):
-        for rec in self:
-            rec.write({'state': 'closed'})
-            rec.message_post(
-                body='FNC clôturée par la Responsable Qualité.')
 
     def _is_creator(self):
         return self.submitted_by_id == self.env.user
@@ -484,7 +478,7 @@ class Nonconformity(models.Model):
 
 
 class CorrectiveAction(models.Model):
-    _name = 'smi_management.corrective_action'
+    _name = 'nc_management.corrective_action'
     _description = "Fiche d'Action Corrective"
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
@@ -498,7 +492,7 @@ class CorrectiveAction(models.Model):
         context={'no_create': True, 'no_create_edit': True})
     date         = fields.Date(string='Date', default=fields.Date.today)
     fnc_id       = fields.Many2one(
-        'smi_management.nonconformity',
+        'nc_management.nonconformity',
         string='N° FNC ou autre document',
         ondelete='set null',
         index=True
@@ -519,7 +513,7 @@ class CorrectiveAction(models.Model):
     visa_analyse           = fields.Char(string='Visa analyse')
 
     # ── Section 3 — Actions décidées ─────────────────────────
-    action_line_ids        = fields.One2many('smi_management.action_line', 'fac_id', string='Actions décidées')
+    action_line_ids        = fields.One2many('nc_management.action_line', 'fac_id', string='Actions décidées')
     responsable_actions_id = fields.Many2one('hr.employee', string='Responsable actions',
                                context={'no_create': True, 'no_create_edit': True})
     date_actions           = fields.Date(string='Date actions')
@@ -591,10 +585,10 @@ class CorrectiveAction(models.Model):
     def create(self, vals):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code(
-                'smi_management.corrective_action') or 'New'
+                'nc_management.corrective_action') or 'New'
         if not vals.get('responsable_id'):
             if vals.get('fnc_id'):
-                fnc = self.env['smi_management.nonconformity'].browse(vals['fnc_id'])
+                fnc = self.env['nc_management.nonconformity'].browse(vals['fnc_id'])
                 user = fnc.assigned_to_id.user_id if fnc.assigned_to_id else False
                 vals['responsable_id'] = user.id if user else self.env.uid
             else:
@@ -628,7 +622,7 @@ class CorrectiveAction(models.Model):
 
     @api.multi
     def unlink(self):
-        if not self.env.user.has_group('smi_management.group_responsable_qualite'):
+        if not self.env.user.has_group('nc_management.group_responsable_qualite'):
             for rec in self:
                 if rec.responsable_id.id != self.env.uid and rec.create_uid.id != self.env.uid:
                     raise UserError("Vous ne pouvez supprimer que les fiches FAC dont vous êtes responsable de l'action.")
@@ -636,11 +630,11 @@ class CorrectiveAction(models.Model):
 
 
 class ActionLine(models.Model):
-    _name = 'smi_management.action_line'
+    _name = 'nc_management.action_line'
     _description = "Ligne d'action corrective"
 
     fac_id             = fields.Many2one(
-        'smi_management.corrective_action',
+        'nc_management.corrective_action',
         string='FAC',
         required=True,
         ondelete='cascade',
@@ -661,7 +655,7 @@ class ActionLine(models.Model):
 
 
 class PlanActionSmi(models.Model):
-    _name = 'smi_management.plan_action_smi'
+    _name = 'nc_management.plan_action_smi'
     _description = 'Plan Action Amelioration SMI'
     _order = 'name asc'
     _inherit = ['mail.thread', 'mail.activity.mixin']
@@ -682,7 +676,7 @@ class PlanActionSmi(models.Model):
         ('amelioration',            'Amélioration'),
         ('nc_reglementaire',        'NC réglementaire'),
     ], string='Nature')
-    fnc_id = fields.Many2one('smi_management.nonconformity', string='Référence')
+    fnc_id = fields.Many2one('nc_management.nonconformity', string='Référence')
     direction_id = fields.Many2one(
         'hr.department',
         domain=[('scaek_level', '=', 'direction')],
@@ -755,7 +749,7 @@ class PlanActionSmi(models.Model):
     # ── Plan d'Action d'Amélioration SMI ─────────────────────────
     is_global      = fields.Boolean("Est un Plan d'Amélioration", default=False)
     global_plan_id = fields.Many2one(
-        'smi_management.plan_action_smi',
+        'nc_management.plan_action_smi',
         string="Plan d'Amélioration parent",
         domain=[('is_global', '=', True)],
         ondelete='set null',
@@ -764,7 +758,7 @@ class PlanActionSmi(models.Model):
     mois_reception = fields.Date('Date de création')
     date_maj       = fields.Datetime("Dernière mise à jour", readonly=True)
     child_plan_ids = fields.One2many(
-        'smi_management.plan_action_smi',
+        'nc_management.plan_action_smi',
         'global_plan_id',
         string='Plans intégrés',
     )
@@ -976,10 +970,10 @@ class PlanActionSmi(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Générer le numéro du plan',
-            'res_model': 'smi_management.plan_number_wizard',
+            'res_model': 'nc_management.plan_number_wizard',
             'view_mode': 'form',
             'view_id': self.env.ref(
-                'smi_management.view_plan_number_wizard_form').id,
+                'nc_management.view_plan_number_wizard_form').id,
             'target': 'new',
             'context': {'default_plan_id': self.id},
         }
@@ -1039,7 +1033,7 @@ class PlanActionSmi(models.Model):
         })
 
         rmqse_group = self.env.ref(
-            'smi_management.group_responsable_qualite', raise_if_not_found=False)
+            'nc_management.group_responsable_qualite', raise_if_not_found=False)
         if rmqse_group:
             partner_ids = rmqse_group.users.mapped('partner_id').ids
             self.message_post(
@@ -1065,10 +1059,10 @@ class PlanActionSmi(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': "Analyse Efficacité Globale",
-            'res_model': 'smi_management.plan_efficacite_wizard',
+            'res_model': 'nc_management.plan_efficacite_wizard',
             'view_mode': 'form',
             'view_id': self.env.ref(
-                'smi_management.view_plan_efficacite_wizard_form').id,
+                'nc_management.view_plan_efficacite_wizard_form').id,
             'target': 'new',
             'context': {'default_plan_id': self.id},
         }
@@ -1080,7 +1074,7 @@ class PlanActionSmi(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Consolider des plans',
-            'res_model': 'smi_management.consolidate_wizard',
+            'res_model': 'nc_management.consolidate_wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {'active_id': self.id},
@@ -1131,11 +1125,11 @@ class PlanActionSmi(models.Model):
 
         return {
             'type': 'ir.actions.act_window',
-            'res_model': 'smi_management.plan_action_smi',
+            'res_model': 'nc_management.plan_action_smi',
             'res_id': new_plan.id,
             'view_mode': 'form',
             'view_id': self.env.ref(
-                'smi_management.view_plan_smi_form_global').id,
+                'nc_management.view_plan_smi_form_global').id,
             'target': 'current',
         }
 
@@ -1177,7 +1171,7 @@ class PlanActionSmi(models.Model):
 
 
 class DocumentRevision(models.Model):
-    _name = 'smi_management.document_revision'
+    _name = 'nc_management.document_revision'
     _description = 'Révision de Document'
     _order = 'revision_date desc, revision_number desc'
 
@@ -1199,7 +1193,7 @@ class DocumentRevision(models.Model):
     @api.depends('revision_number', 'doc_type')
     def _compute_revision_number_link(self):
         for rec in self:
-            url = '/report/pdf/smi_management.report_revision_template/%s' % rec.id
+            url = '/report/pdf/nc_management.report_revision_template/%s' % rec.id
             rec.revision_number_link = '<a href="%s" target="_blank" style="font-weight:bold; color:#00A09D;">%s</a>' % (url, rec.revision_number)
 
     name = fields.Char(string='Révision', compute='_compute_name', store=True)
@@ -1236,13 +1230,13 @@ class DocumentRevision(models.Model):
 
 
 class NcDashboard(models.Model):
-    _name = 'smi_management.dashboard'
+    _name = 'nc_management.dashboard'
     _description = 'Dashboard'
 
     @api.model
     def get_plan_smi_stats(self):
-        fnc = self.env['smi_management.nonconformity']
-        fac = self.env['smi_management.corrective_action']
+        fnc = self.env['nc_management.nonconformity']
+        fac = self.env['nc_management.corrective_action']
 
         def get_categorie(field_name):
             fnc_ids = fnc.search([(field_name, '=', True)]).ids
@@ -1261,9 +1255,9 @@ class NcDashboard(models.Model):
             realise_100 = len(fac_recs.filtered(
                 lambda f: f.state == 'closed'))
             realise_50plus = len(fac_recs.filtered(
-                lambda f: f.state in ['verified', 'open']))
+                lambda f: f.state in ['in_progress', 'validated']))
             realise_50moins = len(fac_recs.filtered(
-                lambda f: f.state == 'draft'))
+                lambda f: f.state in ['draft', 'submitted']))
             taux = round((efficace / total * 100), 1) if total > 0 else 0
             return {
                 'total': total,
@@ -1302,7 +1296,7 @@ class NcDashboard(models.Model):
             ('nc_reglementaire',         'NC réglementaire'),
         ]
         # Plans intégrés dans un plan global (submission_state == 'integre')
-        plan_model     = self.env['smi_management.plan_action_smi']
+        plan_model     = self.env['nc_management.plan_action_smi']
         integrated_plans = plan_model.search([
             ('is_global',        '=', False),
             ('submission_state', '=', 'integre'),
@@ -1353,8 +1347,8 @@ class NcDashboard(models.Model):
 
     @api.model
     def get_efficacite_categorie(self, field_name):
-        fnc = self.env['smi_management.nonconformity']
-        fac = self.env['smi_management.corrective_action']
+        fnc = self.env['nc_management.nonconformity']
+        fac = self.env['nc_management.corrective_action']
 
         fnc_ids = fnc.search([(field_name, '=', True)]).ids
         total = len(fnc_ids)
@@ -1385,9 +1379,9 @@ class NcDashboard(models.Model):
         from dateutil.relativedelta import relativedelta
         import calendar as cal_mod
 
-        fnc = self.env['smi_management.nonconformity']
-        fac = self.env['smi_management.corrective_action']
-        plan = self.env['smi_management.plan_action_smi']
+        fnc = self.env['nc_management.nonconformity']
+        fac = self.env['nc_management.corrective_action']
+        plan = self.env['nc_management.plan_action_smi']
         today = date.today()
         period_months = {
             '1m': 1,
@@ -1581,14 +1575,14 @@ class NcDashboard(models.Model):
 
         # FAC en retard (ouvertes > 7 jours — tout le système)
         fac_retard_recs = fac.search_read(
-            [('state', 'in', ['open', 'verified']),
+            [('state', 'in', ['submitted', 'in_progress', 'validated']),
              ('date', '<=', limit7)],
             ['name', 'direction_id', 'date_cloture', 'state'], limit=10)
         fac_retard = len(fac_retard_recs)
 
         # FAC à clôturer avec urgence (toutes FAC du système — RMQSE clôture tout)
         fac_a_cloturer = []
-        for f in fac.search([('state', 'in', ['open', 'verified'])],
+        for f in fac.search([('state', 'in', ['submitted', 'in_progress', 'validated'])],
                             order='date asc', limit=8):
             if f.date:
                 from datetime import datetime as dt
@@ -1614,8 +1608,8 @@ class NcDashboard(models.Model):
                 'label': label,
             })
 
-        # FAC à approuver reçues
-        fac_recues_count = fac.search_count(fac_received_period_domain + [('state','=','verified')])
+        # FAC à approuver reçues (en attente d'approbation QSE)
+        fac_recues_count = fac.search_count(fac_received_period_domain + [('state','=','in_progress')])
 
         # ── Evolution mensuelle 6 mois — FNC/FAC créées par RMQSE uniquement ──
         monthly_fnc = []
@@ -1785,7 +1779,7 @@ class NcDashboard(models.Model):
         result['calendar_events'] = calendar_events
 
         fac_a_cloturer_list = []
-        for fac_rec in fac.search([('state', 'in', ['open', 'verified'])],
+        for fac_rec in fac.search([('state', 'in', ['submitted', 'in_progress', 'validated'])],
                                   order='date asc', limit=8):
             delta = 0
             if fac_rec.date:
@@ -1870,7 +1864,7 @@ class NcDashboard(models.Model):
                 'type': _fnc_type_label(fnc_rec),
                 'kind': 'FNC',
                 'badge': 'blue',
-                'model': 'smi_management.nonconformity',
+                'model': 'nc_management.nonconformity',
                 'department': fnc_rec.direction_id.name if fnc_rec.direction_id else '',
                 'responsible': responsible.name if responsible else '',
                 'date': _date_label(fnc_rec.date),
@@ -1897,7 +1891,7 @@ class NcDashboard(models.Model):
                 'type': 'Action corrective',
                 'kind': 'FAC',
                 'badge': 'red',
-                'model': 'smi_management.corrective_action',
+                'model': 'nc_management.corrective_action',
                 'department': fac_rec.direction_id.name if fac_rec.direction_id else '',
                 'responsible': responsible.name if responsible else '',
                 'date': _date_label(fac_rec.date),
@@ -1929,7 +1923,7 @@ class NcDashboard(models.Model):
                 'type': dict(plan_rec._fields['nature'].selection).get(plan_rec.nature, 'Plan action'),
                 'kind': 'Plan',
                 'badge': 'purple',
-                'model': 'smi_management.plan_action_smi',
+                'model': 'nc_management.plan_action_smi',
                 'department': plan_rec.direction_id.name if plan_rec.direction_id else '',
                 'responsible': responsible.name if responsible else '',
                 'date': _date_label(plan_date),
@@ -1959,8 +1953,8 @@ class NcDashboard(models.Model):
     def get_direction_details(self, direction_id, period=None):
         from dateutil.relativedelta import relativedelta
 
-        fnc = self.env['smi_management.nonconformity']
-        fac = self.env['smi_management.corrective_action']
+        fnc = self.env['nc_management.nonconformity']
+        fac = self.env['nc_management.corrective_action']
         today = date.today()
         period_months = {'1m': 1, '6m': 6, '1y': 12}.get(period or '1m', 1)
         period_end = today.replace(day=1) + relativedelta(months=1)
@@ -2086,7 +2080,7 @@ class NcDashboard(models.Model):
             return _fmt_dt(msg.date) if msg else ''
 
         try:
-            if model == 'smi_management.nonconformity':
+            if model == 'nc_management.nonconformity':
                 rec = self.env[model].sudo().browse(record_id)
                 if not rec.exists():
                     return result
@@ -2105,7 +2099,7 @@ class NcDashboard(models.Model):
                 result['send_datetime'] = _first_msg_dt(model, record_id)
                 result['message'] = _wizard_note(model, record_id)
 
-            elif model == 'smi_management.corrective_action':
+            elif model == 'nc_management.corrective_action':
                 rec = self.env[model].sudo().browse(record_id)
                 if not rec.exists():
                     return result
@@ -2122,12 +2116,12 @@ class NcDashboard(models.Model):
                 result['direction']  = rec.direction_id.name if rec.direction_id else ''
                 result['service']    = (fnc.service_id.name    if fnc and fnc.service_id    else '')
                 result['department'] = (fnc.department_id.name if fnc and fnc.department_id else '')
-                src_mod = 'smi_management.nonconformity' if fnc else model
+                src_mod = 'nc_management.nonconformity' if fnc else model
                 src_id  = fnc.id if fnc else record_id
                 result['send_datetime'] = _first_msg_dt(src_mod, src_id)
                 result['message'] = _wizard_note(src_mod, src_id)
 
-            elif model == 'smi_management.plan_action_smi':
+            elif model == 'nc_management.plan_action_smi':
                 rec = self.env[model].sudo().browse(record_id)
                 if not rec.exists():
                     return result

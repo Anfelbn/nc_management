@@ -1,4 +1,4 @@
-odoo.define('smi_management.dashboard', function(require){
+odoo.define('nc_management.dashboard', function(require){
     'use strict';
 
     var core    = require('web.core');
@@ -86,7 +86,7 @@ odoo.define('smi_management.dashboard', function(require){
             var self = this;
             var superDef = this._super.apply(this, arguments);
             var statsDef = this._rpc({
-                model:  'smi_management.dashboard',
+                model:  'nc_management.dashboard',
                 method: 'get_stats',
                 args:   [],
             }).then(function(stats){
@@ -128,7 +128,7 @@ odoo.define('smi_management.dashboard', function(require){
                 self.do_action({
                     type:      'ir.actions.act_window',
                     name:      'Répondre à la fiche',
-                    res_model: 'smi_management.reply_wizard',
+                    res_model: 'nc_management.reply_wizard',
                     views:     [[false, 'form']],
                     target:    'new',
                     context: {
@@ -139,7 +139,7 @@ odoo.define('smi_management.dashboard', function(require){
             });
 
             this.$el.on('click', '.btn-list', function(){
-                var model   = $(this).data('model') || 'smi_management.nonconformity';
+                var model   = $(this).data('model') || 'nc_management.nonconformity';
                 var domain  = JSON.parse($(this).attr('data-domain') || '[]');
                 var context = JSON.parse($(this).attr('data-context') || '{}');
                 self.do_action({
@@ -201,7 +201,7 @@ odoo.define('smi_management.dashboard', function(require){
             var self = this;
             this._currentKind = kind;
             this._rpc({
-                model:  'smi_management.dashboard',
+                model:  'nc_management.dashboard',
                 method: 'get_direction_details',
                 args:   [dirId, this.stats.period || '1m'],
             }).then(function(data){
@@ -331,7 +331,7 @@ odoo.define('smi_management.dashboard', function(require){
         _reload: function(period){
             var self = this;
             this._rpc({
-                model:  'smi_management.dashboard',
+                model:  'nc_management.dashboard',
                 method: 'get_stats',
                 args:   [period],
             }).then(function(stats){
@@ -473,30 +473,30 @@ odoo.define('smi_management.dashboard', function(require){
                 html += '<div style="border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden">';
                 // En-tête FNC
                 html += '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f8fafc">'
-                      + '<div class="nc-avatar avatar-blue avatar-clickable" data-model="smi_management.nonconformity" data-id="' + fnc.id + '" title="' + _.escape(fnc.sender_name || 'Émetteur') + '">' + _.escape(fnc.sender_initials || '?') + '</div>'
+                      + '<div class="nc-avatar avatar-blue avatar-clickable" data-model="nc_management.nonconformity" data-id="' + fnc.id + '" title="' + _.escape(fnc.sender_name || 'Émetteur') + '">' + _.escape(fnc.sender_initials || '?') + '</div>'
                       + '<div style="flex:1;min-width:0">'
                       + '<div style="display:flex;justify-content:space-between;align-items:center">'
                       + '<div class="nc-notif-ref">' + _.escape(fnc.name || '') + ' · ' + _.escape(fnc.type || '') + '</div>'
                       + '<span class="badge blue">FNC</span>'
                       + '</div>'
                       + '<div class="nc-notif-actions">'
-                      + '<div class="btn-sm primary btn-open" data-model="smi_management.nonconformity" data-id="' + fnc.id + '">Ouvrir FNC</div>'
-                      + '<div class="btn-sm btn-reply" data-model="smi_management.nonconformity" data-id="' + fnc.id + '" data-partner-id="">Répondre</div>'
+                      + '<div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" data-id="' + fnc.id + '">Ouvrir FNC</div>'
+                      + '<div class="btn-sm btn-reply" data-model="nc_management.nonconformity" data-id="' + fnc.id + '" data-partner-id="">Répondre</div>'
                       + '</div>'
                       + '</div></div>';
                 // FAC liées (indentées avec barre rouge)
                 g.facs.forEach(function(fac){
                     html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px 8px 16px;border-top:1px solid #f1f5f9;background:white">'
                           + '<div style="width:2px;background:#EF4444;border-radius:2px;align-self:stretch;flex-shrink:0;margin-top:4px"></div>'
-                          + '<div class="nc-avatar avatar-red avatar-clickable" style="width:28px;height:28px;font-size:10px" data-model="smi_management.corrective_action" data-id="' + fac.id + '" title="' + _.escape(fac.sender_name || 'Émetteur') + '">' + _.escape(fac.sender_initials || '?') + '</div>'
+                          + '<div class="nc-avatar avatar-red avatar-clickable" style="width:28px;height:28px;font-size:10px" data-model="nc_management.corrective_action" data-id="' + fac.id + '" title="' + _.escape(fac.sender_name || 'Émetteur') + '">' + _.escape(fac.sender_initials || '?') + '</div>'
                           + '<div style="flex:1;min-width:0">'
                           + '<div style="display:flex;justify-content:space-between;align-items:center">'
                           + '<div style="font-size:11px;font-weight:600;color:#1e293b">' + _.escape(fac.name || '') + ' · Action corrective</div>'
                           + '<span class="badge red">FAC</span>'
                           + '</div>'
                           + '<div class="nc-notif-actions">'
-                          + '<div class="btn-sm btn-open" data-model="smi_management.corrective_action" data-id="' + fac.id + '">Ouvrir FAC</div>'
-                          + '<div class="btn-sm btn-reply" data-model="smi_management.corrective_action" data-id="' + fac.id + '" data-partner-id="">Répondre</div>'
+                          + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Ouvrir FAC</div>'
+                          + '<div class="btn-sm btn-reply" data-model="nc_management.corrective_action" data-id="' + fac.id + '" data-partner-id="">Répondre</div>'
                           + '</div>'
                           + '</div></div>';
                 });
@@ -523,7 +523,7 @@ odoo.define('smi_management.dashboard', function(require){
 
                 html += '<div style="border:1px solid #e9d5ff;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#faf5ff">'
                       + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;">'
-                      + '<div class="nc-avatar avatar-purple avatar-clickable" data-model="smi_management.plan_action_smi" data-id="' + item.id + '" title="' + _.escape(item.sender_name || 'Émetteur') + '">' + _.escape(item.sender_initials || '?') + '</div>'
+                      + '<div class="nc-avatar avatar-purple avatar-clickable" data-model="nc_management.plan_action_smi" data-id="' + item.id + '" title="' + _.escape(item.sender_name || 'Émetteur') + '">' + _.escape(item.sender_initials || '?') + '</div>'
                       + '<div style="flex:1;min-width:0">'
                       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'
                       + '<div class="nc-notif-ref" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _.escape(item.name || '') + '</div>'
@@ -532,8 +532,8 @@ odoo.define('smi_management.dashboard', function(require){
                       + '<div class="nc-notif-info" style="margin-top:3px;color:#6d28d9">' + _.escape(item.type || 'Plan action') + '</div>'
                       + echeanceLine
                       + '<div class="nc-notif-actions">'
-                      + '<div class="btn-sm primary btn-open" style="background:#7c3aed;border-color:#7c3aed" data-model="smi_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
-                      + '<div class="btn-sm btn-reply" data-model="smi_management.plan_action_smi" data-id="' + item.id + '" data-partner-id="">Répondre</div>'
+                      + '<div class="btn-sm primary btn-open" style="background:#7c3aed;border-color:#7c3aed" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
+                      + '<div class="btn-sm btn-reply" data-model="nc_management.plan_action_smi" data-id="' + item.id + '" data-partner-id="">Répondre</div>'
                       + '</div>'
                       + '</div></div></div>';
             });
@@ -650,7 +650,7 @@ odoo.define('smi_management.dashboard', function(require){
         _onAvatarClick: function(model, id) {
             var self = this;
             this._rpc({
-                model:  'smi_management.dashboard',
+                model:  'nc_management.dashboard',
                 method: 'get_sender_info',
                 args:   [model, id],
             }).then(function(data) {

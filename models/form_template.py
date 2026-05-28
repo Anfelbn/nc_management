@@ -77,7 +77,7 @@ ALL_FIELD_SELECTION = [
 
 
 class FormTemplate(models.Model):
-    _name = 'smi_management.form_template'
+    _name = 'nc_management.form_template'
     _description = 'Gabarit de formulaire FNC/FAC'
     _order = 'doc_type asc, id desc'
 
@@ -88,9 +88,9 @@ class FormTemplate(models.Model):
     ], string='Type de document', required=True)
     is_active = fields.Boolean(string='Gabarit actif', default=False)
     revision_id = fields.Many2one(
-        'smi_management.document_revision', string='Révision liée', ondelete='set null')
+        'nc_management.document_revision', string='Révision liée', ondelete='set null')
     section_ids = fields.One2many(
-        'smi_management.form_section', 'template_id', string='Sections')
+        'nc_management.form_section', 'template_id', string='Sections')
     section_count = fields.Integer(compute='_compute_counts', store=False)
 
     @api.depends('section_ids')
@@ -115,7 +115,7 @@ class FormTemplate(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Nouvelle révision de document',
-            'res_model': 'smi_management.new_revision_wizard',
+            'res_model': 'nc_management.new_revision_wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {'default_source_template_id': self.id},
@@ -128,12 +128,12 @@ class FormTemplate(models.Model):
 
 
 class FormSection(models.Model):
-    _name = 'smi_management.form_section'
+    _name = 'nc_management.form_section'
     _description = 'Section du gabarit'
     _order = 'sequence asc, id asc'
 
     template_id = fields.Many2one(
-        'smi_management.form_template', required=True, ondelete='cascade')
+        'nc_management.form_template', required=True, ondelete='cascade')
     name = fields.Char(string='Titre', required=True)
     sequence = fields.Integer(string='Ordre', default=10)
     is_active = fields.Boolean(string='Actif', default=True)
@@ -144,7 +144,7 @@ class FormSection(models.Model):
         ('action_lines', 'Tableau actions (FAC)'),
     ], string='Disposition', default='standard', required=True)
     line_ids = fields.One2many(
-        'smi_management.form_line', 'section_id', string='Lignes')
+        'nc_management.form_line', 'section_id', string='Lignes')
     line_count = fields.Integer(compute='_compute_line_count', store=False)
 
     @api.depends('line_ids', 'line_ids.is_active')
@@ -154,12 +154,12 @@ class FormSection(models.Model):
 
 
 class FormLine(models.Model):
-    _name = 'smi_management.form_line'
+    _name = 'nc_management.form_line'
     _description = 'Ligne du gabarit'
     _order = 'sequence asc, id asc'
 
     section_id = fields.Many2one(
-        'smi_management.form_section', required=True, ondelete='cascade')
+        'nc_management.form_section', required=True, ondelete='cascade')
     sequence = fields.Integer(string='Ordre', default=10)
     is_active = fields.Boolean(string='Actif', default=True)
     line_type = fields.Selection([

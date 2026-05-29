@@ -1,4 +1,4 @@
-﻿from odoo import models, fields, api
+from odoo import models, fields, api
 
 FIELD_RENDER_TYPES = {
     'name': 'char', 'direction_id': 'many2one', 'department_id': 'many2one',

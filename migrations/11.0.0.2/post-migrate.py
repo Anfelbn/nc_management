@@ -1,4 +1,4 @@
-﻿from odoo import api, SUPERUSER_ID
+from odoo import api, SUPERUSER_ID
 
 
 def migrate(cr, version):

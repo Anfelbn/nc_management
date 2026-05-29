@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+﻿from odoo import models, fields, api
 
 # Les 12 natures du plan d'action — correspondent au champ nature de plan_action_smi
 CATEGORIES = [
@@ -18,10 +18,10 @@ CATEGORIES = [
 
 
 class PlanEfficaciteLine(models.TransientModel):
-    _name = 'smi_management.plan_efficacite_line'
+    _name = 'nc_management.plan_efficacite_line'
     _description = "Ligne analyse efficacité"
 
-    wizard_id       = fields.Many2one('smi_management.plan_efficacite_wizard', required=True)
+    wizard_id       = fields.Many2one('nc_management.plan_efficacite_wizard', required=True)
     categorie       = fields.Char(string='Catégorie')
     total           = fields.Integer(string='Total')
     efficace        = fields.Integer(string='Efficace')
@@ -33,12 +33,12 @@ class PlanEfficaciteLine(models.TransientModel):
 
 
 class PlanEfficaciteWizard(models.TransientModel):
-    _name = 'smi_management.plan_efficacite_wizard'
+    _name = 'nc_management.plan_efficacite_wizard'
     _description = "Analyse Efficacité Plan d'Amélioration"
 
-    plan_id    = fields.Many2one('smi_management.plan_action_smi',
+    plan_id    = fields.Many2one('nc_management.plan_action_smi',
                                  string="Plan d'Amélioration", readonly=True)
-    line_ids   = fields.One2many('smi_management.plan_efficacite_line', 'wizard_id',
+    line_ids   = fields.One2many('nc_management.plan_efficacite_line', 'wizard_id',
                                  string='Analyse par catégorie')
     chart_html = fields.Html(string='Graphique', compute='_compute_chart_html',
                              sanitize_attributes=False, sanitize_tags=False)
@@ -132,7 +132,7 @@ class PlanEfficaciteWizard(models.TransientModel):
             return res
 
         # Plans intégrés dans ce plan d'action d'amélioration
-        global_plan  = self.env['smi_management.plan_action_smi'].browse(plan_id)
+        global_plan  = self.env['nc_management.plan_action_smi'].browse(plan_id)
         child_plans  = global_plan.child_plan_ids.filtered(
             lambda p: p.submission_state == 'integre'
         )

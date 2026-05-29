@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_number_generator_wizard_form" model="ir.ui.view">
-        <field name="name">smi_management.number_generator_wizard.form</field>
-        <field name="model">smi_management.number_generator_wizard</field>
+        <field name="name">nc_management.number_generator_wizard.form</field>
+        <field name="model">nc_management.number_generator_wizard</field>
         <field name="arch" type="xml">
             <form string="Générer Numéro FNC">
                 <group>
@@ -20,7 +20,7 @@
 
     <record id="action_number_generator_wizard" model="ir.actions.act_window">
         <field name="name">Générer Numéro</field>
-        <field name="res_model">smi_management.number_generator_wizard</field>
+        <field name="res_model">nc_management.number_generator_wizard</field>
         <field name="view_mode" eval="'form'"/>
         <field name="target">new</field>
     </record>

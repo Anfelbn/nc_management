@@ -1,4 +1,4 @@
-odoo.define('smi_management.fnc_form', function (require) {
+﻿odoo.define('nc_management.fnc_form', function (require) {
     'use strict';
 
     var FormController = require('web.FormController');
@@ -13,7 +13,7 @@ odoo.define('smi_management.fnc_form', function (require) {
          * et _callButtonAction pour laisser passer l'auto-save du wizard.
          */
         saveRecord: function (handle, options) {
-            if (this.modelName !== 'smi_management.nonconformity') {
+            if (this.modelName !== 'nc_management.nonconformity') {
                 return this._super.apply(this, arguments);
             }
             var record = this.model.get(handle || this.handle);
@@ -32,7 +32,7 @@ odoo.define('smi_management.fnc_form', function (require) {
 
         // Interception via _callButtonAction (Odoo 11 standard)
         _callButtonAction: function (attrs, record) {
-            if (this.modelName === 'smi_management.nonconformity' &&
+            if (this.modelName === 'nc_management.nonconformity' &&
                     attrs && attrs.name === 'action_open_number_wizard') {
                 this._skipFncSaveValidation = true;
             }
@@ -42,7 +42,7 @@ odoo.define('smi_management.fnc_form', function (require) {
         // Double interception via _onButtonClicked (filet de sécurité)
         _onButtonClicked: function (event) {
             var attrs = event.data && event.data.attrs;
-            if (this.modelName === 'smi_management.nonconformity' &&
+            if (this.modelName === 'nc_management.nonconformity' &&
                     attrs && attrs.name === 'action_open_number_wizard') {
                 this._skipFncSaveValidation = true;
             }

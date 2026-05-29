@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="assets_backend" inherit_id="web.assets_backend">
         <xpath expr="." position="inside">
             <link rel="stylesheet" type="text/css"
-                  href="/smi_management/static/src/css/smi_management.css"/>
+                  href="/nc_management/static/src/css/nc_management.css"/>
             <script type="text/javascript"
-                    src="/smi_management/static/src/js/fnc_form.js"/>
+                    src="/nc_management/static/src/js/fnc_form.js"/>
         </xpath>
     </template>
 </odoo>

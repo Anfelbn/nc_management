@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 <data>
 
     <report
         id="action_report_fac"
-        model="smi_management.corrective_action"
+        model="nc_management.corrective_action"
         string="Fiche d'Action Corrective"
         report_type="qweb-pdf"
-        name="smi_management.report_fac_template"
-        file="smi_management.report_fac_template"
+        name="nc_management.report_fac_template"
+        file="nc_management.report_fac_template"
         attachment_use="False"
         menu="True"
     />
@@ -41,7 +41,7 @@
                     <div class="page">
 
                         <!-- ===== EN-TÊTE FIXE ===== -->
-                        <t t-set="valable_rev" t-value="env['smi_management.document_revision'].search(
+                        <t t-set="valable_rev" t-value="env['nc_management.document_revision'].search(
                             [('doc_type','=','fac'),('etat','=','valable')], limit=1)"/>
                         <table style="margin-bottom:6px;">
                             <tr style="height:70px;">
@@ -76,7 +76,7 @@
                         </table>
 
                         <!-- ===== CORPS DYNAMIQUE ===== -->
-                        <t t-set="tpl" t-value="env['smi_management.form_template'].search(
+                        <t t-set="tpl" t-value="env['nc_management.form_template'].search(
                             [('doc_type','=','fac'),('is_active','=',True)], limit=1)"/>
 
                         <t t-if="tpl">

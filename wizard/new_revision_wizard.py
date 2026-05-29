@@ -1,13 +1,13 @@
-from odoo import models, fields, api
+﻿from odoo import models, fields, api
 from odoo.exceptions import UserError
 
 
 class NewRevisionWizard(models.TransientModel):
-    _name = 'smi_management.new_revision_wizard'
+    _name = 'nc_management.new_revision_wizard'
     _description = 'Assistant Nouvelle Révision de Document'
 
     source_template_id = fields.Many2one(
-        'smi_management.form_template', string='Gabarit source', readonly=True)
+        'nc_management.form_template', string='Gabarit source', readonly=True)
     doc_type = fields.Selection(
         related='source_template_id.doc_type', readonly=True, string='Type')
 
@@ -22,8 +22,8 @@ class NewRevisionWizard(models.TransientModel):
         res = super(NewRevisionWizard, self).default_get(fields_list)
         source_id = self.env.context.get('default_source_template_id')
         if source_id:
-            source = self.env['smi_management.form_template'].browse(source_id)
-            last_rev = self.env['smi_management.document_revision'].search(
+            source = self.env['nc_management.form_template'].browse(source_id)
+            last_rev = self.env['nc_management.document_revision'].search(
                 [('doc_type', '=', source.doc_type)],
                 order='revision_number desc', limit=1)
             res['revision_number'] = (last_rev.revision_number + 1) if last_rev else 1
@@ -50,7 +50,7 @@ class NewRevisionWizard(models.TransientModel):
         })
 
         # 2. Créer la révision (auto-obsolescence des autres)
-        new_rev = self.env['smi_management.document_revision'].create({
+        new_rev = self.env['nc_management.document_revision'].create({
             'doc_type':         source.doc_type,
             'revision_number':  self.revision_number,
             'revision_date':    self.revision_date,
@@ -63,11 +63,11 @@ class NewRevisionWizard(models.TransientModel):
         new_tpl.write({'revision_id': new_rev.id})
 
         # 4. Ouvrir le nouveau gabarit pour édition
-        view_id = self.env.ref('smi_management.view_form_template_form').id
+        view_id = self.env.ref('nc_management.view_form_template_form').id
         return {
             'type':      'ir.actions.act_window',
             'name':      'Nouveau gabarit — %s' % new_name,
-            'res_model': 'smi_management.form_template',
+            'res_model': 'nc_management.form_template',
             'res_id':    new_tpl.id,
             'view_mode': 'form',
             'view_id':   view_id,

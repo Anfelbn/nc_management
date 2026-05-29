@@ -1,9 +1,9 @@
-from odoo import models, fields, api
+﻿from odoo import models, fields, api
 from odoo.exceptions import UserError
 
 
 class ReplyWizard(models.TransientModel):
-    _name = 'smi_management.reply_wizard'
+    _name = 'nc_management.reply_wizard'
     _description = 'Répondre à une fiche reçue'
 
     record_model = fields.Char(string='Modèle', required=True)

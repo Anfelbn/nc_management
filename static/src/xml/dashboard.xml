@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <templates>
 <t t-name="NcDashboard">
 <div class="nc-db">
@@ -223,14 +223,14 @@ canvas{display:block;width:100%}
         <div class="nc-kpi-label">Audit Interne</div>
         <div style="display:flex;gap:6px;margin-top:6px">
           <div class="aud-btn btn-list"
-               data-model="smi_management.nonconformity"
+               data-model="nc_management.nonconformity"
                data-domain='[["type_audit_interne","=",true]]'
                data-context='{"search_default_mes_fnc":0,"default_type_audit_interne":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FNC</div>
             <div class="aud-btn-val" style="color:#1d4ed8"><t t-esc="widget.stats.fnc_audit_interne"/></div>
           </div>
           <div class="aud-btn btn-list"
-               data-model="smi_management.corrective_action"
+               data-model="nc_management.corrective_action"
                data-domain='[["fnc_id.type_audit_interne","=",true]]'
                data-context='{"fnc_audit_domain":[["type_audit_interne","=",true]],"default_type_audit_interne":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FAC</div>
@@ -245,14 +245,14 @@ canvas{display:block;width:100%}
         <div class="nc-kpi-label">Audit Externe</div>
         <div style="display:flex;gap:6px;margin-top:6px">
           <div class="aud-btn btn-list"
-               data-model="smi_management.nonconformity"
+               data-model="nc_management.nonconformity"
                data-domain='[["type_audit_externe","=",true]]'
                data-context='{"search_default_mes_fnc":0,"default_type_audit_externe":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FNC</div>
             <div class="aud-btn-val" style="color:#1d4ed8"><t t-esc="widget.stats.fnc_audit_externe"/></div>
           </div>
           <div class="aud-btn btn-list"
-               data-model="smi_management.corrective_action"
+               data-model="nc_management.corrective_action"
                data-domain='[["fnc_id.type_audit_externe","=",true]]'
                data-context='{"fnc_audit_domain":[["type_audit_externe","=",true]],"default_type_audit_externe":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FAC</div>
@@ -266,7 +266,7 @@ canvas{display:block;width:100%}
         <div class="nc-kpi-top" style="background:#2196F3"></div>
         <div class="nc-kpi-label">Total FNC</div>
         <div class="nc-kpi-val" style="color:#1565C0"><t t-esc="widget.stats.fnc_total"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="smi_management.nonconformity" data-domain='[["state","=","validated"]]'>↳ Taux validation : <t t-esc="widget.stats.taux_cloture"/>%</div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["state","=","validated"]]'>↳ Taux validation : <t t-esc="widget.stats.taux_cloture"/>%</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
           <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fnc_brouillon"/></span>
           <span class="badge orange">Soumise <t t-esc="widget.stats.fnc_envoyes"/></span>
@@ -280,8 +280,8 @@ canvas{display:block;width:100%}
         <div class="nc-kpi-top" style="background:#10B981"></div>
         <div class="nc-kpi-label">Total FAC</div>
         <div class="nc-kpi-val" style="color:#065F46"><t t-esc="widget.stats.fac_total"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="smi_management.corrective_action" data-domain='[["actions_efficaces","=","oui"]]'>↳ Taux efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
-        <div class="nc-kpi-sub btn-list" data-model="smi_management.corrective_action" data-domain='[["state","=","closed"]]'>↳ Taux clôture : <t t-esc="widget.stats.taux_cloture_fac"/>%</div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["actions_efficaces","=","oui"]]'>↳ Taux efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
+        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["state","=","closed"]]'>↳ Taux clôture : <t t-esc="widget.stats.taux_cloture_fac"/>%</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
           <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
           <span class="badge orange">Soumise <t t-esc="widget.stats.fac_open"/></span>
@@ -304,7 +304,7 @@ canvas{display:block;width:100%}
             <span class="badge" style="background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe">En attente <t t-esc="widget.stats.plan_en_attente"/></span>
             <span class="badge" style="background:#f0fdf4;color:#059669;border:1px solid #bbf7d0">Intégrés <t t-esc="widget.stats.plan_integres"/></span>
           </div>
-          <div class="nc-kpi-sub btn-list" data-model="smi_management.plan_action_smi" data-domain='[["sent_to_rmqse","=",true],["is_global","=",false]]' style="flex-shrink:0;margin:0">↳ Voir tous →</div>
+          <div class="nc-kpi-sub btn-list" data-model="nc_management.plan_action_smi" data-domain='[["sent_to_rmqse","=",true],["is_global","=",false]]' style="flex-shrink:0;margin:0">↳ Voir tous →</div>
         </div>
       </div>
 
@@ -417,7 +417,7 @@ canvas{display:block;width:100%}
 
     <div class="nc-card">
       <div class="nc-card-title">Alertes &amp; Notifications</div>
-      <div class="nc-card-sub">FAC à clôturer · FNC à valider · &lt; 7 jours</div>
+      <div class="nc-card-sub">FAC à clôturer · FNC à valider · FAC non reçues &amp; à relancer</div>
 
       <t t-foreach="widget.stats.fac_a_cloturer" t-as="fac">
         <t t-if="fac.days > 7">
@@ -427,7 +427,7 @@ canvas{display:block;width:100%}
               <div style="font-size:11px;color:#b91c1c;margin-top:2px"><t t-esc="fac.department"/> · Retard <t t-esc="fac.days"/> jours</div>
             </div>
             <span class="badge red">Urgent</span>
-            <div class="btn-sm primary btn-open" t-att-data-model="'smi_management.corrective_action'" t-att-data-id="fac.id">Ouvrir</div>
+            <div class="btn-sm primary btn-open" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac.id">Ouvrir</div>
           </div>
         </t>
         <t t-if="fac.days > 3 and fac.days &lt;= 7">
@@ -437,7 +437,7 @@ canvas{display:block;width:100%}
               <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fac.department"/> · Dans <t t-esc="fac.days"/> jours</div>
             </div>
             <span class="badge orange">Bientôt</span>
-            <div class="btn-sm btn-open" t-att-data-model="'smi_management.corrective_action'" t-att-data-id="fac.id">Ouvrir</div>
+            <div class="btn-sm btn-open" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac.id">Ouvrir</div>
           </div>
         </t>
       </t>
@@ -448,7 +448,29 @@ canvas{display:block;width:100%}
             <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — À valider</div>
             <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours en cours</div>
           </div>
-          <div class="btn-sm btn-open" t-att-data-model="'smi_management.nonconformity'" t-att-data-id="fnc.id">Ouvrir</div>
+          <div class="btn-sm btn-open" t-att-data-model="'nc_management.nonconformity'" t-att-data-id="fnc.id">Ouvrir</div>
+        </div>
+      </t>
+
+      <t t-if="widget.stats.fac_non_recues.length">
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid #ede9fe">
+          <div style="font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">FAC non reçues — validées par d'autres, à clôturer</div>
+          <t t-foreach="widget.stats.fac_non_recues" t-as="fac_nr">
+            <div class="nc-alert" style="border-left:3px solid #7c3aed;border-color:#ede9fe;background:#faf5ff;margin-bottom:7px">
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:600;color:#5b21b6"><t t-esc="fac_nr.name"/> — À clôturer</div>
+                <div style="font-size:11px;color:#6d28d9;margin-top:2px">
+                  <t t-if="fac_nr.fnc_name">FNC : <t t-esc="fac_nr.fnc_name"/> · </t><t t-esc="fac_nr.department"/> · Retard <t t-esc="fac_nr.days"/>j
+                </div>
+                <t t-if="fac_nr.owner">
+                  <div style="font-size:10px;color:#94a3b8;margin-top:1px">Utilisateur : <t t-esc="fac_nr.owner"/></div>
+                </t>
+              </div>
+              <span class="badge purple">Urgent</span>
+              <div class="btn-sm primary" style="background:#7c3aed;border-color:#7c3aed" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac_nr.id" data-action="open-fac-nr">Ouvrir FAC</div>
+              <div class="btn-sm btn-reply" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac_nr.id">Relancer</div>
+            </div>
+          </t>
         </div>
       </t>
     </div>

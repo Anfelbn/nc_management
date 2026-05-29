@@ -7,16 +7,16 @@
 .nc-brand-title{font-size:16px;font-weight:700;color:#0f172a}
 .nc-header-right{display:flex;align-items:center;gap:12px}
 .nc-period-label,.nc-update{font-size:11px;color:#94a3b8}
-.pb{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;transition:all .15s}
-.pb:hover{border-color:#1e40af;color:#1e40af}
-.pb.active{background:#1e40af;color:white;border-color:#1e40af}
-.period-btn{display:flex;gap:5px}
+.nc-db .pb{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;transition:all .15s}
+.nc-db .pb:hover{border-color:#1e40af;color:#1e40af}
+.nc-db .pb.active{background:#1e40af;color:white;border-color:#1e40af}
+.nc-db .period-btn{display:flex;gap:5px}
 .nc-section-hdr{display:flex;align-items:center;gap:14px;margin:22px 0 16px;padding:12px 18px;border-radius:10px;color:white;font-size:13px;font-weight:700;letter-spacing:.4px}
 .nc-section-hdr.rmqse{background:linear-gradient(90deg,#1e3a8a,#2563eb)}
 .nc-section-hdr.autres{background:linear-gradient(90deg,#065f46,#059669)}
 .nc-section-hdr.globale{background:linear-gradient(90deg,#581c87,#7c3aed)}
 .nc-section-hdr-sep{flex:1;height:1px;background:rgba(255,255,255,.25)}
-.section-title{font-size:10px;font-weight:700;letter-spacing:1px;color:#94a3b8;text-transform:uppercase;margin-bottom:10px;padding-left:2px}
+.nc-db .section-title{font-size:10px;font-weight:700;letter-spacing:1px;color:#94a3b8;text-transform:uppercase;margin-bottom:10px;padding-left:2px}
 .nc-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .nc-card-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:3px}
 .nc-card-sub{font-size:11px;color:#94a3b8;margin-bottom:10px}
@@ -27,12 +27,12 @@
 .nc-kpi-sub{font-size:10px;color:#94a3b8;margin-top:4px;cursor:pointer;text-decoration:underline}
 .nc-kpi-sub:hover{color:#1e40af}
 .nc-kpi-txt{font-size:10px;color:#94a3b8;margin-top:4px}
-.badge{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:500}
-.badge.red{background:#fef2f2;color:#991b1b}
-.badge.blue{background:#eff6ff;color:#1d4ed8}
-.badge.green{background:#f0fdf4;color:#166534}
-.badge.orange{background:#fff7ed;color:#9a3412}
-.badge.purple{background:#f5f3ff;color:#6d28d9}
+.nc-db .badge{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:500}
+.nc-db .badge.red{background:#fef2f2;color:#991b1b}
+.nc-db .badge.blue{background:#eff6ff;color:#1d4ed8}
+.nc-db .badge.green{background:#f0fdf4;color:#166534}
+.nc-db .badge.orange{background:#fff7ed;color:#9a3412}
+.nc-db .badge.purple{background:#f5f3ff;color:#6d28d9}
 .nc-notif{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:7px;background:#fafafa;transition:background .2s}
 .nc-notif:hover{background:#f0f9ff}
 .nc-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
@@ -43,10 +43,10 @@
 .nc-notif-ref{font-size:12px;font-weight:600;color:#1e293b}
 .nc-notif-info{font-size:11px;color:#64748b;margin-top:2px}
 .nc-notif-actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-.btn-sm{font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid #e2e8f0;background:white;color:#1e40af;cursor:pointer;transition:all .15s}
-.btn-sm:hover{background:#eff6ff}
-.btn-sm.primary{background:#1e40af;color:white;border-color:#1e40af}
-.btn-sm.primary:hover{background:#1d4ed8}
+.nc-db .btn-sm{font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid #e2e8f0;background:white;color:#1e40af;cursor:pointer;transition:all .15s}
+.nc-db .btn-sm:hover{background:#eff6ff}
+.nc-db .btn-sm.primary{background:#1e40af;color:white;border-color:#1e40af}
+.nc-db .btn-sm.primary:hover{background:#1d4ed8}
 .nc-alert{display:flex;gap:10px;align-items:center;padding:10px;border-radius:0 8px 8px 0;border:1px solid #fee2e2;border-left:3px solid #EF4444;background:#fef2f2;margin-bottom:7px}
 .nc-alert.orange{border-left-color:#FF9800;border-color:#ffedd5;background:#fff7ed}
 .nc-alert.green{border-left-color:#10B981;border-color:#d1fae5;background:#f0fdf4}

@@ -265,6 +265,8 @@ class Nonconformity(models.Model):
                 'title': 'Champ requis',
                 'message': "Veuillez remplir la description de la non-conformité avant d'affecter la fonction et visa.",
             }}
+        if self.state == 'draft':
+            self.state = 'submitted'
 
     @api.constrains('fonction_visa')
     def _check_fonction_visa_requirements(self):
@@ -391,11 +393,6 @@ class Nonconformity(models.Model):
             if any(rec.create_uid.id != self.env.uid for rec in self):
                 raise UserError("Vous ne pouvez supprimer que vos propres fiches FNC.")
         return super(Nonconformity, self).unlink()
-
-    @api.onchange('fonction_visa')
-    def _onchange_fonction_visa(self):
-        if self.fonction_visa and self.state == 'draft':
-            self.state = 'submitted'
 
     @api.onchange('responsable_action_id')
     def _onchange_responsable_action(self):

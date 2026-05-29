@@ -207,11 +207,8 @@
 <menuitem name="Gabarits FNC / FAC"
           id="nc_management.menu_form_templates"
           parent="nc_management.menu_config"
-<menuitem name="Révision Documents"
-          id="nc_management.menu_config"
-          parent="nc_management.menu_root"
           action="action_form_template_list"
-          sequence="100"
+          sequence="20"
           groups="nc_management.group_responsable_qualite"/>
 
 

@@ -1628,12 +1628,12 @@ class NcDashboard(models.Model):
         # FAC à approuver reçues (en attente d'approbation QSE)
         fac_recues_count = fac.search_count(fac_received_period_domain + [('state','=','in_progress')])
 
-        # ── Evolution mensuelle 6 mois — FNC/FAC créées par RMQSE uniquement ──
+        # ── Evolution mensuelle — FNC/FAC créées par RMQSE (depuis mois actuel) ──
         monthly_fnc = []
         monthly_fac = []
         fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
         monthly_labels = []
-        for i in range(5, -1, -1):
+        for i in range(period_months - 1, -1, -1):
             d = today - relativedelta(months=i)
             m_start = d.replace(day=1)
             m_end = (d + relativedelta(months=1)).replace(day=1)
@@ -1742,10 +1742,10 @@ class NcDashboard(models.Model):
         result['global_fnc_types'] = _type_percentages(_all_received_fnc)
         result['global_fac_types'] = _type_percentages(_all_received_fac_fnc)
 
-        # Diagramme global : toutes FNC/FAC du système (tous espaces/modules)
+        # Diagramme global : toutes FNC/FAC du système (depuis mois actuel)
         monthly_fnc_global = []
         monthly_fac_global = []
-        for i in range(5, -1, -1):
+        for i in range(period_months - 1, -1, -1):
             d = today - relativedelta(months=i)
             d_start = d.replace(day=1)
             d_end = (d + relativedelta(months=1)).replace(day=1)

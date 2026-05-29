@@ -1,4 +1,4 @@
-﻿odoo.define('nc_management.plan_smi', function(require) {
+odoo.define('nc_management.plan_smi', function(require) {
     'use strict';
     var Widget = require('web.Widget');
     var core = require('web.core');

@@ -545,14 +545,20 @@
 <!--  MENUS                                                        -->
 <!-- ============================================================ -->
 
+<!-- Plan Action SMI :
+     - NC users  : feuille (pas de sous-menus visibles) → cliquable → affiche Mes Plans
+     - RMQSE     : dropdown avec 3 sous-menus (Mes Plans / Plan Amélioration / Analyse) -->
 <menuitem
     name="Plan Action SMI"
     id="nc_management.menu_plan_smi_root"
     parent="nc_management.menu_root"
     groups="nc_management.group_nc_utilisateur,nc_management.group_responsable_qualite"
     sequence="20"/>
+    action="action_mes_plans_smi"
+    groups="nc_management.group_nc_utilisateur,nc_management.group_responsable_qualite"
+    sequence="25"/>
 
-<!-- Mes Plans : NC Utilisateur + Responsable Qualité -->
+<!-- Mes Plans : sous-menu RMQSE (sequence 1) -->
 <menuitem
     name="Mes Plans"
     id="nc_management.menu_mes_plans_smi"
@@ -571,6 +577,10 @@
     sequence="2"/>
 
 <!-- Plan d'Action d'Amélioration : Responsable Qualité uniquement -->
+    groups="nc_management.group_responsable_qualite"
+    sequence="1"/>
+
+<!-- Plan d'Action d'Amélioration SMI : sous-menu RMQSE (sequence 2) -->
 <menuitem
     name="Plan d'Action d'Amélioration SMI"
     id="nc_management.menu_plan_global_smi"
@@ -578,8 +588,9 @@
     action="action_plan_global_smi"
     groups="nc_management.group_responsable_qualite"
     sequence="3"/>
+    sequence="2"/>
 
-<!-- Analyse d'Efficacité : Responsable Qualité uniquement -->
+<!-- Analyse d'Efficacité : sous-menu RMQSE (sequence 3) -->
 <menuitem
     name="Analyse d'Efficacité"
     id="nc_management.menu_plan_smi_analyse"
@@ -587,6 +598,7 @@
     action="action_plan_smi_analyse_efficacite"
     groups="nc_management.group_responsable_qualite"
     sequence="4"/>
+    sequence="3"/>
 
 </data>
 </odoo>

@@ -1,4 +1,4 @@
-﻿odoo.define('nc_management.fnc_form', function (require) {
+odoo.define('nc_management.fnc_form', function (require) {
     'use strict';
 
     var FormController = require('web.FormController');

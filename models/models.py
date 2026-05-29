@@ -197,6 +197,7 @@ class Nonconformity(models.Model):
             fac = rec.sudo().fac_ids[:1]
             rec.fac_number_display = fac.name if fac else False
 
+    @api.depends('fac_ids', 'fac_ids.responsable_id')
     def _compute_can_access_fac(self):
         user = self.env.user
         is_rmqse = user.has_group('nc_management.group_responsable_qualite')
@@ -264,6 +265,8 @@ class Nonconformity(models.Model):
                 'title': 'Champ requis',
                 'message': "Veuillez remplir la description de la non-conformité avant d'affecter la fonction et visa.",
             }}
+        if self.state == 'draft':
+            self.state = 'submitted'
 
     @api.constrains('fonction_visa')
     def _check_fonction_visa_requirements(self):
@@ -391,11 +394,6 @@ class Nonconformity(models.Model):
                 raise UserError("Vous ne pouvez supprimer que vos propres fiches FNC.")
         return super(Nonconformity, self).unlink()
 
-    @api.onchange('fonction_visa')
-    def _onchange_fonction_visa(self):
-        if self.fonction_visa and self.state == 'draft':
-            self.state = 'submitted'
-
     @api.onchange('responsable_action_id')
     def _onchange_responsable_action(self):
         if self.responsable_action_id and self.state == 'submitted':
@@ -441,13 +439,6 @@ class Nonconformity(models.Model):
             'target': 'new',
             'context': {'default_fnc_id': self.id},
         }
-
-    @api.multi
-    def action_close(self):
-        for rec in self:
-            rec.write({'state': 'closed'})
-            rec.message_post(
-                body='FNC clôturée par la Responsable Qualité.')
 
     def _is_creator(self):
         return self.submitted_by_id == self.env.user
@@ -1281,9 +1272,9 @@ class NcDashboard(models.Model):
             realise_100 = len(fac_recs.filtered(
                 lambda f: f.state == 'closed'))
             realise_50plus = len(fac_recs.filtered(
-                lambda f: f.state in ['verified', 'open']))
+                lambda f: f.state in ['in_progress', 'validated']))
             realise_50moins = len(fac_recs.filtered(
-                lambda f: f.state == 'draft'))
+                lambda f: f.state in ['draft', 'submitted']))
             taux = round((efficace / total * 100), 1) if total > 0 else 0
             return {
                 'total': total,
@@ -1601,14 +1592,14 @@ class NcDashboard(models.Model):
 
         # FAC en retard (ouvertes > 7 jours — tout le système)
         fac_retard_recs = fac.search_read(
-            [('state', 'in', ['open', 'verified']),
+            [('state', 'in', ['submitted', 'in_progress', 'validated']),
              ('date', '<=', limit7)],
             ['name', 'direction_id', 'date_cloture', 'state'], limit=10)
         fac_retard = len(fac_retard_recs)
 
         # FAC à clôturer avec urgence (toutes FAC du système — RMQSE clôture tout)
         fac_a_cloturer = []
-        for f in fac.search([('state', 'in', ['open', 'verified'])],
+        for f in fac.search([('state', 'in', ['submitted', 'in_progress', 'validated'])],
                             order='date asc', limit=8):
             if f.date:
                 from datetime import datetime as dt
@@ -1634,8 +1625,8 @@ class NcDashboard(models.Model):
                 'label': label,
             })
 
-        # FAC à approuver reçues
-        fac_recues_count = fac.search_count(fac_received_period_domain + [('state','=','verified')])
+        # FAC à approuver reçues (en attente d'approbation QSE)
+        fac_recues_count = fac.search_count(fac_received_period_domain + [('state','=','in_progress')])
 
         # ── Evolution mensuelle 6 mois — FNC/FAC créées par RMQSE uniquement ──
         monthly_fnc = []
@@ -1999,6 +1990,201 @@ class NcDashboard(models.Model):
         result['fac_recues'] = [d for d in received_docs if d['kind'] == 'FAC']
 
         return result
+
+    @api.model
+    def get_user_stats(self):
+        from datetime import date, timedelta
+        from dateutil.relativedelta import relativedelta
+
+        uid = self.env.uid
+        fnc_model = self.env['nc_management.nonconformity']
+        fac_model = self.env['nc_management.corrective_action']
+        today = date.today()
+        fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
+
+        # FNCs belonging to this user
+        user_fnc_domain = [('create_uid', '=', uid)]
+        user_fnc_ids = fnc_model.search(user_fnc_domain).ids
+        user_fac_domain = [('fnc_id', 'in', user_fnc_ids)]
+
+        # ── KPI totals ──
+        fnc_total     = fnc_model.search_count(user_fnc_domain)
+        fnc_brouillon = fnc_model.search_count(user_fnc_domain + [('state', '=', 'draft')])
+        fnc_submitted = fnc_model.search_count(user_fnc_domain + [('state', '=', 'submitted')])
+        fnc_cours     = fnc_model.search_count(user_fnc_domain + [('state', '=', 'in_progress')])
+        fnc_validated = fnc_model.search_count(user_fnc_domain + [('state', '=', 'validated')])
+        fnc_closed    = fnc_model.search_count(user_fnc_domain + [('state', '=', 'closed')])
+
+        fac_total     = fac_model.search_count(user_fac_domain)
+        fac_submitted = fac_model.search_count(user_fac_domain + [('state', '=', 'submitted')])
+        fac_cours     = fac_model.search_count(user_fac_domain + [('state', '=', 'in_progress')])
+        fac_validated = fac_model.search_count(user_fac_domain + [('state', '=', 'validated')])
+        fac_closed    = fac_model.search_count(user_fac_domain + [('state', '=', 'closed')])
+
+        # ── Monthly evolution (6 months) ──
+        monthly_labels = []
+        monthly_fnc = []
+        monthly_fac = []
+        for i in range(5, -1, -1):
+            d = today - relativedelta(months=i)
+            m_start = d.replace(day=1)
+            m_end = (d + relativedelta(months=1)).replace(day=1)
+            m_fnc_ids = fnc_model.search([
+                ('create_uid', '=', uid),
+                ('date', '>=', str(m_start)),
+                ('date', '<', str(m_end)),
+            ]).ids
+            monthly_fnc.append(len(m_fnc_ids))
+            monthly_fac.append(fac_model.search_count([
+                ('fnc_id', 'in', m_fnc_ids),
+            ]))
+            monthly_labels.append(fr_months[m_start.month - 1])
+
+        # ── Calendar events (current month) ──
+        m_start = today.replace(day=1)
+        m_end = (today + relativedelta(months=1)).replace(day=1)
+        calendar_events = {}
+        for fnc_rec in fnc_model.search([
+            ('create_uid', '=', uid),
+            ('date', '>=', str(m_start)),
+            ('date', '<', str(m_end)),
+        ]):
+            k = str(fnc_rec.date)[:10]
+            if k not in calendar_events:
+                calendar_events[k] = {'fnc': False, 'fac': False}
+            calendar_events[k]['fnc'] = True
+        for fac_rec in fac_model.search([
+            ('fnc_id', 'in', user_fnc_ids),
+            ('date', '>=', str(m_start)),
+            ('date', '<', str(m_end)),
+        ]):
+            k = str(fac_rec.date)[:10]
+            if k not in calendar_events:
+                calendar_events[k] = {'fnc': False, 'fac': False}
+            calendar_events[k]['fac'] = True
+
+        # ── Alerts ──
+        limit7 = str(today - timedelta(days=7))
+        alerts = []
+
+        # FNCs submitted (en attente de traitement RMQSE)
+        for rec in fnc_model.search(user_fnc_domain + [('state', '=', 'submitted')], limit=10):
+            days_wait = (today - fields.Date.from_string(str(rec.date))).days if rec.date else 0
+            alerts.append({
+                'id': rec.id,
+                'model': 'nc_management.nonconformity',
+                'name': rec.name or '',
+                'label': 'En attente RMQSE',
+                'days': days_wait,
+                'badge': 'orange' if days_wait <= 7 else 'red',
+                'kind': 'FNC',
+            })
+
+        # FNCs in_progress depuis > 7 jours
+        for rec in fnc_model.search(user_fnc_domain + [
+            ('state', '=', 'in_progress'),
+            ('date_in_progress', '!=', False),
+            ('date_in_progress', '<=', limit7),
+        ], limit=10):
+            days_open = (today - fields.Date.from_string(str(rec.date_in_progress))).days
+            alerts.append({
+                'id': rec.id,
+                'model': 'nc_management.nonconformity',
+                'name': rec.name or '',
+                'label': 'En cours %dj' % days_open,
+                'days': days_open,
+                'badge': 'red',
+                'kind': 'FNC',
+            })
+
+        # FACs liées aux FNCs user qui sont en retard
+        for fac_rec in fac_model.search(user_fac_domain + [
+            ('state', 'in', ['submitted', 'in_progress']),
+            ('date', '!=', False),
+            ('date', '<=', limit7),
+        ], limit=10):
+            days_open = (today - fields.Date.from_string(str(fac_rec.date))).days
+            alerts.append({
+                'id': fac_rec.id,
+                'model': 'nc_management.corrective_action',
+                'name': fac_rec.name or '',
+                'label': 'FAC retard %dj' % days_open,
+                'days': days_open,
+                'badge': 'red',
+                'kind': 'FAC',
+            })
+
+        def _initials(name):
+            if not name:
+                return '??'
+            return ''.join([w[0].upper() for w in name.split()[:2]]) or '??'
+
+        # ── Docs reçus par date (pour clic calendrier) ──
+        received_by_date = {}
+
+        def _append_doc(day_key, item):
+            if day_key not in received_by_date:
+                received_by_date[day_key] = []
+            received_by_date[day_key].append(item)
+
+        for fnc_rec in fnc_model.search(user_fnc_domain, order='date desc, id desc'):
+            if not fnc_rec.date:
+                continue
+            k = str(fnc_rec.date)[:10]
+            dept_name = fnc_rec.direction_id.name if fnc_rec.direction_id else ''
+            _append_doc(k, {
+                'id': fnc_rec.id,
+                'name': fnc_rec.name or '',
+                'kind': 'FNC',
+                'model': 'nc_management.nonconformity',
+                'state': fnc_rec.state,
+                'sender_name': dept_name,
+                'sender_initials': _initials(dept_name),
+                'fnc_id': None,
+            })
+
+        for fac_rec in fac_model.search(user_fac_domain, order='date desc, id desc'):
+            if not fac_rec.fnc_id:
+                continue
+            fnc_date = fac_rec.fnc_id.date
+            if not fnc_date:
+                continue
+            k = str(fnc_date)[:10]
+            resp_name = fac_rec.responsable_actions_id.name if fac_rec.responsable_actions_id else ''
+            _append_doc(k, {
+                'id': fac_rec.id,
+                'name': fac_rec.name or '',
+                'kind': 'FAC',
+                'model': 'nc_management.corrective_action',
+                'state': fac_rec.state,
+                'sender_name': resp_name,
+                'sender_initials': _initials(resp_name),
+                'fnc_id': fac_rec.fnc_id.id,
+            })
+
+        return {
+            'today': today.strftime('%d/%m/%Y'),
+            'uid':           uid,
+            'fnc_total':     fnc_total,
+            'fnc_brouillon': fnc_brouillon,
+            'fnc_submitted': fnc_submitted,
+            'fnc_cours':     fnc_cours,
+            'fnc_validated': fnc_validated,
+            'fnc_closed':    fnc_closed,
+            'fac_total':     fac_total,
+            'fac_submitted': fac_submitted,
+            'fac_cours':     fac_cours,
+            'fac_validated': fac_validated,
+            'fac_closed':    fac_closed,
+            'monthly_labels':  monthly_labels,
+            'monthly_fnc':     monthly_fnc,
+            'monthly_fac':     monthly_fac,
+            'calendar_events': calendar_events,
+            'calendar_year':   today.year,
+            'calendar_month':  today.month,
+            'alerts':          alerts,
+            'received_by_date': received_by_date,
+        }
 
     @api.model
     def get_direction_details(self, direction_id, period=None):

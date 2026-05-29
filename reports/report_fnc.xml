@@ -255,7 +255,7 @@
 
                         <t t-else="">
                             <p style="color:red;padding:10px;text-align:center;">
-                                Aucun gabarit FNC actif. Allez dans Configuration &gt; Gabarits FNC/FAC.
+                                Aucun gabarit FNC actif. Allez dans Révisions de documents &gt; Gabarits FNC/FAC.
                             </p>
                         </t>
 

@@ -422,12 +422,29 @@ class Nonconformity(models.Model):
             self.trait_reprise, self.trait_declassement, self.trait_retour_fourn,
             self.trait_recyclage, self.trait_reparation, self.trait_autre,
         ])
-        if has_traitement and self.action_immediate and self.analyse_causes and self.impact:
-            if not self.responsable_action_id:
-                employee = self.env['hr.employee'].search(
-                    [('user_id', '=', self.env.uid)], limit=1)
-                if employee:
-                    self.responsable_action_id = employee
+        manquants = []
+        if not has_traitement:
+            manquants.append("un type de traitement")
+        if not self.action_immediate:
+            manquants.append("l'action immédiate")
+        if not self.analyse_causes:
+            manquants.append("l'analyse des causes")
+        if not self.impact:
+            manquants.append("l'impact")
+
+        if manquants:
+            self.responsable_action_id = False
+            return {'warning': {
+                'title': 'Champ requis',
+                'message': "Veuillez compléter tous les champs de traitement avant de continuer :\n— "
+                           + "\n— ".join(manquants),
+            }}
+
+        if not self.responsable_action_id:
+            employee = self.env['hr.employee'].search(
+                [('user_id', '=', self.env.uid)], limit=1)
+            if employee:
+                self.responsable_action_id = employee
 
     @api.onchange('responsable_action_id')
     def _onchange_responsable_action(self):

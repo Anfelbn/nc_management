@@ -2090,6 +2090,54 @@ class NcDashboard(models.Model):
                 'kind': 'FAC',
             })
 
+        def _initials(name):
+            if not name:
+                return '??'
+            return ''.join([w[0].upper() for w in name.split()[:2]]) or '??'
+
+        # ── Docs reçus par date (pour clic calendrier) ──
+        received_by_date = {}
+
+        def _append_doc(day_key, item):
+            if day_key not in received_by_date:
+                received_by_date[day_key] = []
+            received_by_date[day_key].append(item)
+
+        for fnc_rec in fnc_model.search(user_fnc_domain, order='date desc, id desc'):
+            if not fnc_rec.date:
+                continue
+            k = str(fnc_rec.date)[:10]
+            dept_name = fnc_rec.direction_id.name if fnc_rec.direction_id else ''
+            _append_doc(k, {
+                'id': fnc_rec.id,
+                'name': fnc_rec.name or '',
+                'kind': 'FNC',
+                'model': 'nc_management.nonconformity',
+                'state': fnc_rec.state,
+                'sender_name': dept_name,
+                'sender_initials': _initials(dept_name),
+                'fnc_id': None,
+            })
+
+        for fac_rec in fac_model.search(user_fac_domain, order='date desc, id desc'):
+            if not fac_rec.fnc_id:
+                continue
+            fnc_date = fac_rec.fnc_id.date
+            if not fnc_date:
+                continue
+            k = str(fnc_date)[:10]
+            resp_name = fac_rec.responsable_actions_id.name if fac_rec.responsable_actions_id else ''
+            _append_doc(k, {
+                'id': fac_rec.id,
+                'name': fac_rec.name or '',
+                'kind': 'FAC',
+                'model': 'nc_management.corrective_action',
+                'state': fac_rec.state,
+                'sender_name': resp_name,
+                'sender_initials': _initials(resp_name),
+                'fnc_id': fac_rec.fnc_id.id,
+            })
+
         return {
             'today': today.strftime('%d/%m/%Y'),
             'uid':           uid,
@@ -2104,13 +2152,14 @@ class NcDashboard(models.Model):
             'fac_cours':     fac_cours,
             'fac_validated': fac_validated,
             'fac_closed':    fac_closed,
-            'monthly_labels': monthly_labels,
-            'monthly_fnc':    monthly_fnc,
-            'monthly_fac':    monthly_fac,
+            'monthly_labels':  monthly_labels,
+            'monthly_fnc':     monthly_fnc,
+            'monthly_fac':     monthly_fac,
             'calendar_events': calendar_events,
             'calendar_year':   today.year,
             'calendar_month':  today.month,
             'alerts':          alerts,
+            'received_by_date': received_by_date,
         }
 
     @api.model

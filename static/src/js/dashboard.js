@@ -790,8 +790,8 @@ odoo.define('nc_management.dashboard', function(require){
                 });
             });
 
-            this.$el.on('click', '.ud-kpi', function(){
-                var uid = self.stats.uid;
+            this.$el.on('click', '.nc-kpi', function(){
+                var uid    = self.stats.uid;
                 var filter = $(this).data('filter');
                 var modelMap = {
                     fnc_total:  'nc_management.nonconformity',
@@ -809,6 +809,7 @@ odoo.define('nc_management.dashboard', function(require){
                     fac_cours:  [['fnc_id.create_uid', '=', uid], ['state', 'in', ['submitted', 'in_progress']]],
                     fac_closed: [['fnc_id.create_uid', '=', uid], ['state', 'in', ['validated', 'closed']]],
                 };
+                if(!filter) return;
                 self.do_action({
                     type: 'ir.actions.act_window',
                     res_model: modelMap[filter] || 'nc_management.nonconformity',
@@ -823,52 +824,194 @@ odoo.define('nc_management.dashboard', function(require){
         },
 
         _initCalendar: function(){
-            var self  = this;
-            var now   = new Date();
+            var self = this;
+            var now  = new Date();
             var year  = this.stats.calendar_year  || now.getFullYear();
             var month = (this.stats.calendar_month || (now.getMonth() + 1)) - 1;
             var EN_M  = ['January','February','March','April','May','June',
                          'July','August','September','October','November','December'];
+            var pickerYear = year;
+
+            function todayKey(){
+                return now.getFullYear() + '-' +
+                       String(now.getMonth()+1).padStart(2,'0') + '-' +
+                       String(now.getDate()).padStart(2,'0');
+            }
 
             function render(y, m){
-                var events  = self.stats.calendar_events || {};
-                var first   = new Date(y, m, 1).getDay();
-                var off     = first === 0 ? 6 : first - 1;
-                var days    = new Date(y, m + 1, 0).getDate();
-                var prev    = new Date(y, m, 0).getDate();
+                var events   = self.stats.calendar_events || {};
+                var first    = new Date(y, m, 1).getDay();
+                var startOff = (first === 0) ? 6 : first - 1;
+                var daysInM  = new Date(y, m+1, 0).getDate();
+                var prevLast = new Date(y, m, 0).getDate();
                 var html = '';
-                for(var i = 0; i < off; i++)
-                    html += '<div class="cal-day other-month">' + (prev - off + i + 1) + '</div>';
-                for(var d = 1; d <= days; d++){
-                    var key = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                for(var i = 0; i < startOff; i++){
+                    html += '<div class="cal-day other-month">'+(prevLast - startOff + i + 1)+'</div>';
+                }
+                for(var d = 1; d <= daysInM; d++){
+                    var key = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
                     var ev  = events[key] || {};
-                    var isToday = (y === now.getFullYear() && m === now.getMonth() && d === now.getDate());
-                    var cls = 'cal-day' + (isToday ? ' today' : '');
+                    var isToday = (y===now.getFullYear() && m===now.getMonth() && d===now.getDate());
+                    var cls = 'cal-day'+(isToday?' today':'');
                     var dots = '';
                     if(ev.fnc) dots += '<div class="cdot" style="background:#2196F3"></div>';
                     if(ev.fac) dots += '<div class="cdot" style="background:#EF4444"></div>';
-                    html += '<div class="' + cls + '" data-date="' + key + '">' + d +
-                            (dots ? '<div class="cal-dot-row">' + dots + '</div>' : '') + '</div>';
+                    html += '<div class="'+cls+'" data-date="'+key+'">'+d+(dots?'<div class="cal-dot-row">'+dots+'</div>':'')+'</div>';
                 }
-                var total = off + days;
+                var total = startOff + daysInM;
                 var nx = 1;
-                while(total % 7){ html += '<div class="cal-day other-month">' + nx++ + '</div>'; total++; }
+                while(total % 7){ html += '<div class="cal-day other-month">'+nx+'</div>'; total++; nx++; }
                 self.$('.cal-grid-body').html(html);
-                self.$('.cal-month-label').text(EN_M[m] + ' ' + y);
-                if(y === now.getFullYear() && m === now.getMonth())
+                self.$('.cal-month-label').text(EN_M[m]+' '+y);
+                if(y===now.getFullYear() && m===now.getMonth()){
                     self.$('.cal-day.today').addClass('selected');
+                }
+                self.$('.cal-grid-body .cal-day:not(.other-month)').off('click').on('click', function(){
+                    var k = $(this).data('date');
+                    self.$('.cal-day').removeClass('selected');
+                    $(this).addClass('selected');
+                    self._renderReceivedDocs((self.stats.received_by_date || {})[k] || [], k);
+                });
             }
 
-            this.$('.ud-cal-prev').off('click').on('click', function(){
-                if(month === 0){ month = 11; year--; } else { month--; }
-                render(year, month);
+            function renderPicker(){
+                self.$('.cal-picker-yr').text(pickerYear);
+                self.$('.cal-pm').removeClass('cal-pm-active');
+                if(pickerYear === year){
+                    self.$('.cal-pm[data-m="'+month+'"]').addClass('cal-pm-active');
+                }
+            }
+
+            this.$('.cal-header-pick').off('click').on('click', function(){
+                var picker = self.$('.cal-picker');
+                picker.toggle();
+                if(picker.is(':visible')){
+                    pickerYear = year;
+                    renderPicker();
+                }
             });
-            this.$('.ud-cal-next').off('click').on('click', function(){
-                if(month === 11){ month = 0; year++; } else { month++; }
+
+            this.$('.cal-yr-prev').off('click').on('click', function(e){
+                e.stopPropagation(); pickerYear--; renderPicker();
+            });
+            this.$('.cal-yr-next').off('click').on('click', function(e){
+                e.stopPropagation(); pickerYear++; renderPicker();
+            });
+
+            this.$('.cal-pm').off('click').on('click', function(e){
+                e.stopPropagation();
+                year  = pickerYear;
+                month = parseInt($(this).data('m'), 10);
+                self.$('.cal-picker').hide();
                 render(year, month);
             });
 
             render(year, month);
+
+            // Show today's docs on load
+            var tk = todayKey();
+            self._renderReceivedDocs((self.stats.received_by_date || {})[tk] || [], tk);
+        },
+
+        _renderReceivedDocs: function(docs, key){
+            var self  = this;
+            var label = key ? this._formatDateKey(key) : "Today's documents";
+            this.$('.received-sub').text(label);
+
+            if(!docs || !docs.length){
+                this.$('.received-list').html('<div class="nc-empty">No documents for this date.</div>');
+                return;
+            }
+
+            // Group: each FNC with its linked FACs
+            var groups   = {};
+            var orphFacs = [];
+            docs.forEach(function(item){
+                if(item.kind === 'FNC') groups[item.id] = {fnc: item, facs: []};
+            });
+            docs.forEach(function(item){
+                if(item.kind === 'FAC'){
+                    if(item.fnc_id && groups[item.fnc_id]) groups[item.fnc_id].facs.push(item);
+                    else orphFacs.push(item);
+                }
+            });
+
+            var stateLabel = {
+                draft:       'Draft',
+                submitted:   'Submitted',
+                in_progress: 'In Progress',
+                validated:   'Validated',
+                closed:      'Closed',
+            };
+            var stateBadge = {
+                draft:       'style="background:#f1f5f9;color:#475569"',
+                submitted:   'class="badge orange"',
+                in_progress: 'class="badge blue"',
+                validated:   'style="background:#d1fae5;color:#065f46"',
+                closed:      'class="badge green"',
+            };
+
+            var html = '';
+
+            Object.keys(groups).forEach(function(fid){
+                var g   = groups[fid];
+                var fnc = g.fnc;
+                var sb  = stateBadge[fnc.state] || '';
+                html += '<div style="border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden">';
+                html += '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f8fafc">'
+                      + '<div class="nc-avatar avatar-blue">' + _.escape(fnc.sender_initials || '?') + '</div>'
+                      + '<div style="flex:1;min-width:0">'
+                      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                      + '<div class="nc-notif-ref">' + _.escape(fnc.name || '') + '</div>'
+                      + '<div style="display:flex;gap:4px"><span class="badge blue">FNC</span>'
+                      + '<span ' + sb + '>' + (stateLabel[fnc.state] || fnc.state) + '</span></div>'
+                      + '</div>'
+                      + '<div class="nc-notif-actions">'
+                      + '<div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" data-id="' + fnc.id + '">Open FNC</div>'
+                      + '</div></div></div>';
+
+                g.facs.forEach(function(fac){
+                    var fsb = stateBadge[fac.state] || '';
+                    html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px 8px 16px;border-top:1px solid #f1f5f9;background:white">'
+                          + '<div style="width:2px;background:#EF4444;border-radius:2px;align-self:stretch;flex-shrink:0;margin-top:4px"></div>'
+                          + '<div class="nc-avatar avatar-red" style="width:28px;height:28px;font-size:10px">' + _.escape(fac.sender_initials || '?') + '</div>'
+                          + '<div style="flex:1;min-width:0">'
+                          + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                          + '<div style="font-size:11px;font-weight:600;color:#1e293b">' + _.escape(fac.name || '') + '</div>'
+                          + '<div style="display:flex;gap:4px"><span class="badge red">FAC</span>'
+                          + '<span ' + fsb + '>' + (stateLabel[fac.state] || fac.state) + '</span></div>'
+                          + '</div>'
+                          + '<div class="nc-notif-actions">'
+                          + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Open FAC</div>'
+                          + '</div></div></div>';
+                });
+                html += '</div>';
+            });
+
+            orphFacs.forEach(function(fac){
+                var fsb = stateBadge[fac.state] || '';
+                html += '<div style="border:1px solid #fecaca;border-radius:10px;margin-bottom:8px;overflow:hidden">'
+                      + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#fef2f2">'
+                      + '<div class="nc-avatar avatar-red">' + _.escape(fac.sender_initials || '?') + '</div>'
+                      + '<div style="flex:1;min-width:0">'
+                      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                      + '<div class="nc-notif-ref">' + _.escape(fac.name || '') + '</div>'
+                      + '<div style="display:flex;gap:4px"><span class="badge red">FAC</span>'
+                      + '<span ' + fsb + '>' + (stateLabel[fac.state] || fac.state) + '</span></div>'
+                      + '</div>'
+                      + '<div class="nc-notif-actions">'
+                      + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Open FAC</div>'
+                      + '</div></div></div></div>';
+            });
+
+            if(!html) html = '<div class="nc-empty">No documents for this date.</div>';
+            this.$('.received-list').html(html);
+        },
+
+        _formatDateKey: function(key){
+            var p = key.split('-');
+            if(p.length !== 3) return key;
+            return 'Documents — ' + p[2] + '/' + p[1] + '/' + p[0];
         },
 
         _drawChart: function(){

@@ -535,39 +535,60 @@
     </div>
   </div>
 
-  <!-- Chart + Calendar -->
-  <div class="g2" style="margin-bottom:12px">
+  <!-- Received docs + Calendar (same layout as RMQSE) -->
+  <div class="section-title">Calendar — FNC &amp; FAC</div>
+  <div class="g2">
 
-    <div class="nc-card" style="display:flex;flex-direction:column">
-      <div class="nc-card-title">Monthly Evolution (6 months)</div>
-      <div style="display:flex;gap:12px;margin-bottom:6px">
-        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
-        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#C9443A"></div>FAC</div>
-      </div>
-      <canvas id="udChart" style="height:200px;max-height:200px"></canvas>
+    <!-- Fiches reçues -->
+    <div class="nc-card" style="max-height:420px;overflow-y:auto">
+      <div class="nc-card-title">My Reports</div>
+      <div class="nc-card-sub received-sub">Today's documents</div>
+      <div class="received-list"></div>
     </div>
 
-    <div class="nc-card">
-      <div class="nc-card-title" style="margin-bottom:8px">Calendar</div>
-      <div class="cal-wrap">
-        <div class="cal-header">
-          <div class="cal-month-label"></div>
-          <div class="cal-nav">
-            <button class="cal-btn ud-cal-prev">&#8249;</button>
-            <button class="cal-btn ud-cal-next">&#8250;</button>
+    <!-- Calendrier avec sélecteur identique au RMQSE -->
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="nc-card">
+        <div class="nc-card-title" style="margin-bottom:8px">Calendar</div>
+        <div class="cal-wrap">
+          <div class="cal-header-pick">
+            <div class="cal-month-label" style="font-size:13px;font-weight:700;color:#1e293b">Loading...</div>
+            <span style="font-size:11px;color:#94a3b8">&#9660;</span>
+          </div>
+          <div class="cal-picker" style="display:none;background:#f0f4ff;border:1px solid #c7d7f8;border-radius:8px;padding:8px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <button class="cal-btn cal-yr-prev">&#8249;</button>
+              <span class="cal-picker-yr" style="font-size:13px;font-weight:700;color:#1e293b">2026</span>
+              <button class="cal-btn cal-yr-next">&#8250;</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+              <div class="cal-pm" data-m="0">Jan</div><div class="cal-pm" data-m="1">Feb</div>
+              <div class="cal-pm" data-m="2">Mar</div><div class="cal-pm" data-m="3">Apr</div>
+              <div class="cal-pm" data-m="4">May</div><div class="cal-pm" data-m="5">Jun</div>
+              <div class="cal-pm" data-m="6">Jul</div><div class="cal-pm" data-m="7">Aug</div>
+              <div class="cal-pm" data-m="8">Sep</div><div class="cal-pm" data-m="9">Oct</div>
+              <div class="cal-pm" data-m="10">Nov</div><div class="cal-pm" data-m="11">Dec</div>
+            </div>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div><div class="cal-day-name">Sun</div>
+            <div class="cal-grid-body" style="display:contents"></div>
+          </div>
+          <div style="display:flex;gap:14px;margin-top:8px;justify-content:flex-end">
+            <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#2196F3"></div>FNC</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#EF4444"></div>FAC</div>
           </div>
         </div>
-        <div class="cal-grid">
-          <div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div>
-          <div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div>
-          <div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div>
-          <div class="cal-day-name">Sun</div>
-          <div class="cal-grid-body" style="display:contents"></div>
+      </div>
+
+      <!-- Diagramme mensuel -->
+      <div class="nc-card" style="display:flex;flex-direction:column">
+        <div class="nc-card-title">Monthly Evolution (6 months)</div>
+        <div style="display:flex;gap:12px;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#C9443A"></div>FAC</div>
         </div>
-        <div style="display:flex;gap:14px;margin-top:8px;justify-content:flex-end">
-          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#2196F3"></div>FNC</div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#EF4444"></div>FAC</div>
-        </div>
+        <canvas id="udChart" style="height:160px;max-height:160px"></canvas>
       </div>
     </div>
   </div>

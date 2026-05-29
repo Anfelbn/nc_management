@@ -321,7 +321,7 @@
         </div>
       </t>
 
-      <t t-if="widget.stats.fac_non_recues.length">
+      <t t-if="widget.stats.fac_non_recues &amp;&amp; widget.stats.fac_non_recues.length">
         <div style="margin-top:10px;padding-top:8px;border-top:1px solid #ede9fe">
           <div style="font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">FAC non reçues — validées par d'autres, à clôturer</div>
           <t t-foreach="widget.stats.fac_non_recues" t-as="fac_nr">

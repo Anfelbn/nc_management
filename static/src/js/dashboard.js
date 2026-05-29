@@ -91,7 +91,7 @@ odoo.define('nc_management.dashboard', function(require){
                 method: 'get_stats',
                 args:   [],
             }).then(function(stats){
-                self.stats = stats;
+                self.stats = $.extend(self._emptyStats(), stats || {});
             });
             return $.when(superDef, statsDef);
         },
@@ -347,7 +347,7 @@ odoo.define('nc_management.dashboard', function(require){
                 method: 'get_stats',
                 args:   [period],
             }).then(function(stats){
-                self.stats = stats;
+                self.stats = $.extend(self._emptyStats(), stats || {});
                 self.renderElement();
                 self._bindAll();
             });

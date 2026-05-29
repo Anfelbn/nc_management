@@ -135,12 +135,15 @@
         <div class="nc-kpi-top" style="background:#2196F3"></div>
         <div class="nc-kpi-label">Total FNC</div>
         <div class="nc-kpi-val" style="color:#1565C0"><t t-esc="widget.stats.fnc_total"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["state","=","validated"]]'>↳ Taux validation : <t t-esc="widget.stats.taux_cloture"/>%</div>
+        <div class="nc-kpi-sub">↳ Taux validation : <t t-esc="widget.stats.taux_cloture"/>%</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
           <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fnc_brouillon"/></span>
           <span class="badge orange">Soumise <t t-esc="widget.stats.fnc_envoyes"/></span>
           <span class="badge blue">En cours <t t-esc="widget.stats.fnc_cours"/></span>
           <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fnc_validated"/></span>
+        </div>
+        <div style="margin-top:6px">
+          <div class="btn-sm btn-list" t-att-data-model="'nc_management.nonconformity'" t-att-data-domain="'[[\"state\",\"=\",\"validated\"]]'">Voir FNC validées →</div>
         </div>
       </div>
 
@@ -149,8 +152,8 @@
         <div class="nc-kpi-top" style="background:#10B981"></div>
         <div class="nc-kpi-label">Total FAC</div>
         <div class="nc-kpi-val" style="color:#065F46"><t t-esc="widget.stats.fac_total"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["actions_efficaces","=","oui"]]'>↳ Taux efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["state","=","closed"]]'>↳ Taux clôture : <t t-esc="widget.stats.taux_cloture_fac"/>%</div>
+        <div class="nc-kpi-sub">↳ Taux efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
+        <div class="nc-kpi-sub">↳ Taux clôture : <t t-esc="widget.stats.taux_cloture_fac"/>%</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
           <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
           <span class="badge orange">Soumise <t t-esc="widget.stats.fac_open"/></span>

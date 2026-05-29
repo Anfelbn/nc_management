@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <data>
 
@@ -552,6 +552,8 @@
     name="Plan Action SMI"
     id="nc_management.menu_plan_smi_root"
     parent="nc_management.menu_root"
+    groups="nc_management.group_nc_utilisateur,nc_management.group_responsable_qualite"
+    sequence="20"/>
     action="action_mes_plans_smi"
     groups="nc_management.group_nc_utilisateur,nc_management.group_responsable_qualite"
     sequence="25"/>
@@ -562,6 +564,19 @@
     id="nc_management.menu_mes_plans_smi"
     parent="nc_management.menu_plan_smi_root"
     action="action_mes_plans_smi"
+    groups="nc_management.group_nc_utilisateur,nc_management.group_responsable_qualite"
+    sequence="1"/>
+
+<!-- Plans Reçus : Responsable Qualité uniquement -->
+<menuitem
+    name="Plans Reçus"
+    id="nc_management.menu_plans_recus_smi"
+    parent="nc_management.menu_plan_smi_root"
+    action="action_plans_recus_smi"
+    groups="nc_management.group_responsable_qualite"
+    sequence="2"/>
+
+<!-- Plan d'Action d'Amélioration : Responsable Qualité uniquement -->
     groups="nc_management.group_responsable_qualite"
     sequence="1"/>
 
@@ -572,6 +587,7 @@
     parent="nc_management.menu_plan_smi_root"
     action="action_plan_global_smi"
     groups="nc_management.group_responsable_qualite"
+    sequence="3"/>
     sequence="2"/>
 
 <!-- Analyse d'Efficacité : sous-menu RMQSE (sequence 3) -->
@@ -581,6 +597,7 @@
     parent="nc_management.menu_plan_smi_root"
     action="action_plan_smi_analyse_efficacite"
     groups="nc_management.group_responsable_qualite"
+    sequence="4"/>
     sequence="3"/>
 
 </data>

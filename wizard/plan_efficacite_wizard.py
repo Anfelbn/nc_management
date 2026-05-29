@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+﻿from odoo import models, fields, api
 
 # Les 12 natures du plan d'action — correspondent au champ nature de plan_action_smi
 CATEGORIES = [

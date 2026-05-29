@@ -736,5 +736,204 @@ odoo.define('nc_management.dashboard', function(require){
     });
 
     core.action_registry.add('nc_dashboard', NcDashboard);
+
+    // ── Dashboard NC Utilisateur ──────────────────────────────────────────────
+    var NcUserDashboard = Widget.extend({
+        template: 'NcUserDashboard',
+
+        init: function(){
+            this._super.apply(this, arguments);
+            this.stats = this._empty();
+        },
+
+        _empty: function(){
+            return {
+                today: '', uid: 0,
+                fnc_total: 0, fnc_brouillon: 0, fnc_submitted: 0,
+                fnc_cours: 0, fnc_validated: 0, fnc_closed: 0,
+                fac_total: 0, fac_submitted: 0, fac_cours: 0,
+                fac_validated: 0, fac_closed: 0,
+                monthly_labels: [], monthly_fnc: [], monthly_fac: [],
+                calendar_events: {}, calendar_year: 0, calendar_month: 0,
+                alerts: [],
+            };
+        },
+
+        willStart: function(){
+            var self = this;
+            var superDef = this._super.apply(this, arguments);
+            var statsDef = this._rpc({
+                model:  'nc_management.dashboard',
+                method: 'get_user_stats',
+                args:   [],
+            }).then(function(stats){ self.stats = stats; });
+            return $.when(superDef, statsDef);
+        },
+
+        start: function(){
+            this._super.apply(this, arguments);
+            this._bind();
+        },
+
+        _bind: function(){
+            var self = this;
+
+            this.$el.on('click', '.btn-open', function(){
+                var model = $(this).data('model');
+                var id    = parseInt($(this).data('id'), 10);
+                self.do_action({
+                    type: 'ir.actions.act_window',
+                    res_model: model,
+                    res_id: id,
+                    views: [[false, 'form']],
+                    target: 'current',
+                });
+            });
+
+            this.$el.on('click', '.ud-kpi', function(){
+                var uid = self.stats.uid;
+                var filter = $(this).data('filter');
+                var modelMap = {
+                    fnc_total:  'nc_management.nonconformity',
+                    fnc_cours:  'nc_management.nonconformity',
+                    fnc_closed: 'nc_management.nonconformity',
+                    fac_total:  'nc_management.corrective_action',
+                    fac_cours:  'nc_management.corrective_action',
+                    fac_closed: 'nc_management.corrective_action',
+                };
+                var domainMap = {
+                    fnc_total:  [['create_uid', '=', uid]],
+                    fnc_cours:  [['create_uid', '=', uid], ['state', 'in', ['submitted', 'in_progress']]],
+                    fnc_closed: [['create_uid', '=', uid], ['state', 'in', ['validated', 'closed']]],
+                    fac_total:  [['fnc_id.create_uid', '=', uid]],
+                    fac_cours:  [['fnc_id.create_uid', '=', uid], ['state', 'in', ['submitted', 'in_progress']]],
+                    fac_closed: [['fnc_id.create_uid', '=', uid], ['state', 'in', ['validated', 'closed']]],
+                };
+                self.do_action({
+                    type: 'ir.actions.act_window',
+                    res_model: modelMap[filter] || 'nc_management.nonconformity',
+                    domain: domainMap[filter] || [],
+                    views: [[false, 'list'], [false, 'form']],
+                    target: 'current',
+                });
+            });
+
+            this._initCalendar();
+            setTimeout(function(){ self._drawChart(); }, 100);
+        },
+
+        _initCalendar: function(){
+            var self  = this;
+            var now   = new Date();
+            var year  = this.stats.calendar_year  || now.getFullYear();
+            var month = (this.stats.calendar_month || (now.getMonth() + 1)) - 1;
+            var EN_M  = ['January','February','March','April','May','June',
+                         'July','August','September','October','November','December'];
+
+            function render(y, m){
+                var events  = self.stats.calendar_events || {};
+                var first   = new Date(y, m, 1).getDay();
+                var off     = first === 0 ? 6 : first - 1;
+                var days    = new Date(y, m + 1, 0).getDate();
+                var prev    = new Date(y, m, 0).getDate();
+                var html = '';
+                for(var i = 0; i < off; i++)
+                    html += '<div class="cal-day other-month">' + (prev - off + i + 1) + '</div>';
+                for(var d = 1; d <= days; d++){
+                    var key = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                    var ev  = events[key] || {};
+                    var isToday = (y === now.getFullYear() && m === now.getMonth() && d === now.getDate());
+                    var cls = 'cal-day' + (isToday ? ' today' : '');
+                    var dots = '';
+                    if(ev.fnc) dots += '<div class="cdot" style="background:#2196F3"></div>';
+                    if(ev.fac) dots += '<div class="cdot" style="background:#EF4444"></div>';
+                    html += '<div class="' + cls + '" data-date="' + key + '">' + d +
+                            (dots ? '<div class="cal-dot-row">' + dots + '</div>' : '') + '</div>';
+                }
+                var total = off + days;
+                var nx = 1;
+                while(total % 7){ html += '<div class="cal-day other-month">' + nx++ + '</div>'; total++; }
+                self.$('.cal-grid-body').html(html);
+                self.$('.cal-month-label').text(EN_M[m] + ' ' + y);
+                if(y === now.getFullYear() && m === now.getMonth())
+                    self.$('.cal-day.today').addClass('selected');
+            }
+
+            this.$('.ud-cal-prev').off('click').on('click', function(){
+                if(month === 0){ month = 11; year--; } else { month--; }
+                render(year, month);
+            });
+            this.$('.ud-cal-next').off('click').on('click', function(){
+                if(month === 11){ month = 0; year++; } else { month++; }
+                render(year, month);
+            });
+
+            render(year, month);
+        },
+
+        _drawChart: function(){
+            var canvas = this.$('#udChart')[0];
+            if(!canvas) return;
+            var s   = this.stats;
+            var dpr = window.devicePixelRatio || 1;
+            var rect = canvas.getBoundingClientRect();
+            if(!rect.width) return;
+            canvas.width  = rect.width  * dpr;
+            canvas.height = rect.height * dpr;
+            var ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            var W = rect.width, H = rect.height;
+            var pL=30, pR=12, pT=16, pB=22;
+            var cW = W - pL - pR, cH = H - pT - pB;
+            var labels = s.monthly_labels || [];
+            var fnc    = s.monthly_fnc    || [];
+            var fac    = s.monthly_fac    || [];
+            var maxV   = Math.max.apply(null, fnc.concat(fac).concat([1]));
+            var nG     = labels.length || 1;
+            var gW     = cW / nG;
+            var bW     = gW * 0.35;
+            var dep    = 6;
+
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 0.8;
+            for(var i = 0; i <= 4; i++){
+                var gy = pT + cH - (i / 4) * cH;
+                ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cW, gy); ctx.stroke();
+                ctx.fillStyle = '#94a3b8'; ctx.font = '9px Segoe UI'; ctx.textAlign = 'right';
+                ctx.fillText(Math.round((i / 4) * maxV), pL - 3, gy + 3);
+            }
+
+            var datasets = [
+                {vals: fnc, cL: '#7AAFEE', cD: '#3A72B8', cT: '#A8CCEF', cS: '#2A5A9A'},
+                {vals: fac, cL: '#E88080', cD: '#B03030', cT: '#F0A0A0', cS: '#8C2020'},
+            ];
+            datasets.forEach(function(ds, si){
+                ds.vals.forEach(function(val, gi){
+                    var bh = (val / maxV) * cH;
+                    var x  = pL + gi * gW + gW * 0.08 + si * (bW + 2);
+                    var y  = pT + cH - bh;
+                    var grad = ctx.createLinearGradient(x, y, x + bW, y);
+                    grad.addColorStop(0, ds.cL); grad.addColorStop(1, ds.cD);
+                    ctx.fillStyle = grad; ctx.fillRect(x, y, bW, bh);
+                    ctx.fillStyle = ds.cT;
+                    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+dep,y-dep);
+                    ctx.lineTo(x+bW+dep,y-dep); ctx.lineTo(x+bW,y); ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = ds.cS;
+                    ctx.beginPath(); ctx.moveTo(x+bW,y); ctx.lineTo(x+bW+dep,y-dep);
+                    ctx.lineTo(x+bW+dep,y-dep+bh); ctx.lineTo(x+bW,y+bh); ctx.closePath(); ctx.fill();
+                    if(val > 0){
+                        ctx.fillStyle = '#374151'; ctx.font = 'bold 9px Segoe UI'; ctx.textAlign = 'center';
+                        ctx.fillText(val, x + bW / 2, y - dep - 2);
+                    }
+                });
+            });
+
+            ctx.fillStyle = '#64748b'; ctx.font = '9px Segoe UI'; ctx.textAlign = 'center';
+            labels.forEach(function(lbl, gi){
+                ctx.fillText(lbl, pL + gi * gW + gW / 2, pT + cH + 13);
+            });
+        },
+    });
+
+    core.action_registry.add('nc_user_dashboard', NcUserDashboard);
     return NcDashboard;
 });

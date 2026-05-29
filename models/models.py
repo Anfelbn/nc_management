@@ -1968,6 +1968,152 @@ class NcDashboard(models.Model):
         return result
 
     @api.model
+    def get_user_stats(self):
+        from datetime import date, timedelta
+        from dateutil.relativedelta import relativedelta
+
+        uid = self.env.uid
+        fnc_model = self.env['nc_management.nonconformity']
+        fac_model = self.env['nc_management.corrective_action']
+        today = date.today()
+        fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
+
+        # FNCs belonging to this user
+        user_fnc_domain = [('create_uid', '=', uid)]
+        user_fnc_ids = fnc_model.search(user_fnc_domain).ids
+        user_fac_domain = [('fnc_id', 'in', user_fnc_ids)]
+
+        # ── KPI totals ──
+        fnc_total     = fnc_model.search_count(user_fnc_domain)
+        fnc_brouillon = fnc_model.search_count(user_fnc_domain + [('state', '=', 'draft')])
+        fnc_submitted = fnc_model.search_count(user_fnc_domain + [('state', '=', 'submitted')])
+        fnc_cours     = fnc_model.search_count(user_fnc_domain + [('state', '=', 'in_progress')])
+        fnc_validated = fnc_model.search_count(user_fnc_domain + [('state', '=', 'validated')])
+        fnc_closed    = fnc_model.search_count(user_fnc_domain + [('state', '=', 'closed')])
+
+        fac_total     = fac_model.search_count(user_fac_domain)
+        fac_submitted = fac_model.search_count(user_fac_domain + [('state', '=', 'submitted')])
+        fac_cours     = fac_model.search_count(user_fac_domain + [('state', '=', 'in_progress')])
+        fac_validated = fac_model.search_count(user_fac_domain + [('state', '=', 'validated')])
+        fac_closed    = fac_model.search_count(user_fac_domain + [('state', '=', 'closed')])
+
+        # ── Monthly evolution (6 months) ──
+        monthly_labels = []
+        monthly_fnc = []
+        monthly_fac = []
+        for i in range(5, -1, -1):
+            d = today - relativedelta(months=i)
+            m_start = d.replace(day=1)
+            m_end = (d + relativedelta(months=1)).replace(day=1)
+            m_fnc_ids = fnc_model.search([
+                ('create_uid', '=', uid),
+                ('date', '>=', str(m_start)),
+                ('date', '<', str(m_end)),
+            ]).ids
+            monthly_fnc.append(len(m_fnc_ids))
+            monthly_fac.append(fac_model.search_count([
+                ('fnc_id', 'in', m_fnc_ids),
+            ]))
+            monthly_labels.append(fr_months[m_start.month - 1])
+
+        # ── Calendar events (current month) ──
+        m_start = today.replace(day=1)
+        m_end = (today + relativedelta(months=1)).replace(day=1)
+        calendar_events = {}
+        for fnc_rec in fnc_model.search([
+            ('create_uid', '=', uid),
+            ('date', '>=', str(m_start)),
+            ('date', '<', str(m_end)),
+        ]):
+            k = str(fnc_rec.date)[:10]
+            if k not in calendar_events:
+                calendar_events[k] = {'fnc': False, 'fac': False}
+            calendar_events[k]['fnc'] = True
+        for fac_rec in fac_model.search([
+            ('fnc_id', 'in', user_fnc_ids),
+            ('date', '>=', str(m_start)),
+            ('date', '<', str(m_end)),
+        ]):
+            k = str(fac_rec.date)[:10]
+            if k not in calendar_events:
+                calendar_events[k] = {'fnc': False, 'fac': False}
+            calendar_events[k]['fac'] = True
+
+        # ── Alerts ──
+        limit7 = str(today - timedelta(days=7))
+        alerts = []
+
+        # FNCs submitted (en attente de traitement RMQSE)
+        for rec in fnc_model.search(user_fnc_domain + [('state', '=', 'submitted')], limit=10):
+            days_wait = (today - fields.Date.from_string(str(rec.date))).days if rec.date else 0
+            alerts.append({
+                'id': rec.id,
+                'model': 'nc_management.nonconformity',
+                'name': rec.name or '',
+                'label': 'En attente RMQSE',
+                'days': days_wait,
+                'badge': 'orange' if days_wait <= 7 else 'red',
+                'kind': 'FNC',
+            })
+
+        # FNCs in_progress depuis > 7 jours
+        for rec in fnc_model.search(user_fnc_domain + [
+            ('state', '=', 'in_progress'),
+            ('date_in_progress', '!=', False),
+            ('date_in_progress', '<=', limit7),
+        ], limit=10):
+            days_open = (today - fields.Date.from_string(str(rec.date_in_progress))).days
+            alerts.append({
+                'id': rec.id,
+                'model': 'nc_management.nonconformity',
+                'name': rec.name or '',
+                'label': 'En cours %dj' % days_open,
+                'days': days_open,
+                'badge': 'red',
+                'kind': 'FNC',
+            })
+
+        # FACs liées aux FNCs user qui sont en retard
+        for fac_rec in fac_model.search(user_fac_domain + [
+            ('state', 'in', ['submitted', 'in_progress']),
+            ('date', '!=', False),
+            ('date', '<=', limit7),
+        ], limit=10):
+            days_open = (today - fields.Date.from_string(str(fac_rec.date))).days
+            alerts.append({
+                'id': fac_rec.id,
+                'model': 'nc_management.corrective_action',
+                'name': fac_rec.name or '',
+                'label': 'FAC retard %dj' % days_open,
+                'days': days_open,
+                'badge': 'red',
+                'kind': 'FAC',
+            })
+
+        return {
+            'today': today.strftime('%d/%m/%Y'),
+            'uid':           uid,
+            'fnc_total':     fnc_total,
+            'fnc_brouillon': fnc_brouillon,
+            'fnc_submitted': fnc_submitted,
+            'fnc_cours':     fnc_cours,
+            'fnc_validated': fnc_validated,
+            'fnc_closed':    fnc_closed,
+            'fac_total':     fac_total,
+            'fac_submitted': fac_submitted,
+            'fac_cours':     fac_cours,
+            'fac_validated': fac_validated,
+            'fac_closed':    fac_closed,
+            'monthly_labels': monthly_labels,
+            'monthly_fnc':    monthly_fnc,
+            'monthly_fac':    monthly_fac,
+            'calendar_events': calendar_events,
+            'calendar_year':   today.year,
+            'calendar_month':  today.month,
+            'alerts':          alerts,
+        }
+
+    @api.model
     def get_direction_details(self, direction_id, period=None):
         from dateutil.relativedelta import relativedelta
 

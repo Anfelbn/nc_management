@@ -188,7 +188,7 @@
                            attrs="{'readonly': [('state','not in',['submitted'])]}"/>
                     <field name="responsable_action_id"
                            options="{'no_create': True, 'no_create_edit': True}"
-                           readonly="1"/>
+                           attrs="{'readonly': ['|', ('state','not in',['submitted']), ('responsable_action_id','!=',False)]}"/>
                 </group>
 
                 <!-- ── Liaison FAC / Responsable ───────────────  -->

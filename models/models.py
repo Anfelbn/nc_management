@@ -412,12 +412,7 @@ class Nonconformity(models.Model):
                 raise UserError("Vous ne pouvez supprimer que vos propres fiches FNC.")
         return super(Nonconformity, self).unlink()
 
-    @api.onchange('impact', 'action_immediate', 'analyse_causes',
-                  'trait_reprise', 'trait_declassement', 'trait_retour_fourn',
-                  'trait_recyclage', 'trait_reparation', 'trait_autre')
-    def _onchange_traitement_complet(self):
-        if self.state != 'submitted':
-            return
+    def _traitement_complet(self):
         has_traitement = any([
             self.trait_reprise, self.trait_declassement, self.trait_retour_fourn,
             self.trait_recyclage, self.trait_reparation, self.trait_autre,
@@ -431,7 +426,26 @@ class Nonconformity(models.Model):
             manquants.append("l'analyse des causes")
         if not self.impact:
             manquants.append("l'impact")
+        return manquants
 
+    @api.onchange('impact', 'action_immediate', 'analyse_causes',
+                  'trait_reprise', 'trait_declassement', 'trait_retour_fourn',
+                  'trait_recyclage', 'trait_reparation', 'trait_autre')
+    def _onchange_traitement_complet(self):
+        if self.state != 'submitted':
+            return
+        if not self._traitement_complet():
+            if not self.responsable_action_id:
+                employee = self.env['hr.employee'].search(
+                    [('user_id', '=', self.env.uid)], limit=1)
+                if employee:
+                    self.responsable_action_id = employee
+
+    @api.onchange('responsable_action_id')
+    def _onchange_responsable_action(self):
+        if not self.responsable_action_id or self.state != 'submitted':
+            return
+        manquants = self._traitement_complet()
         if manquants:
             self.responsable_action_id = False
             return {'warning': {
@@ -439,18 +453,8 @@ class Nonconformity(models.Model):
                 'message': "Veuillez compléter tous les champs de traitement avant de continuer :\n— "
                            + "\n— ".join(manquants),
             }}
-
-        if not self.responsable_action_id:
-            employee = self.env['hr.employee'].search(
-                [('user_id', '=', self.env.uid)], limit=1)
-            if employee:
-                self.responsable_action_id = employee
-
-    @api.onchange('responsable_action_id')
-    def _onchange_responsable_action(self):
-        if self.responsable_action_id and self.state == 'submitted':
-            self.state = 'in_progress'
-            self.date_in_progress = fields.Date.today()
+        self.state = 'in_progress'
+        self.date_in_progress = fields.Date.today()
 
     @api.onchange('signature')
     def _onchange_signature(self):

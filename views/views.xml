@@ -547,17 +547,6 @@
     <field name="view_mode">tree,form</field>
 </record>
 
-<menuitem name="Configuration"
-          id="nc_management.menu_config"
-          parent="nc_management.menu_root"
-          sequence="100"
-          groups="nc_management.group_responsable_qualite"/>
-
-<menuitem name="Révision des documents"
-          id="nc_management.menu_revision"
-          parent="nc_management.menu_root"
-          action="action_document_revision"
-          sequence="30"/>
 
 <!-- ============================================================ -->
 <!--  VUE CONFIGURATION DÉPARTEMENTS (niveaux hiérarchiques)      -->

@@ -374,6 +374,24 @@ class Nonconformity(models.Model):
                     if updates:
                         fac.write(updates)
 
+        # Création automatique de FAC quand responsable_action_id est défini pour la première fois
+        if 'responsable_action_id' in vals and vals['responsable_action_id']:
+            for rec in self:
+                if not rec.fac_ids:
+                    employee = self.env['hr.employee'].browse(vals['responsable_action_id'])
+                    resp_user = employee.user_id if employee else self.env.user
+                    fac_vals = {
+                        'fnc_id': rec.id,
+                        'direction_id': rec.direction_id.id if rec.direction_id else False,
+                        'rappel_nc': rec.description or '',
+                        'analyse_causes': rec.analyse_causes or '',
+                        'responsable_id': resp_user.id if resp_user else False,
+                        'responsable_analyse_id': employee.id if employee else False,
+                    }
+                    self.env['nc_management.corrective_action'].sudo(
+                        resp_user.id if resp_user else self.env.uid
+                    ).create(fac_vals)
+
         # Sync responsable_id + responsable_analyse_id sur les FAC quand assigned_to_id change
         if 'assigned_to_id' in vals:
             employee = self.env['hr.employee'].browse(vals['assigned_to_id'])
@@ -393,6 +411,23 @@ class Nonconformity(models.Model):
             if any(rec.create_uid.id != self.env.uid for rec in self):
                 raise UserError("Vous ne pouvez supprimer que vos propres fiches FNC.")
         return super(Nonconformity, self).unlink()
+
+    @api.onchange('impact', 'action_immediate', 'analyse_causes',
+                  'trait_reprise', 'trait_declassement', 'trait_retour_fourn',
+                  'trait_recyclage', 'trait_reparation', 'trait_autre')
+    def _onchange_traitement_complet(self):
+        if self.state != 'submitted':
+            return
+        has_traitement = any([
+            self.trait_reprise, self.trait_declassement, self.trait_retour_fourn,
+            self.trait_recyclage, self.trait_reparation, self.trait_autre,
+        ])
+        if has_traitement and self.action_immediate and self.analyse_causes and self.impact:
+            if not self.responsable_action_id:
+                employee = self.env['hr.employee'].search(
+                    [('user_id', '=', self.env.uid)], limit=1)
+                if employee:
+                    self.responsable_action_id = employee
 
     @api.onchange('responsable_action_id')
     def _onchange_responsable_action(self):

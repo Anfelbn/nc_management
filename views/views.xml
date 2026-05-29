@@ -186,6 +186,9 @@
                     <field name="impact"
                            placeholder="Impact : coût, incidence, risque..."
                            attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                    <field name="responsable_action_id"
+                           options="{'no_create': True, 'no_create_edit': True}"
+                           readonly="1"/>
                 </group>
 
                 <!-- ── Liaison FAC / Responsable ───────────────  -->

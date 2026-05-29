@@ -362,8 +362,8 @@ canvas{display:block;width:100%}
       </div>
 
       <div style="margin-top:10px;border-top:1px solid #f1f5f9;padding-top:10px">
-        <div class="nc-card-sub dir-pie-scope">Types FNC liés à la barre sélectionnée</div>
-        <div class="dir-pie-title">Sélectionnez une barre</div>
+        <div class="nc-card-sub dir-pie-scope">Types FNC — Vue globale</div>
+        <div class="dir-pie-title">Toutes directions</div>
         <div class="dir-pie"></div>
         <div class="dir-pie-legend" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;justify-content:center;font-size:10px;color:#64748b"></div>
       </div>
@@ -374,24 +374,24 @@ canvas{display:block;width:100%}
         <div class="nc-kpi-top" style="background:#FF9800"></div>
         <div class="nc-card-title scope-dir-title">Par direction</div>
         <div class="split-card">
-          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val scope-dir-fnc" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.direction.fnc"/></div></div>
-          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val scope-dir-fac" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.direction.fac"/></div></div>
+          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val scope-dir-fnc" style="color:#1565C0">—</div></div>
+          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val scope-dir-fac" style="color:#991B1B">—</div></div>
         </div>
       </div>
       <div class="nc-card" style="flex:1">
         <div class="nc-kpi-top" style="background:#10B981"></div>
         <div class="nc-card-title scope-dept-title">Par département</div>
         <div class="split-card">
-          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val scope-dept-fnc" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.department.fnc"/></div></div>
-          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val scope-dept-fac" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.department.fac"/></div></div>
+          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val scope-dept-fnc" style="color:#1565C0">—</div></div>
+          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val scope-dept-fac" style="color:#991B1B">—</div></div>
         </div>
       </div>
       <div class="nc-card" style="flex:1">
         <div class="nc-kpi-top" style="background:#7C3AED"></div>
         <div class="nc-card-title scope-svc-title">Par service</div>
         <div class="split-card">
-          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val scope-svc-fnc" style="color:#1565C0"><t t-esc="widget.stats.scope_totals.service.fnc"/></div></div>
-          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val scope-svc-fac" style="color:#991B1B"><t t-esc="widget.stats.scope_totals.service.fac"/></div></div>
+          <div class="split-box"><div class="split-label">Total FNC</div><div class="split-val scope-svc-fnc" style="color:#1565C0">—</div></div>
+          <div class="split-box"><div class="split-label">Total FAC</div><div class="split-val scope-svc-fac" style="color:#991B1B">—</div></div>
         </div>
       </div>
     </div>
@@ -417,7 +417,7 @@ canvas{display:block;width:100%}
 
     <div class="nc-card">
       <div class="nc-card-title">Alertes &amp; Notifications</div>
-      <div class="nc-card-sub">FAC à clôturer · FNC en retard · &lt; 7 jours</div>
+      <div class="nc-card-sub">FAC à clôturer · FNC à valider · &lt; 7 jours</div>
 
       <t t-foreach="widget.stats.fac_a_cloturer" t-as="fac">
         <t t-if="fac.days > 7">
@@ -445,8 +445,8 @@ canvas{display:block;width:100%}
       <t t-foreach="widget.stats.fnc_retard_list" t-as="fnc">
         <div class="nc-alert orange">
           <div style="flex:1">
-            <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — En retard</div>
-            <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours de retard</div>
+            <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — À valider</div>
+            <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours en cours</div>
           </div>
           <div class="btn-sm btn-open" t-att-data-model="'nc_management.nonconformity'" t-att-data-id="fnc.id">Ouvrir</div>
         </div>

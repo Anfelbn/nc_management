@@ -183,6 +183,7 @@ class Nonconformity(models.Model):
         ('in_progress', 'En cours'),
         ('validated',   'Validée'),
     ], string='Statut', default='draft', track_visibility='onchange')
+    date_in_progress = fields.Date(string='Date mise en cours')
 
     @api.depends('fac_ids')
     def _compute_fac_reference(self):
@@ -328,7 +329,8 @@ class Nonconformity(models.Model):
                 if vals.get('fonction_visa') and rec.state == 'draft':
                     vals = dict(vals, state='submitted')
                 elif vals.get('responsable_action_id') and rec.state == 'submitted':
-                    vals = dict(vals, state='in_progress')
+                    vals = dict(vals, state='in_progress',
+                                date_in_progress=fields.Date.today())
                 elif vals.get('signature') and rec.state == 'in_progress':
                     vals = dict(vals, state='validated')
                 break  # formulaire = un seul record à la fois
@@ -389,6 +391,22 @@ class Nonconformity(models.Model):
             if any(rec.create_uid.id != self.env.uid for rec in self):
                 raise UserError("Vous ne pouvez supprimer que vos propres fiches FNC.")
         return super(Nonconformity, self).unlink()
+
+    @api.onchange('fonction_visa')
+    def _onchange_fonction_visa(self):
+        if self.fonction_visa and self.state == 'draft':
+            self.state = 'submitted'
+
+    @api.onchange('responsable_action_id')
+    def _onchange_responsable_action(self):
+        if self.responsable_action_id and self.state == 'submitted':
+            self.state = 'in_progress'
+            self.date_in_progress = fields.Date.today()
+
+    @api.onchange('signature')
+    def _onchange_signature(self):
+        if self.signature and self.state == 'in_progress':
+            self.state = 'validated'
 
     # ── Boutons workflow ──────────────────────────────────────
     @api.multi
@@ -552,6 +570,7 @@ class CorrectiveAction(models.Model):
         ('validated',  'Validée'),
         ('closed',     'Clôturée'),
     ], string='Statut', default='draft', track_visibility='onchange')
+    date_validated = fields.Date(string='Date validation QSE')
 
     # ── Valeurs par défaut depuis le compte employé ───────────
     @api.model
@@ -612,7 +631,8 @@ class CorrectiveAction(models.Model):
                                 cloture_par_id=employee.id if employee else False,
                                 date_cloture=fields.Date.today())
                 elif new_qse_visa and rec.state not in ('validated', 'closed'):
-                    vals = dict(vals, state='validated')
+                    vals = dict(vals, state='validated',
+                                date_validated=fields.Date.today())
                 elif new_visa_actions and rec.state not in ('in_progress', 'validated', 'closed'):
                     vals = dict(vals, state='in_progress')
                 elif new_visa_analyse and rec.state == 'draft':
@@ -1715,15 +1735,15 @@ class NcDashboard(models.Model):
             ('fnc_id.type_audit', '=', True),
         ])
 
-        # Totaux globaux (tout le système) pour l'en-tête du graphique direction
-        result['global_fnc_total'] = fnc.search_count([
-            ('date', '>=', period_start.strftime('%Y-%m-%d')),
-            ('date', '<', period_end.strftime('%Y-%m-%d')),
-        ])
-        result['global_fac_total'] = fac.search_count([
-            ('date', '>=', period_start.strftime('%Y-%m-%d')),
-            ('date', '<', period_end.strftime('%Y-%m-%d')),
-        ])
+        # Totaux globaux reçus par les autres directions (hors FNC/FAC créées par la RMQSE)
+        result['global_fnc_total'] = fnc.search_count(received_fnc_period_domain)
+        result['global_fac_total'] = fac.search_count(fac_received_period_domain)
+
+        # Types globaux pour le cercle "Vue globale" — toutes directions confondues
+        _all_received_fnc = fnc.search(received_fnc_period_domain)
+        _all_received_fac_fnc = fac.search(fac_received_period_domain).mapped('fnc_id')
+        result['global_fnc_types'] = _type_percentages(_all_received_fnc)
+        result['global_fac_types'] = _type_percentages(_all_received_fac_fnc)
 
         # Diagramme global : toutes FNC/FAC du système (tous espaces/modules)
         monthly_fnc_global = []
@@ -1779,11 +1799,11 @@ class NcDashboard(models.Model):
         result['calendar_events'] = calendar_events
 
         fac_a_cloturer_list = []
-        for fac_rec in fac.search([('state', 'in', ['submitted', 'in_progress', 'validated'])],
-                                  order='date asc', limit=8):
+        for fac_rec in fac.search([('state', '=', 'validated')],
+                                  order='date_validated asc', limit=8):
             delta = 0
-            if fac_rec.date:
-                delta = (today - fields.Date.from_string(fac_rec.date)).days
+            if fac_rec.date_validated:
+                delta = (today - fields.Date.from_string(str(fac_rec.date_validated))).days
             fac_a_cloturer_list.append({
                 'id': fac_rec.id,
                 'name': fac_rec.name,
@@ -1818,16 +1838,17 @@ class NcDashboard(models.Model):
                 return '??'
             return ''.join([w[0].upper() for w in name.split()[:2]]) or '??'
 
-        # FNC en retard alertes : créées par RMQSE, in_progress > 7 jours
+        # FNC en retard alertes : créées par RMQSE, in_progress depuis > 7 jours
         fnc_retard_list = []
         for fnc_rec in fnc.search([
             ('state', '=', 'in_progress'),
-            ('date', '<=', limit7),
+            ('date_in_progress', '!=', False),
+            ('date_in_progress', '<=', limit7),
             ('create_uid', '=', self.env.uid),
         ], limit=10):
             delta = 0
-            if fnc_rec.date:
-                delta = (today - fields.Date.from_string(fnc_rec.date)).days
+            if fnc_rec.date_in_progress:
+                delta = (today - fields.Date.from_string(str(fnc_rec.date_in_progress))).days
             fnc_retard_list.append({
                 'id': fnc_rec.id,
                 'name': fnc_rec.name,
@@ -1960,17 +1981,12 @@ class NcDashboard(models.Model):
         period_end = today.replace(day=1) + relativedelta(months=1)
         period_start = today.replace(day=1) - relativedelta(months=period_months - 1)
 
-        base_fnc = [
+        # Même filtre que les barres : FNC reçues = pas créées par la RMQSE
+        received_fnc_domain = [
             ('date', '>=', str(period_start)),
             ('date', '<', str(period_end)),
             ('state', '!=', 'draft'),
-            '|', ('submitted_by_id', '=', False),
-                 ('submitted_by_id', '!=', self.env.uid),
-            ('direction_id', '=', direction_id),
-        ]
-        base_fac = [
-            ('date', '>=', str(period_start)),
-            ('date', '<', str(period_end)),
+            ('create_uid', '!=', self.env.uid),
         ]
 
         def _pct(recs):
@@ -1985,9 +2001,9 @@ class NcDashboard(models.Model):
             total = sum(counts.values()) or 1
             return {k: int(round(v / total * 100)) for k, v in counts.items()}
 
-        dir_fnc_recs = fnc.search(base_fnc)
+        dir_fnc_recs = fnc.search(received_fnc_domain + [('direction_id', '=', direction_id)])
         dir_fnc_ids = dir_fnc_recs.ids
-        dir_fac_recs = fac.search(base_fac + [('fnc_id', 'in', dir_fnc_ids)])
+        dir_fac_recs = fac.search([('fnc_id', 'in', dir_fnc_ids)])
 
         departments = self.env['hr.department'].search([
             ('scaek_level', '=', 'departement'),
@@ -1996,9 +2012,12 @@ class NcDashboard(models.Model):
 
         dept_data = []
         for dept in departments:
-            d_fnc = fnc.search(base_fnc + [('department_id', '=', dept.id)])
+            d_fnc = fnc.search(received_fnc_domain + [
+                ('direction_id', '=', direction_id),
+                ('department_id', '=', dept.id),
+            ])
             d_fnc_ids = d_fnc.ids
-            d_fac = fac.search(base_fac + [('fnc_id', 'in', d_fnc_ids)])
+            d_fac = fac.search([('fnc_id', 'in', d_fnc_ids)])
 
             services = self.env['hr.department'].search([
                 ('scaek_level', '=', 'service'),
@@ -2007,9 +2026,12 @@ class NcDashboard(models.Model):
 
             svc_data = []
             for svc in services:
-                s_fnc = fnc.search(base_fnc + [('service_id', '=', svc.id)])
+                s_fnc = fnc.search(received_fnc_domain + [
+                    ('direction_id', '=', direction_id),
+                    ('service_id', '=', svc.id),
+                ])
                 s_fnc_ids = s_fnc.ids
-                s_fac = fac.search(base_fac + [('fnc_id', 'in', s_fnc_ids)])
+                s_fac = fac.search([('fnc_id', 'in', s_fnc_ids)])
                 svc_data.append({
                     'id': svc.id,
                     'name': svc.name,

@@ -10,6 +10,12 @@
     <div class="nc-brand-title">Dashboard RMQSE</div>
   </div>
   <div class="nc-header-right">
+    <span style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Période stats</span>
+    <div class="period-btn">
+      <div class="pb active" data-period="1m">1 mois</div>
+      <div class="pb" data-period="6m">6 mois</div>
+      <div class="pb" data-period="1y">1 an</div>
+    </div>
   </div>
 </div>
 
@@ -65,16 +71,6 @@
         </div>
       </div>
 
-      <!-- Période : composant indépendant sous le calendrier -->
-      <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
-        <span style="font-size:10px;font-weight:600;color:#64748b;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase">Période stats</span>
-        <div style="flex:1;height:1px;background:#e2e8f0"></div>
-        <div class="period-btn">
-          <div class="pb active" data-period="1m">1 mois</div>
-          <div class="pb" data-period="6m">6 mois</div>
-          <div class="pb" data-period="1y">1 an</div>
-        </div>
-      </div>
     </div>
   </div>
 

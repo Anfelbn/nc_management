@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <data>
 
@@ -479,7 +479,7 @@
     <field name="context">{'search_default_mes_fac': 1}</field>
 </record>
 
-<menuitem name="SMI Management"
+<menuitem name="NC Management"
           id="nc_management.menu_root"
           sequence="10"/>
 

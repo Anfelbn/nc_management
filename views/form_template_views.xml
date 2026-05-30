@@ -211,6 +211,10 @@
           sequence="100"
           groups="nc_management.group_responsable_qualite"/>
 
+<record model="ir.ui.menu" id="nc_management.menu_config">
+    <field name="name">Révision Documents</field>
+</record>
+
 
 </data>
 </odoo>

@@ -63,8 +63,8 @@ msgstr "Document Revisions"
 
 #. module: nc_management
 #: model:ir.ui.menu,name:nc_management.menu_config
-msgid "Configuration"
-msgstr "Configuration"
+msgid "Révision Documents"
+msgstr "Révision Documents"
 
 #. module: nc_management
 #: model:ir.ui.menu,name:nc_management.menu_plan_smi_root

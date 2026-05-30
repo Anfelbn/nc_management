@@ -1,7 +1,7 @@
 {
     'name': 'NC Management',
     'summary': 'NC Management module',
-    'version': '11.0.0.3',
+    'version': '11.0.0.4',
     'category': 'Tools',
     'author': 'Your Name',
 

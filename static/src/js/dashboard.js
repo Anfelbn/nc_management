@@ -99,6 +99,20 @@ odoo.define('nc_management.dashboard', function(require){
         start: function(){
             this._super.apply(this, arguments);
             this._bindAll();
+            this._startAutoRefresh();
+        },
+
+        _startAutoRefresh: function(){
+            var self = this;
+            this._refreshTimer = setInterval(function(){
+                var period = self.$('.pb.active').data('period') || '1m';
+                self._reload(period);
+            }, 60000);
+        },
+
+        destroy: function(){
+            if(this._refreshTimer){ clearInterval(this._refreshTimer); }
+            this._super.apply(this, arguments);
         },
 
         _bindAll: function(){
@@ -131,6 +145,17 @@ odoo.define('nc_management.dashboard', function(require){
                     res_id:    id,
                     views:     [[false, 'form']],
                     target:    'current',
+                });
+            });
+
+            this.$el.on('click', '.btn-validate-fnc', function(){
+                var id = parseInt($(this).data('id'), 10);
+                self._rpc({
+                    model:  'nc_management.nonconformity',
+                    method: 'action_valider_fnc',
+                    args:   [[id]],
+                }).then(function(action){
+                    self.do_action(action);
                 });
             });
 
@@ -785,6 +810,27 @@ odoo.define('nc_management.dashboard', function(require){
         start: function(){
             this._super.apply(this, arguments);
             this._bind();
+            this._startAutoRefresh();
+        },
+
+        _startAutoRefresh: function(){
+            var self = this;
+            this._refreshTimer = setInterval(function(){
+                self._rpc({
+                    model:  'nc_management.dashboard',
+                    method: 'get_user_stats',
+                    args:   [],
+                }).then(function(stats){
+                    self.stats = stats;
+                    self.renderElement();
+                    self._bind();
+                });
+            }, 60000);
+        },
+
+        destroy: function(){
+            if(this._refreshTimer){ clearInterval(this._refreshTimer); }
+            this._super.apply(this, arguments);
         },
 
         _bind: function(){
@@ -935,9 +981,10 @@ odoo.define('nc_management.dashboard', function(require){
                 return;
             }
 
-            // Group: each FNC with its linked FACs
+            // Group: each FNC with its linked FACs; collect Plans separately
             var groups   = {};
             var orphFacs = [];
+            var plans    = [];
             docs.forEach(function(item){
                 if(item.kind === 'FNC') groups[item.id] = {fnc: item, facs: []};
             });
@@ -945,6 +992,8 @@ odoo.define('nc_management.dashboard', function(require){
                 if(item.kind === 'FAC'){
                     if(item.fnc_id && groups[item.fnc_id]) groups[item.fnc_id].facs.push(item);
                     else orphFacs.push(item);
+                } else if(item.kind === 'Plan'){
+                    plans.push(item);
                 }
             });
 
@@ -1013,6 +1062,26 @@ odoo.define('nc_management.dashboard', function(require){
                       + '</div>'
                       + '<div class="nc-notif-actions">'
                       + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Open FAC</div>'
+                      + '</div></div></div></div>';
+            });
+
+            var planStateLabel = {
+                brouillon: 'Brouillon', soumis: 'Soumis',
+                integre: 'Intégré', cloture: 'Clôturé',
+            };
+            plans.forEach(function(item){
+                var st = item.submission_state || 'brouillon';
+                html += '<div style="border:1px solid #e9d5ff;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#faf5ff">'
+                      + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px">'
+                      + '<div class="nc-avatar avatar-purple">' + _.escape(item.sender_initials || '?') + '</div>'
+                      + '<div style="flex:1;min-width:0">'
+                      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">'
+                      + '<div class="nc-notif-ref" style="color:#6d28d9">' + _.escape(item.name || '') + '</div>'
+                      + '<span class="badge purple">PLAN</span>'
+                      + '</div>'
+                      + '<div style="font-size:11px;color:#7c3aed;margin-top:2px">' + _.escape(item.type || 'Plan action') + '</div>'
+                      + '<div class="nc-notif-actions">'
+                      + '<div class="btn-sm primary btn-open" style="background:#7c3aed;border-color:#7c3aed" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
                       + '</div></div></div></div>';
             });
 

@@ -10,6 +10,12 @@
     <div class="nc-brand-title">Dashboard RMQSE</div>
   </div>
   <div class="nc-header-right">
+    <span style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Période stats</span>
+    <div class="period-btn">
+      <div class="pb active" data-period="1m">1 mois</div>
+      <div class="pb" data-period="6m">6 mois</div>
+      <div class="pb" data-period="1y">1 an</div>
+    </div>
   </div>
 </div>
 
@@ -65,16 +71,6 @@
         </div>
       </div>
 
-      <!-- Période : composant indépendant sous le calendrier -->
-      <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
-        <span style="font-size:10px;font-weight:600;color:#64748b;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase">Période stats</span>
-        <div style="flex:1;height:1px;background:#e2e8f0"></div>
-        <div class="period-btn">
-          <div class="pb active" data-period="1m">1 mois</div>
-          <div class="pb" data-period="6m">6 mois</div>
-          <div class="pb" data-period="1y">1 an</div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -139,7 +135,7 @@
         <div class="nc-kpi-top" style="background:#2196F3"></div>
         <div class="nc-kpi-label">Total FNC</div>
         <div class="nc-kpi-val" style="color:#1565C0"><t t-esc="widget.stats.fnc_total"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.nonconformity" data-domain='[["state","=","validated"]]'>↳ Taux validation : <t t-esc="widget.stats.taux_cloture"/>%</div>
+        <div class="nc-kpi-sub">↳ Taux validation : <t t-esc="widget.stats.taux_cloture"/>%</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
           <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fnc_brouillon"/></span>
           <span class="badge orange">Soumise <t t-esc="widget.stats.fnc_envoyes"/></span>
@@ -153,8 +149,8 @@
         <div class="nc-kpi-top" style="background:#10B981"></div>
         <div class="nc-kpi-label">Total FAC</div>
         <div class="nc-kpi-val" style="color:#065F46"><t t-esc="widget.stats.fac_total"/></div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["actions_efficaces","=","oui"]]'>↳ Taux efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
-        <div class="nc-kpi-sub btn-list" data-model="nc_management.corrective_action" data-domain='[["state","=","closed"]]'>↳ Taux clôture : <t t-esc="widget.stats.taux_cloture_fac"/>%</div>
+        <div class="nc-kpi-sub">↳ Taux efficacité : <t t-esc="widget.stats.taux_efficacite"/>%</div>
+        <div class="nc-kpi-sub">↳ Taux clôture : <t t-esc="widget.stats.taux_cloture_fac"/>%</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
           <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
           <span class="badge orange">Soumise <t t-esc="widget.stats.fac_open"/></span>
@@ -321,7 +317,7 @@
             <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — À valider</div>
             <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours en cours</div>
           </div>
-          <div class="btn-sm btn-open" t-att-data-model="'nc_management.nonconformity'" t-att-data-id="fnc.id">Ouvrir</div>
+          <div class="btn-sm primary btn-validate-fnc" t-att-data-id="fnc.id">Valider</div>
         </div>
       </t>
 

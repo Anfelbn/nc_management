@@ -16,6 +16,8 @@
         'data/mail_template.xml',
         'data/ir_cron.xml',
         'wizard/send_fnc_wizard.xml',
+        'wizard/send_fac_wizard.xml',
+        'wizard/send_plan_wizard.xml',
         'wizard/reply_wizard.xml',
         'wizard/number_generator_wizard.xml',
         'wizard/new_revision_wizard.xml',

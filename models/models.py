@@ -330,9 +330,6 @@ class Nonconformity(models.Model):
             for rec in self:
                 if vals.get('fonction_visa') and rec.state == 'draft':
                     vals = dict(vals, state='submitted')
-                elif vals.get('responsable_action_id') and rec.state == 'submitted':
-                    vals = dict(vals, state='in_progress',
-                                date_in_progress=fields.Date.today())
                 elif vals.get('signature') and rec.state == 'in_progress':
                     vals = dict(vals, state='validated')
                 break  # formulaire = un seul record à la fois
@@ -374,23 +371,44 @@ class Nonconformity(models.Model):
                     if updates:
                         fac.write(updates)
 
-        # Création automatique de FAC quand responsable_action_id est défini pour la première fois
-        if 'responsable_action_id' in vals and vals['responsable_action_id']:
+        # Création automatique de FAC dès que le traitement est complet en base
+        treatment_fields = [
+            'impact', 'action_immediate', 'analyse_causes',
+            'trait_reprise', 'trait_declassement', 'trait_retour_fourn',
+            'trait_recyclage', 'trait_reparation', 'trait_autre',
+            'assigned_to_id',
+        ]
+        if any(f in vals for f in treatment_fields):
             for rec in self:
-                if not rec.fac_ids:
-                    employee = self.env['hr.employee'].browse(vals['responsable_action_id'])
-                    resp_user = employee.user_id if employee else self.env.user
-                    fac_vals = {
-                        'fnc_id': rec.id,
-                        'direction_id': rec.direction_id.id if rec.direction_id else False,
-                        'rappel_nc': rec.description or '',
-                        'analyse_causes': rec.analyse_causes or '',
-                        'responsable_id': resp_user.id if resp_user else False,
-                        'responsable_analyse_id': employee.id if employee else False,
-                    }
-                    self.env['nc_management.corrective_action'].sudo(
-                        resp_user.id if resp_user else self.env.uid
-                    ).create(fac_vals)
+                if rec.fac_ids:
+                    continue
+                if rec.state not in ('submitted', 'in_progress'):
+                    continue
+                if not rec.assigned_to_id:
+                    continue
+                has_trait = any([
+                    rec.trait_reprise, rec.trait_declassement, rec.trait_retour_fourn,
+                    rec.trait_recyclage, rec.trait_reparation, rec.trait_autre,
+                ])
+                if not (has_trait and rec.action_immediate and rec.analyse_causes and rec.impact):
+                    continue
+                # Traitement complet : créer la FAC
+                if rec.state == 'submitted':
+                    rec.write({'state': 'in_progress',
+                               'date_in_progress': fields.Date.today()})
+                employee = rec.assigned_to_id
+                resp_user = employee.user_id if employee else self.env.user
+                fac_vals = {
+                    'fnc_id': rec.id,
+                    'direction_id': rec.direction_id.id if rec.direction_id else False,
+                    'rappel_nc': rec.description or '',
+                    'analyse_causes': rec.analyse_causes or '',
+                    'responsable_id': resp_user.id if resp_user else False,
+                    'responsable_analyse_id': employee.id if employee else False,
+                }
+                self.env['nc_management.corrective_action'].sudo(
+                    resp_user.id if resp_user else self.env.uid
+                ).create(fac_vals)
 
         # Sync responsable_id + responsable_analyse_id sur les FAC quand assigned_to_id change
         if 'assigned_to_id' in vals:
@@ -435,26 +453,24 @@ class Nonconformity(models.Model):
         if self.state != 'submitted':
             return
         if not self._traitement_complet():
-            if not self.responsable_action_id:
+            if not self.assigned_to_id:
                 employee = self.env['hr.employee'].search(
                     [('user_id', '=', self.env.uid)], limit=1)
                 if employee:
-                    self.responsable_action_id = employee
+                    self.assigned_to_id = employee
 
-    @api.onchange('responsable_action_id')
-    def _onchange_responsable_action(self):
-        if not self.responsable_action_id or self.state != 'submitted':
+    @api.onchange('assigned_to_id')
+    def _onchange_assigned_to_id(self):
+        if not self.assigned_to_id or self.state not in ('submitted', 'in_progress'):
             return
         manquants = self._traitement_complet()
         if manquants:
-            self.responsable_action_id = False
+            self.assigned_to_id = False
             return {'warning': {
                 'title': 'Champ requis',
                 'message': "Veuillez compléter tous les champs de traitement avant de continuer :\n— "
                            + "\n— ".join(manquants),
             }}
-        self.state = 'in_progress'
-        self.date_in_progress = fields.Date.today()
 
     @api.onchange('signature')
     def _onchange_signature(self):
@@ -462,6 +478,27 @@ class Nonconformity(models.Model):
             self.state = 'validated'
 
     # ── Boutons workflow ──────────────────────────────────────
+    @api.multi
+    def action_valider_fnc(self):
+        self.ensure_one()
+        employee = self.env['hr.employee'].search(
+            [('user_id', '=', self.env.uid)], limit=1)
+        vals = {}
+        if employee and not self.superieur_id:
+            vals['superieur_id'] = employee.id
+        if not self.date_validation:
+            vals['date_validation'] = fields.Date.today()
+        if vals:
+            self.write(vals)
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'nc_management.nonconformity',
+            'res_id': self.id,
+            'views': [[False, 'form']],
+            'target': 'current',
+            'context': {'form_view_initial_mode': 'edit'},
+        }
+
     @api.multi
     def action_open_send_wizard(self):
         self.ensure_one()

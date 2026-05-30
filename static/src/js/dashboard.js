@@ -134,6 +134,17 @@ odoo.define('nc_management.dashboard', function(require){
                 });
             });
 
+            this.$el.on('click', '.btn-validate-fnc', function(){
+                var id = parseInt($(this).data('id'), 10);
+                self._rpc({
+                    model:  'nc_management.nonconformity',
+                    method: 'action_valider_fnc',
+                    args:   [[id]],
+                }).then(function(action){
+                    self.do_action(action);
+                });
+            });
+
             this.$el.on('click', '.btn-reply', function(){
                 var model = $(this).data('model');
                 var id    = parseInt($(this).data('id'), 10);

@@ -48,6 +48,11 @@
                         type="object"
                         class="oe_highlight"
                         attrs="{'invisible': ['|', ('state','=','validated'), ('name','=','New')]}"/>
+                <button name="action_valider_fnc"
+                        string="Valider"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('state','!=','in_progress')]}"/>
                 <field name="state" widget="statusbar"
                        statusbar_visible="draft,submitted,in_progress,validated"/>
             </header>
@@ -128,15 +133,15 @@
                 <group string="1- Description de la non-conformité">
                     <field name="description" nolabel="1"
                            placeholder="Décrivez la non-conformité..."
-                           attrs="{'readonly': [('state','!=','draft')]}"/>
+                           attrs="{'readonly': [('state','not in',['draft','submitted'])]}"/>
                     <group>
                         <field name="signale_par_id"
                                options="{'no_create': True, 'no_create_edit': True}"
-                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                               attrs="{'readonly': [('state','not in',['draft','submitted'])]}"/>
                         <field name="date_signalement"
-                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                               attrs="{'readonly': [('state','not in',['draft','submitted'])]}"/>
                         <field name="fonction_visa"
-                               attrs="{'readonly': [('state','!=','draft')]}"/>
+                               attrs="{'readonly': [('state','not in',['draft','submitted'])]}"/>
                     </group>
                 </group>
 
@@ -144,23 +149,23 @@
                 <group string="Traitement">
                     <group>
                         <field name="trait_reprise"
-                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                         <field name="trait_declassement"
-                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                         <field name="trait_retour_fourn"
-                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                     </group>
                     <group>
                         <field name="trait_recyclage"
-                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                         <field name="trait_reparation"
-                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                         <field name="trait_autre"
-                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                         <field name="trait_autre_preciser"
                                attrs="{'invisible': [('trait_autre','=',False)],
                                        'required':  [('trait_autre','=',True)],
-                                       'readonly':  [('state','not in',['submitted'])]}"/>
+                                       'readonly':  [('state','not in',['submitted','in_progress'])]}"/>
                     </group>
                 </group>
 
@@ -168,13 +173,13 @@
                 <group string="2- Action immédiate">
                     <field name="action_immediate" nolabel="1"
                            placeholder="Décrivez l'action immédiate..."
-                           attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                     <group>
                         <field name="realise_par_id"
                                options="{'no_create': True, 'no_create_edit': True}"
-                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                         <field name="date_realisation"
-                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                     </group>
                 </group>
 
@@ -182,13 +187,10 @@
                 <group string="3- Analyse des causes">
                     <field name="analyse_causes" nolabel="1"
                            placeholder="Analysez les causes..."
-                           attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                     <field name="impact"
                            placeholder="Impact : coût, incidence, risque..."
-                           attrs="{'readonly': [('state','not in',['submitted'])]}"/>
-                    <field name="responsable_action_id"
-                           options="{'no_create': True, 'no_create_edit': True}"
-                           attrs="{'readonly': ['|', ('state','not in',['submitted']), ('responsable_action_id','!=',False)]}"/>
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                 </group>
 
                 <!-- ── Liaison FAC / Responsable ───────────────  -->

@@ -88,13 +88,13 @@
                         type="object"
                         class="oe_highlight"
                         attrs="{'invisible': ['|', ('name', '!=', 'New'), ('is_global', '=', True)]}"/>
-                <!-- Bouton envoi : NC Utilisateur, plan encore brouillon, non global -->
-                <button name="action_envoyer_rmqse"
-                        string="Envoyer à la Responsable Qualité"
+                <!-- Bouton envoi : NC User uniquement, plan avec numéro généré -->
+                <button name="action_open_send_plan_wizard"
+                        string="Envoyer"
                         type="object"
                         class="oe_highlight"
                         groups="nc_management.group_nc_utilisateur"
-                        attrs="{'invisible': [('submission_state', '!=', 'brouillon')]}"/>
+                        attrs="{'invisible': [('name', '=', 'New')]}"/>
                 <!-- Barre de statut avancement -->
                 <field name="state" widget="statusbar"
                        statusbar_visible="draft,done"/>

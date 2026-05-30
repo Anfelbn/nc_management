@@ -47,7 +47,7 @@
                         string="Envoyer"
                         type="object"
                         class="oe_highlight"
-                        attrs="{'invisible': ['|', ('state','=','validated'), ('name','=','New')]}"/>
+                        attrs="{'invisible': [('name','=','New')]}"/>
                 <button name="action_valider_fnc"
                         string="Valider"
                         type="object"
@@ -297,6 +297,10 @@
     <field name="arch" type="xml">
         <form string="Fiche d'Action Corrective">
             <header>
+                <button name="action_open_send_fac_wizard"
+                        string="Envoyer"
+                        type="object"
+                        class="oe_highlight"/>
                 <field name="state" widget="statusbar"
                        statusbar_visible="draft,submitted,in_progress,validated,closed"/>
             </header>

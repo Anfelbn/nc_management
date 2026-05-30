@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <record model="ir.ui.view" id="view_send_plan_wizard">
+        <field name="name">nc_management.send_plan_wizard.form</field>
+        <field name="model">nc_management.send_plan_wizard</field>
+        <field name="arch" type="xml">
+            <form string="Envoyer à la Responsable Qualité">
+                <group>
+                    <field name="plan_id" invisible="1"/>
+                    <field name="recipient_id"
+                           options="{'no_create': True, 'no_create_edit': True}"
+                           domain="[('id', 'in', context.get('qm_employee_ids', []))]"
+                           string="Destinataire (Responsable Qualité)"/>
+                    <field name="note"
+                           placeholder="Message optionnel pour le destinataire..."/>
+                </group>
+                <footer>
+                    <button name="action_send"
+                            string="Envoyer"
+                            type="object"
+                            class="oe_highlight"/>
+                    <button string="Annuler"
+                            class="oe_link"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</data>
+</odoo>

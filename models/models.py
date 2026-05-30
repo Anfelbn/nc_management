@@ -184,6 +184,7 @@ class Nonconformity(models.Model):
         ('validated',   'Validée'),
     ], string='Statut', default='draft', track_visibility='onchange')
     date_in_progress = fields.Date(string='Date mise en cours')
+    date_envoi       = fields.Date(string="Date d'envoi", readonly=True)
 
     @api.depends('fac_ids')
     def _compute_fac_reference(self):
@@ -651,6 +652,7 @@ class CorrectiveAction(models.Model):
                        context={'no_create': True, 'no_create_edit': True})
     date_cloture   = fields.Date(string='Date clôture')
     visa_cloture   = fields.Char(string='Visa clôture')
+    date_envoi     = fields.Date(string="Date d'envoi", readonly=True)
 
     # ── Statut ────────────────────────────────────────────────
     state = fields.Selection([
@@ -729,6 +731,20 @@ class CorrectiveAction(models.Model):
                     vals = dict(vals, state='submitted')
                 break  # formulaire = un seul record à la fois
         return super(CorrectiveAction, self).write(vals)
+
+    @api.multi
+    def action_open_send_fac_wizard(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Envoyer la FAC',
+            'res_model': 'nc_management.send_fac_wizard',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'view_id': self.env.ref('nc_management.view_send_fac_wizard').id,
+            'target': 'new',
+            'context': {'default_fac_id': self.id},
+        }
 
     @api.multi
     def unlink(self):
@@ -1125,6 +1141,27 @@ class PlanActionSmi(models.Model):
         self.service_id = False
 
     @api.multi
+    def action_open_send_plan_wizard(self):
+        self.ensure_one()
+        qm_group = self.env.ref('nc_management.group_responsable_qualite', raise_if_not_found=False)
+        qm_emp_ids = self.env['hr.employee'].search([
+            ('user_id', 'in', qm_group.users.ids if qm_group else [])
+        ]).ids
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Envoyer à la Responsable Qualité',
+            'res_model': 'nc_management.send_plan_wizard',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'view_id': self.env.ref('nc_management.view_send_plan_wizard').id,
+            'target': 'new',
+            'context': {
+                'default_plan_id': self.id,
+                'qm_employee_ids': qm_emp_ids,
+            },
+        }
+
+    @api.multi
     def action_envoyer_rmqse(self):
         self.ensure_one()
         if self.submission_state != 'brouillon':
@@ -1509,13 +1546,17 @@ class NcDashboard(models.Model):
             ('date', '>=', period_start.strftime('%Y-%m-%d')),
             ('date', '<', period_end.strftime('%Y-%m-%d')),
         ]
-        received_fnc_period_domain = fnc_period_domain + [
+        received_fnc_period_domain = [
+            ('date_envoi', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date_envoi', '<', period_end.strftime('%Y-%m-%d')),
             ('state', '!=', 'draft'),
             ('create_uid', '!=', self.env.uid),
         ]
         received_fnc_ids = fnc.search(received_fnc_period_domain).ids
         fac_received_period_domain = [
+            '|',
             ('fnc_id', 'in', received_fnc_ids),
+            ('date_envoi', '>=', period_start.strftime('%Y-%m-%d')),
         ]
 
         # Domaine FNC créées par RMQSE (espace RMQSE — section Évolution)
@@ -1858,12 +1899,12 @@ class NcDashboard(models.Model):
         fnc_this_month = fnc.search(received_fnc_period_domain)
         fac_this_month = fac.search(fac_received_period_domain)
         for fnc_rec in fnc_this_month:
-            k = str(fnc_rec.date)[:10]
+            k = str(fnc_rec.date_envoi or fnc_rec.date)[:10]
             if k not in calendar_events:
                 calendar_events[k] = {'fnc': False, 'fac': False, 'plan': False}
             calendar_events[k]['fnc'] = True
         for fac_rec in fac_this_month:
-            k = str(fac_rec.date)[:10]
+            k = str(fac_rec.date_envoi or fac_rec.date)[:10]
             if k not in calendar_events:
                 calendar_events[k] = {'fnc': False, 'fac': False, 'plan': False}
             calendar_events[k]['fac'] = True
@@ -1986,7 +2027,7 @@ class NcDashboard(models.Model):
 
         received_docs = []
         for fnc_rec in fnc.search(received_fnc_period_domain,
-                                  order='date desc, id desc', limit=20):
+                                  order='date_envoi desc, id desc', limit=20):
             responsible = fnc_rec.assigned_to_id or fnc_rec.responsable_action_id
             submitter = fnc_rec.submitted_by_id
             signale = fnc_rec.signale_par_id
@@ -2010,10 +2051,11 @@ class NcDashboard(models.Model):
                 'submitted_by_name': submitter.name if submitter else '',
             }
             received_docs.append(item)
-            if fnc_rec.date:
-                _append_received(str(fnc_rec.date)[:10], item)
+            fnc_key = str(fnc_rec.date_envoi or fnc_rec.date)[:10] if (fnc_rec.date_envoi or fnc_rec.date) else None
+            if fnc_key:
+                _append_received(fnc_key, item)
 
-        for fac_rec in fac.search(fac_received_period_domain, order='date desc, id desc', limit=20):
+        for fac_rec in fac.search(fac_received_period_domain, order='date_envoi desc, date desc, id desc', limit=20):
             responsible = fac_rec.responsable_actions_id
             fnc_submitter = fac_rec.fnc_id.submitted_by_id if fac_rec.fnc_id else None
             fnc_signale = fac_rec.fnc_id.signale_par_id if fac_rec.fnc_id else None
@@ -2039,10 +2081,7 @@ class NcDashboard(models.Model):
                 'submitted_by_name': fnc_submitter.name if fnc_submitter else '',
             }
             received_docs.append(item)
-            # Indexer sur la date de la FNC parente pour toujours apparaître groupée
-            fac_key = (str(fac_rec.fnc_id.date)[:10]
-                       if fac_rec.fnc_id and fac_rec.fnc_id.date
-                       else (str(fac_rec.date)[:10] if fac_rec.date else None))
+            fac_key = str(fac_rec.date_envoi or fac_rec.date)[:10] if (fac_rec.date_envoi or fac_rec.date) else None
             if fac_key:
                 _append_received(fac_key, item)
 
@@ -2098,7 +2137,10 @@ class NcDashboard(models.Model):
         # FNCs belonging to this user
         user_fnc_domain = [('create_uid', '=', uid)]
         user_fnc_ids = fnc_model.search(user_fnc_domain).ids
-        user_fac_domain = [('fnc_id', 'in', user_fnc_ids)]
+        user_fac_domain = ['|',
+            ('fnc_id', 'in', user_fnc_ids),
+            ('responsable_id', '=', uid),
+        ]
 
         # ── KPI totals ──
         fnc_total     = fnc_model.search_count(user_fnc_domain)
@@ -2138,20 +2180,20 @@ class NcDashboard(models.Model):
         m_end = (today + relativedelta(months=1)).replace(day=1)
         calendar_events = {}
         for fnc_rec in fnc_model.search([
-            ('create_uid', '=', uid),
-            ('date', '>=', str(m_start)),
-            ('date', '<', str(m_end)),
+            ('assigned_to_id.user_id', '=', uid),
+            ('date_envoi', '>=', str(m_start)),
+            ('date_envoi', '<', str(m_end)),
         ]):
-            k = str(fnc_rec.date)[:10]
+            k = str(fnc_rec.date_envoi)[:10]
             if k not in calendar_events:
                 calendar_events[k] = {'fnc': False, 'fac': False}
             calendar_events[k]['fnc'] = True
         for fac_rec in fac_model.search([
-            ('fnc_id', 'in', user_fnc_ids),
-            ('date', '>=', str(m_start)),
-            ('date', '<', str(m_end)),
+            ('responsable_id', '=', uid),
+            ('date_envoi', '>=', str(m_start)),
+            ('date_envoi', '<', str(m_end)),
         ]):
-            k = str(fac_rec.date)[:10]
+            k = str(fac_rec.date_envoi)[:10]
             if k not in calendar_events:
                 calendar_events[k] = {'fnc': False, 'fac': False}
             calendar_events[k]['fac'] = True
@@ -2220,39 +2262,39 @@ class NcDashboard(models.Model):
                 received_by_date[day_key] = []
             received_by_date[day_key].append(item)
 
-        for fnc_rec in fnc_model.search(user_fnc_domain, order='date desc, id desc'):
-            if not fnc_rec.date:
-                continue
-            k = str(fnc_rec.date)[:10]
-            dept_name = fnc_rec.direction_id.name if fnc_rec.direction_id else ''
+        for fnc_rec in fnc_model.search([
+            ('assigned_to_id.user_id', '=', uid),
+            ('date_envoi', '!=', False),
+        ], order='date_envoi desc, id desc'):
+            k = str(fnc_rec.date_envoi)[:10]
+            sender_name = fnc_rec.signale_par_id.name if fnc_rec.signale_par_id else (
+                fnc_rec.direction_id.name if fnc_rec.direction_id else '')
             _append_doc(k, {
                 'id': fnc_rec.id,
                 'name': fnc_rec.name or '',
                 'kind': 'FNC',
                 'model': 'nc_management.nonconformity',
                 'state': fnc_rec.state,
-                'sender_name': dept_name,
-                'sender_initials': _initials(dept_name),
+                'sender_name': sender_name,
+                'sender_initials': _initials(sender_name),
                 'fnc_id': None,
             })
 
-        for fac_rec in fac_model.search(user_fac_domain, order='date desc, id desc'):
-            if not fac_rec.fnc_id:
-                continue
-            fnc_date = fac_rec.fnc_id.date
-            if not fnc_date:
-                continue
-            k = str(fnc_date)[:10]
-            resp_name = fac_rec.responsable_actions_id.name if fac_rec.responsable_actions_id else ''
+        for fac_rec in fac_model.search([
+            ('responsable_id', '=', uid),
+            ('date_envoi', '!=', False),
+        ], order='date_envoi desc, id desc'):
+            k = str(fac_rec.date_envoi)[:10]
+            sender_name = fac_rec.responsable_actions_id.name if fac_rec.responsable_actions_id else ''
             _append_doc(k, {
                 'id': fac_rec.id,
                 'name': fac_rec.name or '',
                 'kind': 'FAC',
                 'model': 'nc_management.corrective_action',
                 'state': fac_rec.state,
-                'sender_name': resp_name,
-                'sender_initials': _initials(resp_name),
-                'fnc_id': fac_rec.fnc_id.id,
+                'sender_name': sender_name,
+                'sender_initials': _initials(sender_name),
+                'fnc_id': None,
             })
 
         return {

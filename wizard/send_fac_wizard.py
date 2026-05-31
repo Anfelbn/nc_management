@@ -37,6 +37,7 @@ class SendFacWizard(models.TransientModel):
         fac.write({
             'date_envoi':     fields.Date.today(),
             'responsable_id': recipient.user_id.id if recipient.user_id else False,
+            'sent_by_id':     self.env.uid,
         })
 
         # Notification sur la FAC

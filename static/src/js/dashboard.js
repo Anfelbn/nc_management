@@ -99,20 +99,6 @@ odoo.define('nc_management.dashboard', function(require){
         start: function(){
             this._super.apply(this, arguments);
             this._bindAll();
-            this._startAutoRefresh();
-        },
-
-        _startAutoRefresh: function(){
-            var self = this;
-            this._refreshTimer = setInterval(function(){
-                var period = self.$('.pb.active').data('period') || '1m';
-                self._reload(period);
-            }, 60000);
-        },
-
-        destroy: function(){
-            if(this._refreshTimer){ clearInterval(this._refreshTimer); }
-            this._super.apply(this, arguments);
         },
 
         _bindAll: function(){
@@ -810,27 +796,6 @@ odoo.define('nc_management.dashboard', function(require){
         start: function(){
             this._super.apply(this, arguments);
             this._bind();
-            this._startAutoRefresh();
-        },
-
-        _startAutoRefresh: function(){
-            var self = this;
-            this._refreshTimer = setInterval(function(){
-                self._rpc({
-                    model:  'nc_management.dashboard',
-                    method: 'get_user_stats',
-                    args:   [],
-                }).then(function(stats){
-                    self.stats = stats;
-                    self.renderElement();
-                    self._bind();
-                });
-            }, 60000);
-        },
-
-        destroy: function(){
-            if(this._refreshTimer){ clearInterval(this._refreshTimer); }
-            this._super.apply(this, arguments);
         },
 
         _bind: function(){
@@ -972,7 +937,6 @@ odoo.define('nc_management.dashboard', function(require){
         },
 
         _renderReceivedDocs: function(docs, key){
-            var self  = this;
             var label = key ? this._formatDateKey(key) : "Today's documents";
             this.$('.received-sub').text(label);
 
@@ -981,28 +945,12 @@ odoo.define('nc_management.dashboard', function(require){
                 return;
             }
 
-            // Group: each FNC with its linked FACs; collect Plans separately
-            var groups   = {};
-            var orphFacs = [];
-            var plans    = [];
-            docs.forEach(function(item){
-                if(item.kind === 'FNC') groups[item.id] = {fnc: item, facs: []};
-            });
-            docs.forEach(function(item){
-                if(item.kind === 'FAC'){
-                    if(item.fnc_id && groups[item.fnc_id]) groups[item.fnc_id].facs.push(item);
-                    else orphFacs.push(item);
-                } else if(item.kind === 'Plan'){
-                    plans.push(item);
-                }
-            });
-
             var stateLabel = {
-                draft:       'Draft',
-                submitted:   'Submitted',
-                in_progress: 'In Progress',
-                validated:   'Validated',
-                closed:      'Closed',
+                draft:       'Brouillon',
+                submitted:   'Soumis',
+                in_progress: 'En cours',
+                validated:   'Validé',
+                closed:      'Clôturé',
             };
             var stateBadge = {
                 draft:       'style="background:#f1f5f9;color:#475569"',
@@ -1014,75 +962,40 @@ odoo.define('nc_management.dashboard', function(require){
 
             var html = '';
 
-            Object.keys(groups).forEach(function(fid){
-                var g   = groups[fid];
-                var fnc = g.fnc;
-                var sb  = stateBadge[fnc.state] || '';
-                html += '<div style="border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden">';
-                html += '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f8fafc">'
-                      + '<div class="nc-avatar avatar-blue">' + _.escape(fnc.sender_initials || '?') + '</div>'
-                      + '<div style="flex:1;min-width:0">'
-                      + '<div style="display:flex;justify-content:space-between;align-items:center">'
-                      + '<div class="nc-notif-ref">' + _.escape(fnc.name || '') + '</div>'
-                      + '<div style="display:flex;gap:4px"><span class="badge blue">FNC</span>'
-                      + '<span ' + sb + '>' + (stateLabel[fnc.state] || fnc.state) + '</span></div>'
-                      + '</div>'
-                      + '<div class="nc-notif-actions">'
-                      + '<div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" data-id="' + fnc.id + '">Open FNC</div>'
-                      + '</div></div></div>';
-
-                g.facs.forEach(function(fac){
-                    var fsb = stateBadge[fac.state] || '';
-                    html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px 8px 16px;border-top:1px solid #f1f5f9;background:white">'
-                          + '<div style="width:2px;background:#EF4444;border-radius:2px;align-self:stretch;flex-shrink:0;margin-top:4px"></div>'
-                          + '<div class="nc-avatar avatar-red" style="width:28px;height:28px;font-size:10px">' + _.escape(fac.sender_initials || '?') + '</div>'
+            // Each item displayed independently — no FNC/FAC grouping, no plans
+            docs.forEach(function(item){
+                if(item.kind === 'FNC'){
+                    var sb = stateBadge[item.state] || '';
+                    html += '<div style="border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden">'
+                          + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f8fafc">'
+                          + '<div class="nc-avatar avatar-blue">' + _.escape(item.sender_initials || '?') + '</div>'
                           + '<div style="flex:1;min-width:0">'
                           + '<div style="display:flex;justify-content:space-between;align-items:center">'
-                          + '<div style="font-size:11px;font-weight:600;color:#1e293b">' + _.escape(fac.name || '') + '</div>'
-                          + '<div style="display:flex;gap:4px"><span class="badge red">FAC</span>'
-                          + '<span ' + fsb + '>' + (stateLabel[fac.state] || fac.state) + '</span></div>'
+                          + '<div class="nc-notif-ref">' + _.escape(item.name || '') + '</div>'
+                          + '<div style="display:flex;gap:4px"><span class="badge blue">FNC</span>'
+                          + '<span ' + sb + '>' + (stateLabel[item.state] || item.state || '') + '</span></div>'
                           + '</div>'
+                          + (item.sender_name ? '<div style="font-size:11px;color:#64748b;margin-top:2px">De : ' + _.escape(item.sender_name) + '</div>' : '')
                           + '<div class="nc-notif-actions">'
-                          + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Open FAC</div>'
-                          + '</div></div></div>';
-                });
-                html += '</div>';
-            });
-
-            orphFacs.forEach(function(fac){
-                var fsb = stateBadge[fac.state] || '';
-                html += '<div style="border:1px solid #fecaca;border-radius:10px;margin-bottom:8px;overflow:hidden">'
-                      + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#fef2f2">'
-                      + '<div class="nc-avatar avatar-red">' + _.escape(fac.sender_initials || '?') + '</div>'
-                      + '<div style="flex:1;min-width:0">'
-                      + '<div style="display:flex;justify-content:space-between;align-items:center">'
-                      + '<div class="nc-notif-ref">' + _.escape(fac.name || '') + '</div>'
-                      + '<div style="display:flex;gap:4px"><span class="badge red">FAC</span>'
-                      + '<span ' + fsb + '>' + (stateLabel[fac.state] || fac.state) + '</span></div>'
-                      + '</div>'
-                      + '<div class="nc-notif-actions">'
-                      + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Open FAC</div>'
-                      + '</div></div></div></div>';
-            });
-
-            var planStateLabel = {
-                brouillon: 'Brouillon', soumis: 'Soumis',
-                integre: 'Intégré', cloture: 'Clôturé',
-            };
-            plans.forEach(function(item){
-                var st = item.submission_state || 'brouillon';
-                html += '<div style="border:1px solid #e9d5ff;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#faf5ff">'
-                      + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px">'
-                      + '<div class="nc-avatar avatar-purple">' + _.escape(item.sender_initials || '?') + '</div>'
-                      + '<div style="flex:1;min-width:0">'
-                      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">'
-                      + '<div class="nc-notif-ref" style="color:#6d28d9">' + _.escape(item.name || '') + '</div>'
-                      + '<span class="badge purple">PLAN</span>'
-                      + '</div>'
-                      + '<div style="font-size:11px;color:#7c3aed;margin-top:2px">' + _.escape(item.type || 'Plan action') + '</div>'
-                      + '<div class="nc-notif-actions">'
-                      + '<div class="btn-sm primary btn-open" style="background:#7c3aed;border-color:#7c3aed" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
-                      + '</div></div></div></div>';
+                          + '<div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" data-id="' + item.id + '">Ouvrir FNC</div>'
+                          + '</div></div></div></div>';
+                } else if(item.kind === 'FAC'){
+                    var fsb = stateBadge[item.state] || '';
+                    html += '<div style="border:1px solid #fecaca;border-radius:10px;margin-bottom:8px;overflow:hidden">'
+                          + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#fef2f2">'
+                          + '<div class="nc-avatar avatar-red">' + _.escape(item.sender_initials || '?') + '</div>'
+                          + '<div style="flex:1;min-width:0">'
+                          + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                          + '<div class="nc-notif-ref">' + _.escape(item.name || '') + '</div>'
+                          + '<div style="display:flex;gap:4px"><span class="badge red">FAC</span>'
+                          + '<span ' + fsb + '>' + (stateLabel[item.state] || item.state || '') + '</span></div>'
+                          + '</div>'
+                          + (item.sender_name ? '<div style="font-size:11px;color:#64748b;margin-top:2px">De : ' + _.escape(item.sender_name) + '</div>' : '')
+                          + '<div class="nc-notif-actions">'
+                          + '<div class="btn-sm btn-open" data-model="nc_management.corrective_action" data-id="' + item.id + '">Ouvrir FAC</div>'
+                          + '</div></div></div></div>';
+                }
+                // Plans: NC user ne reçoit pas de plans
             });
 
             if(!html) html = '<div class="nc-empty">No documents for this date.</div>';

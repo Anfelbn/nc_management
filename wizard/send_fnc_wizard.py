@@ -66,7 +66,7 @@ class SendFncWizard(models.TransientModel):
         else:
             raise UserError("Cette FNC ne peut pas être envoyée dans son état actuel.")
 
-        vals = {'state': new_state, 'assigned_to_id': recipient.id, 'date_envoi': fields.Date.today()}
+        vals = {'state': new_state, 'assigned_to_id': recipient.id, 'date_envoi': fields.Date.today(), 'sent_by_id': self.env.uid}
         vals.update(extra_vals)
         fnc.write(vals)
 
@@ -85,10 +85,13 @@ class SendFncWizard(models.TransientModel):
                 message_type='comment')
 
         for fac in fnc.sudo().fac_ids:
-            fac.sudo().write({'responsable_id': recipient.user_id.id if recipient.user_id else False})
             if is_qm:
-                # QM reçoit aussi la FAC liée → mettre à jour date_envoi pour qu'elle apparaisse dans le dashboard
-                fac.sudo().write({'date_envoi': fields.Date.today()})
+                # QM reçoit la FAC liée → date_envoi = aujourd'hui pour apparaître dans le dashboard QM
+                fac.sudo().write({
+                    'responsable_id': recipient.user_id.id if recipient.user_id else False,
+                    'date_envoi': fields.Date.today(),
+                    'sent_by_id': self.env.uid,
+                })
                 fac.sudo().message_post(
                     body='FAC liée à <b>%s</b> — transmise à <b>%s</b>.%s' % (
                         fnc.name, recipient.name, note_part))
@@ -99,5 +102,12 @@ class SendFncWizard(models.TransientModel):
                         partner_ids=partner_ids,
                         subtype='mail.mt_comment',
                         message_type='comment')
+            else:
+                # NC user ne reçoit pas la FAC via le routing FNC → effacer date_envoi
+                # pour qu'elle n'apparaisse pas dans la section "Fiches reçues" du NC user
+                fac.sudo().write({
+                    'responsable_id': recipient.user_id.id if recipient.user_id else False,
+                    'date_envoi': False,
+                })
 
         return {'type': 'ir.actions.act_window_close'}

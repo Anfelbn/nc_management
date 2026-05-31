@@ -185,6 +185,7 @@ class Nonconformity(models.Model):
     ], string='Statut', default='draft', track_visibility='onchange')
     date_in_progress = fields.Date(string='Date mise en cours')
     date_envoi       = fields.Date(string="Date d'envoi", readonly=True)
+    sent_by_id       = fields.Many2one('res.users', string='Envoyé par', readonly=True)
 
     @api.depends('fac_ids')
     def _compute_fac_reference(self):
@@ -653,6 +654,7 @@ class CorrectiveAction(models.Model):
     date_cloture   = fields.Date(string='Date clôture')
     visa_cloture   = fields.Char(string='Visa clôture')
     date_envoi     = fields.Date(string="Date d'envoi", readonly=True)
+    sent_by_id     = fields.Many2one('res.users', string='Envoyé par', readonly=True)
 
     # ── Statut ────────────────────────────────────────────────
     state = fields.Selection([
@@ -1556,7 +1558,10 @@ class NcDashboard(models.Model):
         fac_received_period_domain = [
             '|',
             ('fnc_id', 'in', received_fnc_ids),
+            '&', '&',
             ('date_envoi', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date_envoi', '<', period_end.strftime('%Y-%m-%d')),
+            ('create_uid', '!=', self.env.uid),
         ]
 
         # Domaine FNC créées par RMQSE (espace RMQSE — section Évolution)
@@ -1876,21 +1881,29 @@ class NcDashboard(models.Model):
         result['global_fnc_types'] = _type_percentages(_all_received_fnc)
         result['global_fac_types'] = _type_percentages(_all_received_fac_fnc)
 
-        # Diagramme global : toutes FNC/FAC du système (depuis mois actuel)
+        # Diagramme global : FNC/FAC propres RMQSE + reçus des autres directions
         monthly_fnc_global = []
         monthly_fac_global = []
         for i in range(period_months - 1, -1, -1):
             d = today - relativedelta(months=i)
             d_start = d.replace(day=1)
             d_end = (d + relativedelta(months=1)).replace(day=1)
-            monthly_fnc_global.append(fnc.search_count([
+            m_own_fnc_ids = fnc.search([
                 ('date', '>=', d_start.strftime('%Y-%m-%d')),
                 ('date', '<', d_end.strftime('%Y-%m-%d')),
-            ]))
-            monthly_fac_global.append(fac.search_count([
-                ('date', '>=', d_start.strftime('%Y-%m-%d')),
-                ('date', '<', d_end.strftime('%Y-%m-%d')),
-            ]))
+                ('create_uid', '=', self.env.uid),
+            ]).ids
+            m_recv_fnc_ids = fnc.search([
+                ('date_envoi', '>=', d_start.strftime('%Y-%m-%d')),
+                ('date_envoi', '<', d_end.strftime('%Y-%m-%d')),
+                ('state', '!=', 'draft'),
+                ('create_uid', '!=', self.env.uid),
+            ]).ids
+            all_m_fnc_ids = list(set(m_own_fnc_ids) | set(m_recv_fnc_ids))
+            monthly_fnc_global.append(len(all_m_fnc_ids))
+            monthly_fac_global.append(
+                fac.search_count([('fnc_id', 'in', all_m_fnc_ids)]) if all_m_fnc_ids else 0
+            )
         result['monthly_fnc_global'] = monthly_fnc_global
         result['monthly_fac_global'] = monthly_fac_global
 
@@ -2027,13 +2040,14 @@ class NcDashboard(models.Model):
 
         received_docs = []
         for fnc_rec in fnc.search(received_fnc_period_domain,
-                                  order='date_envoi desc, id desc', limit=20):
+                                  order='date_envoi desc, id desc'):
             responsible = fnc_rec.assigned_to_id or fnc_rec.responsable_action_id
             submitter = fnc_rec.submitted_by_id
             signale = fnc_rec.signale_par_id
-            sender_name = (signale.name if signale
+            sender_name = (fnc_rec.sent_by_id.name if fnc_rec.sent_by_id
+                           else (signale.name if signale
                            else (submitter.name if submitter and submitter.id != self.env.uid
-                           else (fnc_rec.direction_id.name if fnc_rec.direction_id else '')))
+                           else (fnc_rec.direction_id.name if fnc_rec.direction_id else ''))))
             item = {
                 'id': fnc_rec.id,
                 'name': fnc_rec.name,
@@ -2055,13 +2069,14 @@ class NcDashboard(models.Model):
             if fnc_key:
                 _append_received(fnc_key, item)
 
-        for fac_rec in fac.search(fac_received_period_domain, order='date_envoi desc, date desc, id desc', limit=20):
+        for fac_rec in fac.search(fac_received_period_domain, order='date_envoi desc, date desc, id desc'):
             responsible = fac_rec.responsable_actions_id
             fnc_submitter = fac_rec.fnc_id.submitted_by_id if fac_rec.fnc_id else None
             fnc_signale = fac_rec.fnc_id.signale_par_id if fac_rec.fnc_id else None
-            fac_sender_name = (fnc_signale.name if fnc_signale
+            fac_sender_name = (fac_rec.sent_by_id.name if fac_rec.sent_by_id
+                               else (fnc_signale.name if fnc_signale
                                else (fnc_submitter.name if fnc_submitter and fnc_submitter.id != self.env.uid
-                               else (fac_rec.direction_id.name if fac_rec.direction_id else '')))
+                               else (fac_rec.direction_id.name if fac_rec.direction_id else ''))))
             item = {
                 'id': fac_rec.id,
                 'name': fac_rec.name,
@@ -2175,14 +2190,11 @@ class NcDashboard(models.Model):
             ]))
             monthly_labels.append(fr_months[m_start.month - 1])
 
-        # ── Calendar events (current month) ──
-        m_start = today.replace(day=1)
-        m_end = (today + relativedelta(months=1)).replace(day=1)
+        # ── Calendar events (all time, same scope as received_by_date) ──
         calendar_events = {}
         for fnc_rec in fnc_model.search([
             ('assigned_to_id.user_id', '=', uid),
-            ('date_envoi', '>=', str(m_start)),
-            ('date_envoi', '<', str(m_end)),
+            ('date_envoi', '!=', False),
         ]):
             k = str(fnc_rec.date_envoi)[:10]
             if k not in calendar_events:
@@ -2190,8 +2202,7 @@ class NcDashboard(models.Model):
             calendar_events[k]['fnc'] = True
         for fac_rec in fac_model.search([
             ('responsable_id', '=', uid),
-            ('date_envoi', '>=', str(m_start)),
-            ('date_envoi', '<', str(m_end)),
+            ('date_envoi', '!=', False),
         ]):
             k = str(fac_rec.date_envoi)[:10]
             if k not in calendar_events:
@@ -2267,8 +2278,9 @@ class NcDashboard(models.Model):
             ('date_envoi', '!=', False),
         ], order='date_envoi desc, id desc'):
             k = str(fnc_rec.date_envoi)[:10]
-            sender_name = fnc_rec.signale_par_id.name if fnc_rec.signale_par_id else (
-                fnc_rec.direction_id.name if fnc_rec.direction_id else '')
+            sender_name = (fnc_rec.sent_by_id.name if fnc_rec.sent_by_id
+                           else (fnc_rec.signale_par_id.name if fnc_rec.signale_par_id
+                           else (fnc_rec.direction_id.name if fnc_rec.direction_id else '')))
             _append_doc(k, {
                 'id': fnc_rec.id,
                 'name': fnc_rec.name or '',
@@ -2285,7 +2297,7 @@ class NcDashboard(models.Model):
             ('date_envoi', '!=', False),
         ], order='date_envoi desc, id desc'):
             k = str(fac_rec.date_envoi)[:10]
-            sender_name = fac_rec.responsable_actions_id.name if fac_rec.responsable_actions_id else ''
+            sender_name = fac_rec.sent_by_id.name if fac_rec.sent_by_id else ''
             _append_doc(k, {
                 'id': fac_rec.id,
                 'name': fac_rec.name or '',
@@ -2294,7 +2306,7 @@ class NcDashboard(models.Model):
                 'state': fac_rec.state,
                 'sender_name': sender_name,
                 'sender_initials': _initials(sender_name),
-                'fnc_id': None,
+                'fnc_id': fac_rec.fnc_id.id if fac_rec.fnc_id else None,
             })
 
         return {
@@ -2332,10 +2344,10 @@ class NcDashboard(models.Model):
         period_end = today.replace(day=1) + relativedelta(months=1)
         period_start = today.replace(day=1) - relativedelta(months=period_months - 1)
 
-        # Même filtre que les barres : FNC reçues = pas créées par la RMQSE
+        # Même filtre que les barres : FNC reçues = pas créées par la RMQSE, filtrées par date_envoi
         received_fnc_domain = [
-            ('date', '>=', str(period_start)),
-            ('date', '<', str(period_end)),
+            ('date_envoi', '>=', str(period_start)),
+            ('date_envoi', '<', str(period_end)),
             ('state', '!=', 'draft'),
             ('create_uid', '!=', self.env.uid),
         ]

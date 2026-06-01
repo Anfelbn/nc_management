@@ -1777,7 +1777,7 @@ class NcDashboard(models.Model):
         fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
         monthly_labels = []
         for i in range(period_months - 1, -1, -1):
-            d = today - relativedelta(months=i)
+            d = ref_date - relativedelta(months=i)
             m_start = d.replace(day=1)
             m_end = (d + relativedelta(months=1)).replace(day=1)
             m_fnc_recs = fnc.search([
@@ -1889,7 +1889,7 @@ class NcDashboard(models.Model):
         monthly_fnc_global = []
         monthly_fac_global = []
         for i in range(period_months - 1, -1, -1):
-            d = today - relativedelta(months=i)
+            d = ref_date - relativedelta(months=i)
             d_start = d.replace(day=1)
             d_end = (d + relativedelta(months=1)).replace(day=1)
             m_own_fnc_ids = fnc.search([
@@ -1937,8 +1937,13 @@ class NcDashboard(models.Model):
         result['plan_en_attente'] = len(plan_this_period.filtered(lambda p: p.submission_state == 'soumis'))
         result['plan_integres']   = len(plan_this_period.filtered(lambda p: p.submission_state == 'integre'))
 
-        mes_domain   = [('create_uid', '=', self.env.uid), ('is_global', '=', False)]
-        recus_domain = [('sent_to_rmqse', '=', True), ('is_global', '=', False), ('sent_by', '!=', self.env.uid)]
+        period_filter_mes   = [('create_date', '>=', period_start.strftime('%Y-%m-%d')),
+                                ('create_date', '<',  period_end.strftime('%Y-%m-%d'))]
+        period_filter_recus = [('date_envoi',   '>=', period_start.strftime('%Y-%m-%d')),
+                                ('date_envoi',   '<',  period_end.strftime('%Y-%m-%d'))]
+        mes_domain   = [('create_uid', '=', self.env.uid), ('is_global', '=', False)] + period_filter_mes
+        recus_domain = [('sent_to_rmqse', '=', True), ('is_global', '=', False),
+                        ('sent_by', '!=', self.env.uid)] + period_filter_recus
         result['plan_mes_total']      = plan.search_count(mes_domain)
         result['plan_mes_brouillon']  = plan.search_count(mes_domain   + [('state', '=', 'draft')])
         result['plan_mes_realise']    = plan.search_count(mes_domain   + [('state', '=', 'done')])

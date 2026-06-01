@@ -475,14 +475,12 @@
 <div class="nc-db">
 <div class="nc-inner">
 
-  <!-- En-tête : sans texte NC MANAGEMENT ni date, avec boutons période -->
+  <!-- En-tête -->
   <div class="nc-header">
     <div>
-      <div class="nc-brand-sub">CIMENTERIE DE SÉTIF — GICA</div>
-      <div class="nc-brand-title">Dashboard NC Utilisateur</div>
+      <div class="nc-brand-title">Dashboard</div>
     </div>
     <div class="nc-header-right">
-      <span style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Période stats</span>
       <div class="period-btn">
         <div class="pb active" data-period="1m">1 mois</div>
         <div class="pb" data-period="6m">6 mois</div>
@@ -502,8 +500,7 @@
 
       <!-- Fiches reçues -->
       <div class="nc-card" style="max-height:400px;overflow-y:auto">
-        <div class="nc-card-title">Mes Fiches</div>
-        <div class="nc-card-sub received-sub">Documents reçus aujourd'hui</div>
+        <div class="nc-card-title">Fiches reçues</div>
         <div class="received-list"></div>
       </div>
 
@@ -561,44 +558,42 @@
       <div style="display:flex;flex-direction:column;gap:10px">
 
         <!-- Total FNC -->
-        <div class="nc-kpi" data-filter="fnc_total" style="cursor:pointer;flex:1">
+        <div class="nc-kpi" style="flex:1">
           <div class="nc-kpi-top" style="background:#2196F3"></div>
           <div class="nc-kpi-label">Total FNC</div>
-          <div class="nc-kpi-val" style="color:#1565C0"><t t-esc="widget.stats.fnc_total"/></div>
+          <div class="nc-kpi-val ud-open-list" data-filter="fnc_total" style="color:#1565C0;cursor:pointer"><t t-esc="widget.stats.fnc_total"/></div>
           <div class="nc-kpi-sub">↳ Taux validation : <t t-esc="widget.stats.fnc_taux_validation"/>%</div>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-            <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fnc_brouillon"/></span>
-            <span class="badge orange">Soumise <t t-esc="widget.stats.fnc_submitted"/></span>
-            <span class="badge blue">En cours <t t-esc="widget.stats.fnc_cours"/></span>
-            <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fnc_validated"/></span>
+            <span class="badge" style="background:#f1f5f9;color:#475569;pointer-events:none">Brouillon <t t-esc="widget.stats.fnc_brouillon"/></span>
+            <span class="badge orange" style="pointer-events:none">Soumise <t t-esc="widget.stats.fnc_submitted"/></span>
+            <span class="badge blue" style="pointer-events:none">En cours <t t-esc="widget.stats.fnc_cours"/></span>
+            <span class="badge" style="background:#d1fae5;color:#065f46;pointer-events:none">Validée <t t-esc="widget.stats.fnc_validated"/></span>
           </div>
         </div>
 
         <!-- Total FAC -->
-        <div class="nc-kpi" data-filter="fac_total" style="cursor:pointer;flex:1">
+        <div class="nc-kpi" style="flex:1">
           <div class="nc-kpi-top" style="background:#10B981"></div>
           <div class="nc-kpi-label">Total FAC</div>
-          <div class="nc-kpi-val" style="color:#065F46"><t t-esc="widget.stats.fac_total"/></div>
-          <div class="nc-kpi-sub">↳ Clôturées : <t t-esc="widget.stats.fac_closed"/></div>
+          <div class="nc-kpi-val ud-open-list" data-filter="fac_total" style="color:#065F46;cursor:pointer"><t t-esc="widget.stats.fac_total"/></div>
+          <div class="nc-kpi-sub">↳ Taux de clôture : <t t-esc="widget.stats.fac_taux_cloture"/>%</div>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-            <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
-            <span class="badge orange">Soumise <t t-esc="widget.stats.fac_submitted"/></span>
-            <span class="badge blue">En cours <t t-esc="widget.stats.fac_cours"/></span>
-            <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fac_validated"/></span>
-            <span class="badge green">Clôturée <t t-esc="widget.stats.fac_closed"/></span>
+            <span class="badge" style="background:#f1f5f9;color:#475569;pointer-events:none">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
+            <span class="badge orange" style="pointer-events:none">Soumise <t t-esc="widget.stats.fac_submitted"/></span>
+            <span class="badge blue" style="pointer-events:none">En cours <t t-esc="widget.stats.fac_cours"/></span>
+            <span class="badge" style="background:#d1fae5;color:#065f46;pointer-events:none">Validée <t t-esc="widget.stats.fac_validated"/></span>
+            <span class="badge green" style="pointer-events:none">Clôturée <t t-esc="widget.stats.fac_closed"/></span>
           </div>
         </div>
 
-        <!-- Plans SMI -->
-        <div class="nc-kpi" data-filter="plan_total" style="cursor:pointer;flex:1;background:linear-gradient(135deg,#faf5ff 0%,#f5f3ff 100%);border-color:#e9d5ff">
+        <!-- Total plan -->
+        <div class="nc-kpi" style="flex:1;background:linear-gradient(135deg,#faf5ff 0%,#f5f3ff 100%);border-color:#e9d5ff">
           <div class="nc-kpi-top" style="background:linear-gradient(90deg,#6d28d9,#7c3aed)"></div>
-          <div class="nc-kpi-label">Plans SMI</div>
-          <div class="nc-kpi-val" style="color:#5B21B6"><t t-esc="widget.stats.plan_total"/></div>
+          <div class="nc-kpi-label">Total plan</div>
+          <div class="nc-kpi-val ud-open-list" data-filter="plan_total" style="color:#5B21B6;cursor:pointer"><t t-esc="widget.stats.plan_total"/></div>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-            <span class="badge" style="background:#f8fafc;color:#475569">Brouillon <t t-esc="widget.stats.plan_brouillon"/></span>
-            <span class="badge" style="background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe">Soumis <t t-esc="widget.stats.plan_soumis"/></span>
-            <span class="badge" style="background:#f0fdf4;color:#059669;border:1px solid #bbf7d0">Intégré <t t-esc="widget.stats.plan_integre"/></span>
-            <span class="badge" style="background:#f1f5f9;color:#64748b">Clôturé <t t-esc="widget.stats.plan_cloture"/></span>
+            <span class="badge" style="background:#f8fafc;color:#475569;pointer-events:none">Brouillon <t t-esc="widget.stats.plan_brouillon"/></span>
+            <span class="badge" style="background:#f0fdf4;color:#059669;border:1px solid #bbf7d0;pointer-events:none">Réalisé <t t-esc="widget.stats.plan_done"/></span>
           </div>
         </div>
 

@@ -2258,8 +2258,13 @@ class NcDashboard(models.Model):
                 calendar_events[k] = {'fnc': False, 'fac': False}
             calendar_events[k]['fac'] = True
 
+<<<<<<< Updated upstream
         # ── Alertes (tous temps pour l'urgence) ──
         limit7 = str(today - timedelta(days=1))  # TEST — remettre à 7 après validation
+=======
+        # ── Alertes : FNC/FAC en cours > 1 jour depuis le changement d'état (test) ──
+        limit7 = str(today - timedelta(days=1))
+>>>>>>> Stashed changes
         alerts = []
 
         for rec in fnc_model.search(user_fnc_domain_all + [('state', '=', 'submitted')], limit=10):

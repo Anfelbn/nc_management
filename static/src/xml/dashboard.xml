@@ -474,174 +474,168 @@
 <div class="nc-db">
 <div class="nc-inner">
 
+  <!-- En-tête : sans texte NC MANAGEMENT ni date, avec boutons période -->
   <div class="nc-header">
     <div>
-      <div class="nc-brand-sub">NC MANAGEMENT</div>
-      <div class="nc-brand-title">Dashboard</div>
+      <div class="nc-brand-sub">CIMENTERIE DE SÉTIF — GICA</div>
+      <div class="nc-brand-title">Dashboard NC Utilisateur</div>
     </div>
     <div class="nc-header-right">
-      <span class="nc-update">Today: <t t-esc="widget.stats.today"></t></span>
+      <span style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Période stats</span>
+      <div class="period-btn">
+        <div class="pb active" data-period="1m">1 mois</div>
+        <div class="pb" data-period="6m">6 mois</div>
+        <div class="pb" data-period="1y">1 an</div>
+      </div>
     </div>
   </div>
 
-  <!-- FNC -->
+  <!-- Section calendrier en haut -->
   <div class="nc-section-hdr rmqse">
-    <span>FNC — Non-Conformity Reports</span>
+    <span>Calendrier — FNC &amp; FAC</span>
     <div class="nc-section-hdr-sep"></div>
-    <span>Total: <t t-esc="widget.stats.fnc_total"></t></span>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
-    <div class="nc-kpi" data-filter="fnc_total" style="cursor:pointer">
-      <div class="nc-kpi-top" style="background:#2196F3"></div>
-      <div class="nc-kpi-label">Total FNC</div>
-      <div class="nc-kpi-val" style="color:#1565C0"><t t-esc="widget.stats.fnc_total"></t></div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-        <span class="badge" style="background:#f1f5f9;color:#475569">Draft <t t-esc="widget.stats.fnc_brouillon"></t></span>
-        <span class="badge orange">Submitted <t t-esc="widget.stats.fnc_submitted"></t></span>
-        <span class="badge blue">In progress <t t-esc="widget.stats.fnc_cours"></t></span>
+  <div>
+    <div class="g2">
+
+      <!-- Fiches reçues -->
+      <div class="nc-card" style="max-height:400px;overflow-y:auto">
+        <div class="nc-card-title">Mes Fiches</div>
+        <div class="nc-card-sub received-sub">Documents reçus aujourd'hui</div>
+        <div class="received-list"></div>
       </div>
-    </div>
-    <div class="nc-kpi" data-filter="fnc_cours" style="cursor:pointer">
-      <div class="nc-kpi-top" style="background:#FF9800"></div>
-      <div class="nc-kpi-label">In Progress</div>
-      <div class="nc-kpi-val" style="color:#9a3412"><t t-esc="widget.stats.fnc_submitted + widget.stats.fnc_cours"></t></div>
-      <div class="nc-kpi-sub"><t t-esc="widget.stats.fnc_submitted"></t> submitted · <t t-esc="widget.stats.fnc_cours"></t> in processing</div>
-    </div>
-    <div class="nc-kpi" data-filter="fnc_closed" style="cursor:pointer">
-      <div class="nc-kpi-top" style="background:#10B981"></div>
-      <div class="nc-kpi-label">Closed</div>
-      <div class="nc-kpi-val" style="color:#166534"><t t-esc="widget.stats.fnc_validated + widget.stats.fnc_closed"></t></div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-        <span class="badge" style="background:#d1fae5;color:#065f46">Validated <t t-esc="widget.stats.fnc_validated"></t></span>
-        <span class="badge green">Closed <t t-esc="widget.stats.fnc_closed"></t></span>
-      </div>
-    </div>
-  </div>
 
-  <!-- FAC -->
-  <div class="nc-section-hdr autres">
-    <span>FAC — Corrective Actions</span>
-    <div class="nc-section-hdr-sep"></div>
-    <span>Total: <t t-esc="widget.stats.fac_total"></t></span>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
-    <div class="nc-kpi" data-filter="fac_total" style="cursor:pointer">
-      <div class="nc-kpi-top" style="background:#EF4444"></div>
-      <div class="nc-kpi-label">Total FAC</div>
-      <div class="nc-kpi-val" style="color:#991b1b"><t t-esc="widget.stats.fac_total"></t></div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-        <span class="badge orange">Submitted <t t-esc="widget.stats.fac_submitted"></t></span>
-        <span class="badge blue">In progress <t t-esc="widget.stats.fac_cours"></t></span>
-      </div>
-    </div>
-    <div class="nc-kpi" data-filter="fac_cours" style="cursor:pointer">
-      <div class="nc-kpi-top" style="background:#FF9800"></div>
-      <div class="nc-kpi-label">In Progress</div>
-      <div class="nc-kpi-val" style="color:#9a3412"><t t-esc="widget.stats.fac_submitted + widget.stats.fac_cours"></t></div>
-      <div class="nc-kpi-sub">Pending actions</div>
-    </div>
-    <div class="nc-kpi" data-filter="fac_closed" style="cursor:pointer">
-      <div class="nc-kpi-top" style="background:#10B981"></div>
-      <div class="nc-kpi-label">Closed</div>
-      <div class="nc-kpi-val" style="color:#166534"><t t-esc="widget.stats.fac_validated + widget.stats.fac_closed"></t></div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-        <span class="badge" style="background:#d1fae5;color:#065f46">Validated <t t-esc="widget.stats.fac_validated"></t></span>
-        <span class="badge green">Closed <t t-esc="widget.stats.fac_closed"></t></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Received docs + Calendar (same layout as RMQSE) -->
-  <div class="section-title">Calendar — FNC &amp; FAC</div>
-  <div class="g2">
-
-    <!-- Fiches reçues -->
-    <div class="nc-card" style="max-height:420px;overflow-y:auto">
-      <div class="nc-card-title">My Reports</div>
-      <div class="nc-card-sub received-sub">Today's documents</div>
-      <div class="received-list"></div>
-    </div>
-
-    <!-- Calendrier avec sélecteur identique au RMQSE -->
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div class="nc-card">
-        <div class="nc-card-title" style="margin-bottom:8px">Calendar</div>
-        <div class="cal-wrap">
-          <div class="cal-header-pick">
-            <div class="cal-month-label" style="font-size:13px;font-weight:700;color:#1e293b">Loading...</div>
-            <span style="font-size:11px;color:#94a3b8">&#9660;</span>
-          </div>
-          <div class="cal-picker" style="display:none;background:#f0f4ff;border:1px solid #c7d7f8;border-radius:8px;padding:8px;margin-bottom:8px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <button class="cal-btn cal-yr-prev">&#8249;</button>
-              <span class="cal-picker-yr" style="font-size:13px;font-weight:700;color:#1e293b">2026</span>
-              <button class="cal-btn cal-yr-next">&#8250;</button>
+      <!-- Calendrier -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="nc-card">
+          <div class="nc-card-title" style="margin-bottom:8px">Calendrier</div>
+          <div class="cal-wrap">
+            <div class="cal-header-pick">
+              <div class="cal-month-label" style="font-size:13px;font-weight:700;color:#1e293b">Chargement...</div>
+              <span style="font-size:11px;color:#94a3b8">▼</span>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
-              <div class="cal-pm" data-m="0">Jan</div><div class="cal-pm" data-m="1">Feb</div>
-              <div class="cal-pm" data-m="2">Mar</div><div class="cal-pm" data-m="3">Apr</div>
-              <div class="cal-pm" data-m="4">May</div><div class="cal-pm" data-m="5">Jun</div>
-              <div class="cal-pm" data-m="6">Jul</div><div class="cal-pm" data-m="7">Aug</div>
-              <div class="cal-pm" data-m="8">Sep</div><div class="cal-pm" data-m="9">Oct</div>
-              <div class="cal-pm" data-m="10">Nov</div><div class="cal-pm" data-m="11">Dec</div>
+            <div class="cal-picker" style="display:none;background:#f0f4ff;border:1px solid #c7d7f8;border-radius:8px;padding:8px;margin-bottom:8px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <button class="cal-btn cal-yr-prev">&#8249;</button>
+                <span class="cal-picker-yr" style="font-size:13px;font-weight:700;color:#1e293b">2026</span>
+                <button class="cal-btn cal-yr-next">&#8250;</button>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+                <div class="cal-pm" data-m="0">Jan</div><div class="cal-pm" data-m="1">Fév</div>
+                <div class="cal-pm" data-m="2">Mar</div><div class="cal-pm" data-m="3">Avr</div>
+                <div class="cal-pm" data-m="4">Mai</div><div class="cal-pm" data-m="5">Jun</div>
+                <div class="cal-pm" data-m="6">Jul</div><div class="cal-pm" data-m="7">Aoû</div>
+                <div class="cal-pm" data-m="8">Sep</div><div class="cal-pm" data-m="9">Oct</div>
+                <div class="cal-pm" data-m="10">Nov</div><div class="cal-pm" data-m="11">Déc</div>
+              </div>
             </div>
-          </div>
-          <div class="cal-grid">
-            <div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div><div class="cal-day-name">Sun</div>
-            <div class="cal-grid-body" style="display:contents"></div>
-          </div>
-          <div style="display:flex;gap:14px;margin-top:8px;justify-content:flex-end">
-            <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#2196F3"></div>FNC</div>
-            <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#EF4444"></div>FAC</div>
+            <div class="cal-grid">
+              <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div><div class="cal-day-name">Mer</div><div class="cal-day-name">Jeu</div><div class="cal-day-name">Ven</div><div class="cal-day-name">Sam</div><div class="cal-day-name">Dim</div>
+              <div class="cal-grid-body" style="display:contents"></div>
+            </div>
+            <div style="display:flex;gap:14px;margin-top:8px;justify-content:flex-end">
+              <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#2196F3"></div>FNC</div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:8px;height:8px;border-radius:50%;background:#EF4444"></div>FAC</div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Diagramme mensuel -->
+    <!-- Évolution + KPI FNC / FAC / Plans -->
+    <div class="g2" style="align-items:stretch">
+
+      <!-- Graphique évolution mensuelle -->
       <div class="nc-card" style="display:flex;flex-direction:column">
-        <div class="nc-card-title">Monthly Evolution (6 months)</div>
-        <div style="display:flex;gap:12px;margin-bottom:6px">
+        <div class="nc-card-title">Évolution FNC &amp; FAC — Mes Fiches</div>
+        <canvas id="udChart" style="flex:1;min-height:130px"></canvas>
+        <div style="display:flex;gap:12px;margin-top:6px;justify-content:flex-end">
           <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
           <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#C9443A"></div>FAC</div>
         </div>
-        <canvas id="udChart" style="height:160px;max-height:160px"></canvas>
+      </div>
+
+      <!-- Colonne KPI : Total FNC + Total FAC + Plans SMI -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+
+        <!-- Total FNC -->
+        <div class="nc-kpi" data-filter="fnc_total" style="cursor:pointer;flex:1">
+          <div class="nc-kpi-top" style="background:#2196F3"></div>
+          <div class="nc-kpi-label">Total FNC</div>
+          <div class="nc-kpi-val" style="color:#1565C0"><t t-esc="widget.stats.fnc_total"/></div>
+          <div class="nc-kpi-sub">↳ Taux validation : <t t-esc="widget.stats.fnc_taux_validation"/>%</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+            <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fnc_brouillon"/></span>
+            <span class="badge orange">Soumise <t t-esc="widget.stats.fnc_submitted"/></span>
+            <span class="badge blue">En cours <t t-esc="widget.stats.fnc_cours"/></span>
+            <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fnc_validated"/></span>
+          </div>
+        </div>
+
+        <!-- Total FAC -->
+        <div class="nc-kpi" data-filter="fac_total" style="cursor:pointer;flex:1">
+          <div class="nc-kpi-top" style="background:#10B981"></div>
+          <div class="nc-kpi-label">Total FAC</div>
+          <div class="nc-kpi-val" style="color:#065F46"><t t-esc="widget.stats.fac_total"/></div>
+          <div class="nc-kpi-sub">↳ Clôturées : <t t-esc="widget.stats.fac_closed"/></div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+            <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
+            <span class="badge orange">Soumise <t t-esc="widget.stats.fac_submitted"/></span>
+            <span class="badge blue">En cours <t t-esc="widget.stats.fac_cours"/></span>
+            <span class="badge" style="background:#d1fae5;color:#065f46">Validée <t t-esc="widget.stats.fac_validated"/></span>
+            <span class="badge green">Clôturée <t t-esc="widget.stats.fac_closed"/></span>
+          </div>
+        </div>
+
+        <!-- Plans SMI -->
+        <div class="nc-kpi" data-filter="plan_total" style="cursor:pointer;flex:1;background:linear-gradient(135deg,#faf5ff 0%,#f5f3ff 100%);border-color:#e9d5ff">
+          <div class="nc-kpi-top" style="background:linear-gradient(90deg,#6d28d9,#7c3aed)"></div>
+          <div class="nc-kpi-label">Plans SMI</div>
+          <div class="nc-kpi-val" style="color:#5B21B6"><t t-esc="widget.stats.plan_total"/></div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+            <span class="badge" style="background:#f8fafc;color:#475569">Brouillon <t t-esc="widget.stats.plan_brouillon"/></span>
+            <span class="badge" style="background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe">Soumis <t t-esc="widget.stats.plan_soumis"/></span>
+            <span class="badge" style="background:#f0fdf4;color:#059669;border:1px solid #bbf7d0">Intégré <t t-esc="widget.stats.plan_integre"/></span>
+            <span class="badge" style="background:#f1f5f9;color:#64748b">Clôturé <t t-esc="widget.stats.plan_cloture"/></span>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <!-- Alerts -->
+  <!-- Alertes -->
   <div class="nc-section-hdr globale">
-    <span>Alerts</span>
+    <span>Alertes</span>
     <div class="nc-section-hdr-sep"></div>
-    <span><t t-esc="widget.stats.alerts.length"></t> alert(s)</span>
+    <span><t t-esc="widget.stats.alerts.length"/> alerte(s)</span>
   </div>
 
   <t t-if="!widget.stats.alerts.length">
-    <div class="nc-empty">No active alerts — everything is up to date.</div>
+    <div class="nc-empty">Aucune alerte active — tout est à jour.</div>
   </t>
   <t t-foreach="widget.stats.alerts" t-as="alert">
     <t t-if="alert.badge === 'red'">
       <div class="nc-alert">
         <div style="flex:1">
           <div style="font-size:12px;font-weight:600;color:#991b1b">
-            <span class="badge red" style="margin-right:6px"><t t-esc="alert.kind"></t></span><t t-esc="alert.name"></t>
+            <span class="badge red" style="margin-right:6px"><t t-esc="alert.kind"/></span><t t-esc="alert.name"/>
           </div>
-          <div style="font-size:11px;color:#b91c1c;margin-top:2px"><t t-esc="alert.label"></t></div>
+          <div style="font-size:11px;color:#b91c1c;margin-top:2px"><t t-esc="alert.label"/></div>
         </div>
-        <div class="btn-sm primary btn-open" t-att-data-model="alert.model" t-att-data-id="alert.id">Open</div>
+        <div class="btn-sm primary btn-open" t-att-data-model="alert.model" t-att-data-id="alert.id">Ouvrir</div>
       </div>
     </t>
     <t t-if="alert.badge === 'orange'">
       <div class="nc-alert orange">
         <div style="flex:1">
           <div style="font-size:12px;font-weight:600;color:#9a3412">
-            <span class="badge orange" style="margin-right:6px"><t t-esc="alert.kind"></t></span><t t-esc="alert.name"></t>
+            <span class="badge orange" style="margin-right:6px"><t t-esc="alert.kind"/></span><t t-esc="alert.name"/>
           </div>
-          <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="alert.label"></t></div>
+          <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="alert.label"/></div>
         </div>
-        <div class="btn-sm btn-open" t-att-data-model="alert.model" t-att-data-id="alert.id">Open</div>
+        <div class="btn-sm btn-open" t-att-data-model="alert.model" t-att-data-id="alert.id">Ouvrir</div>
       </div>
     </t>
   </t>

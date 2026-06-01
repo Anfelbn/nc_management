@@ -12,10 +12,11 @@
         <field name="category_id" ref="module_nc_management"/>
     </record>
 
-    <!-- Responsable Qualité : RMQSE, voit tout -->
+    <!-- Responsable Qualité : RMQSE, voit tout — aucun héritage -->
     <record id="group_responsable_qualite" model="res.groups">
         <field name="name">Responsable Qualité</field>
         <field name="category_id" ref="module_nc_management"/>
+        <field name="implied_ids" eval="[(5,)]"/>
     </record>
 
 </data>

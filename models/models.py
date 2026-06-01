@@ -2139,43 +2139,74 @@ class NcDashboard(models.Model):
         return result
 
     @api.model
-    def get_user_stats(self):
+    def get_user_stats(self, period=None):
         from datetime import date, timedelta
         from dateutil.relativedelta import relativedelta
 
         uid = self.env.uid
         fnc_model = self.env['nc_management.nonconformity']
         fac_model = self.env['nc_management.corrective_action']
+        plan_model = self.env['nc_management.plan_action_smi']
         today = date.today()
         fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
 
-        # FNCs belonging to this user
-        user_fnc_domain = [('create_uid', '=', uid)]
-        user_fnc_ids = fnc_model.search(user_fnc_domain).ids
-        user_fac_domain = ['|',
-            ('fnc_id', 'in', user_fnc_ids),
+        period_months = {'1m': 1, '6m': 6, '1y': 12}.get(period or '1m', 1)
+        period_end = today.replace(day=1) + relativedelta(months=1)
+        period_start = today.replace(day=1) - relativedelta(months=period_months - 1)
+
+        # Domaines tous temps (alertes, calendrier)
+        user_fnc_domain_all = [('create_uid', '=', uid)]
+        user_fnc_ids_all = fnc_model.search(user_fnc_domain_all).ids
+        user_fac_domain_all = ['|',
+            ('fnc_id', 'in', user_fnc_ids_all),
             ('responsable_id', '=', uid),
         ]
 
-        # ── KPI totals ──
-        fnc_total     = fnc_model.search_count(user_fnc_domain)
+        # Domaines filtrés par période (KPI)
+        user_fnc_domain = [
+            ('create_uid', '=', uid),
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
+        ]
+        user_fnc_ids = fnc_model.search(user_fnc_domain).ids
+        user_fac_domain = ['|',
+            ('fnc_id', 'in', user_fnc_ids),
+            '&', '&',
+            ('responsable_id', '=', uid),
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
+        ]
+
+        # ── KPI totals (période) ──
+        fnc_total     = len(user_fnc_ids)
         fnc_brouillon = fnc_model.search_count(user_fnc_domain + [('state', '=', 'draft')])
         fnc_submitted = fnc_model.search_count(user_fnc_domain + [('state', '=', 'submitted')])
         fnc_cours     = fnc_model.search_count(user_fnc_domain + [('state', '=', 'in_progress')])
         fnc_validated = fnc_model.search_count(user_fnc_domain + [('state', '=', 'validated')])
         fnc_closed    = fnc_model.search_count(user_fnc_domain + [('state', '=', 'closed')])
+        fnc_taux_validation = round((fnc_validated + fnc_closed) / fnc_total * 100) if fnc_total else 0
 
         fac_total     = fac_model.search_count(user_fac_domain)
+        fac_brouillon = fac_model.search_count(user_fac_domain + [('state', '=', 'draft')])
         fac_submitted = fac_model.search_count(user_fac_domain + [('state', '=', 'submitted')])
         fac_cours     = fac_model.search_count(user_fac_domain + [('state', '=', 'in_progress')])
         fac_validated = fac_model.search_count(user_fac_domain + [('state', '=', 'validated')])
         fac_closed    = fac_model.search_count(user_fac_domain + [('state', '=', 'closed')])
 
-        # ── Monthly evolution (6 months) ──
+        # ── Plans SMI (tous temps) ──
+        plan_domain = [('create_uid', '=', uid), ('is_global', '=', False)]
+        plan_total     = plan_model.search_count(plan_domain)
+        plan_brouillon = plan_model.search_count(plan_domain + [('submission_state', '=', 'brouillon')])
+        plan_soumis    = plan_model.search_count(plan_domain + [('submission_state', '=', 'soumis')])
+        plan_integre   = plan_model.search_count(plan_domain + [('submission_state', '=', 'integre')])
+        plan_cloture   = plan_model.search_count(plan_domain + [('submission_state', '=', 'cloture')])
+
+        # ── Évolution mensuelle (min 6 mois pour lisibilité du graphique) ──
+        nb_chart_months = max(period_months, 6)
         monthly_labels = []
         monthly_fnc = []
         monthly_fac = []
-        for i in range(5, -1, -1):
+        for i in range(nb_chart_months - 1, -1, -1):
             d = today - relativedelta(months=i)
             m_start = d.replace(day=1)
             m_end = (d + relativedelta(months=1)).replace(day=1)
@@ -2190,7 +2221,7 @@ class NcDashboard(models.Model):
             ]))
             monthly_labels.append(fr_months[m_start.month - 1])
 
-        # ── Calendar events (all time, same scope as received_by_date) ──
+        # ── Calendrier (tous temps) ──
         calendar_events = {}
         for fnc_rec in fnc_model.search([
             ('assigned_to_id.user_id', '=', uid),
@@ -2209,12 +2240,11 @@ class NcDashboard(models.Model):
                 calendar_events[k] = {'fnc': False, 'fac': False}
             calendar_events[k]['fac'] = True
 
-        # ── Alerts ──
+        # ── Alertes (tous temps pour l'urgence) ──
         limit7 = str(today - timedelta(days=7))
         alerts = []
 
-        # FNCs submitted (en attente de traitement RMQSE)
-        for rec in fnc_model.search(user_fnc_domain + [('state', '=', 'submitted')], limit=10):
+        for rec in fnc_model.search(user_fnc_domain_all + [('state', '=', 'submitted')], limit=10):
             days_wait = (today - fields.Date.from_string(str(rec.date))).days if rec.date else 0
             alerts.append({
                 'id': rec.id,
@@ -2226,8 +2256,7 @@ class NcDashboard(models.Model):
                 'kind': 'FNC',
             })
 
-        # FNCs in_progress depuis > 7 jours
-        for rec in fnc_model.search(user_fnc_domain + [
+        for rec in fnc_model.search(user_fnc_domain_all + [
             ('state', '=', 'in_progress'),
             ('date_in_progress', '!=', False),
             ('date_in_progress', '<=', limit7),
@@ -2243,8 +2272,7 @@ class NcDashboard(models.Model):
                 'kind': 'FNC',
             })
 
-        # FACs liées aux FNCs user qui sont en retard
-        for fac_rec in fac_model.search(user_fac_domain + [
+        for fac_rec in fac_model.search(user_fac_domain_all + [
             ('state', 'in', ['submitted', 'in_progress']),
             ('date', '!=', False),
             ('date', '<=', limit7),
@@ -2265,7 +2293,7 @@ class NcDashboard(models.Model):
                 return '??'
             return ''.join([w[0].upper() for w in name.split()[:2]]) or '??'
 
-        # ── Docs reçus par date (pour clic calendrier) ──
+        # ── Docs reçus par date (calendrier) ──
         received_by_date = {}
 
         def _append_doc(day_key, item):
@@ -2310,19 +2338,27 @@ class NcDashboard(models.Model):
             })
 
         return {
-            'today': today.strftime('%d/%m/%Y'),
+            'today':         today.strftime('%d/%m/%Y'),
             'uid':           uid,
+            'period':        period or '1m',
             'fnc_total':     fnc_total,
             'fnc_brouillon': fnc_brouillon,
             'fnc_submitted': fnc_submitted,
             'fnc_cours':     fnc_cours,
             'fnc_validated': fnc_validated,
             'fnc_closed':    fnc_closed,
+            'fnc_taux_validation': fnc_taux_validation,
             'fac_total':     fac_total,
+            'fac_brouillon': fac_brouillon,
             'fac_submitted': fac_submitted,
             'fac_cours':     fac_cours,
             'fac_validated': fac_validated,
             'fac_closed':    fac_closed,
+            'plan_total':    plan_total,
+            'plan_brouillon': plan_brouillon,
+            'plan_soumis':   plan_soumis,
+            'plan_integre':  plan_integre,
+            'plan_cloture':  plan_cloture,
             'monthly_labels':  monthly_labels,
             'monthly_fnc':     monthly_fnc,
             'monthly_fac':     monthly_fac,

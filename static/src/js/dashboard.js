@@ -764,9 +764,8 @@ odoo.define('nc_management.dashboard', function(require){
                 fnc_cours: 0, fnc_validated: 0, fnc_closed: 0,
                 fac_total: 0, fac_brouillon: 0, fac_submitted: 0,
                 fac_cours: 0, fac_validated: 0, fac_closed: 0,
-                fnc_taux_validation: 0,
-                plan_total: 0, plan_brouillon: 0, plan_soumis: 0,
-                plan_integre: 0, plan_cloture: 0,
+                fnc_taux_validation: 0, fac_taux_cloture: 0,
+                plan_total: 0, plan_brouillon: 0, plan_done: 0,
                 monthly_labels: [], monthly_fnc: [], monthly_fac: [],
                 calendar_events: {}, calendar_year: 0, calendar_month: 0,
                 alerts: [], received_by_date: {},
@@ -789,12 +788,16 @@ odoo.define('nc_management.dashboard', function(require){
             this._bind();
         },
 
-        _reload: function(period){
+        _reload: function(period, calYear, calMonth){
             var self = this;
+            var now = new Date();
+            var yr  = calYear  || self.stats.calendar_year  || now.getFullYear();
+            var mo  = calMonth || self.stats.calendar_month || (now.getMonth() + 1);
             this._rpc({
                 model:  'nc_management.dashboard',
                 method: 'get_user_stats',
-                args:   [period],
+                args:   [period || '1m'],
+                kwargs: {cal_year: yr, cal_month: mo},
             }).then(function(stats){
                 self.stats = $.extend(self._empty(), stats || {});
                 self.renderElement();
@@ -810,7 +813,10 @@ odoo.define('nc_management.dashboard', function(require){
                 self.$('.pb').removeClass('active');
                 $(this).addClass('active');
                 var period = $(this).data('period') || '1m';
-                self._reload(period);
+                var now = new Date();
+                var calYear  = self.stats.calendar_year  || now.getFullYear();
+                var calMonth = self.stats.calendar_month || (now.getMonth() + 1);
+                self._reload(period, calYear, calMonth);
             });
             this.$('.pb').removeClass('active');
             this.$('.pb[data-period="' + (this.stats.period || '1m') + '"]').addClass('active');
@@ -827,25 +833,17 @@ odoo.define('nc_management.dashboard', function(require){
                 });
             });
 
-            this.$el.on('click', '.nc-kpi[data-filter]', function(){
+            this.$el.on('click', '.ud-open-list', function(){
                 var uid    = self.stats.uid;
                 var filter = $(this).data('filter');
                 var modelMap = {
                     fnc_total:  'nc_management.nonconformity',
-                    fnc_cours:  'nc_management.nonconformity',
-                    fnc_closed: 'nc_management.nonconformity',
                     fac_total:  'nc_management.corrective_action',
-                    fac_cours:  'nc_management.corrective_action',
-                    fac_closed: 'nc_management.corrective_action',
                     plan_total: 'nc_management.plan_action_smi',
                 };
                 var domainMap = {
                     fnc_total:  [['create_uid', '=', uid]],
-                    fnc_cours:  [['create_uid', '=', uid], ['state', 'in', ['submitted', 'in_progress']]],
-                    fnc_closed: [['create_uid', '=', uid], ['state', 'in', ['validated', 'closed']]],
                     fac_total:  [['fnc_id.create_uid', '=', uid]],
-                    fac_cours:  [['fnc_id.create_uid', '=', uid], ['state', 'in', ['submitted', 'in_progress']]],
-                    fac_closed: [['fnc_id.create_uid', '=', uid], ['state', 'in', ['validated', 'closed']]],
                     plan_total: [['create_uid', '=', uid], ['is_global', '=', false]],
                 };
                 if(!filter) return;
@@ -943,6 +941,9 @@ odoo.define('nc_management.dashboard', function(require){
                 month = parseInt($(this).data('m'), 10);
                 self.$('.cal-picker').hide();
                 render(year, month);
+                // Recharger les stats ancrées sur le nouveau mois (month 0-based → +1)
+                var period = self.stats.period || '1m';
+                self._reload(period, year, month + 1);
             });
 
             render(year, month);
@@ -953,9 +954,6 @@ odoo.define('nc_management.dashboard', function(require){
         },
 
         _renderReceivedDocs: function(docs, key){
-            var label = key ? this._formatDateKey(key) : "Documents reçus aujourd'hui";
-            this.$('.received-sub').text(label);
-
             if(!docs || !docs.length){
                 this.$('.received-list').html('<div class="nc-empty">Aucun document reçu pour cette date.</div>');
                 return;
@@ -1019,9 +1017,7 @@ odoo.define('nc_management.dashboard', function(require){
         },
 
         _formatDateKey: function(key){
-            var p = key.split('-');
-            if(p.length !== 3) return key;
-            return 'Documents reçus le ' + p[2] + '/' + p[1] + '/' + p[0];
+            return 'Fiches reçues';
         },
 
         _drawChart: function(){

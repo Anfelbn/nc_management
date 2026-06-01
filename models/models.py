@@ -664,7 +664,8 @@ class CorrectiveAction(models.Model):
         ('validated',  'Validée'),
         ('closed',     'Clôturée'),
     ], string='Statut', default='draft', track_visibility='onchange')
-    date_validated = fields.Date(string='Date validation QSE')
+    date_in_progress = fields.Date(string='Date mise en cours')
+    date_validated   = fields.Date(string='Date validation QSE')
 
     # ── Valeurs par défaut depuis le compte employé ───────────
     @api.model
@@ -728,10 +729,19 @@ class CorrectiveAction(models.Model):
                     vals = dict(vals, state='validated',
                                 date_validated=fields.Date.today())
                 elif new_visa_actions and rec.state not in ('in_progress', 'validated', 'closed'):
-                    vals = dict(vals, state='in_progress')
+                    vals = dict(vals, state='in_progress',
+                                date_in_progress=fields.Date.today())
                 elif new_visa_analyse and rec.state == 'draft':
                     vals = dict(vals, state='submitted')
                 break  # formulaire = un seul record à la fois
+
+        # Capturer aussi les transitions directes state='in_progress'
+        if vals.get('state') == 'in_progress' and not vals.get('date_in_progress'):
+            for rec in self:
+                if not rec.date_in_progress:
+                    vals = dict(vals, date_in_progress=fields.Date.today())
+                break
+
         return super(CorrectiveAction, self).write(vals)
 
     @api.multi
@@ -2139,7 +2149,7 @@ class NcDashboard(models.Model):
         return result
 
     @api.model
-    def get_user_stats(self, period=None):
+    def get_user_stats(self, period=None, cal_year=None, cal_month=None):
         from datetime import date, timedelta
         from dateutil.relativedelta import relativedelta
 
@@ -2151,8 +2161,17 @@ class NcDashboard(models.Model):
         fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
 
         period_months = {'1m': 1, '6m': 6, '1y': 12}.get(period or '1m', 1)
-        period_end = today.replace(day=1) + relativedelta(months=1)
-        period_start = today.replace(day=1) - relativedelta(months=period_months - 1)
+
+        # Ancre = mois sélectionné dans le calendrier (ou aujourd'hui par défaut)
+        if cal_year and cal_month:
+            ref = date(int(cal_year), int(cal_month), 1)
+        else:
+            ref = today
+            cal_year  = today.year
+            cal_month = today.month
+
+        period_end   = ref.replace(day=1) + relativedelta(months=1)
+        period_start = ref.replace(day=1) - relativedelta(months=period_months - 1)
 
         # Domaines tous temps (alertes, calendrier)
         user_fnc_domain_all = [('create_uid', '=', uid)]
@@ -2192,22 +2211,21 @@ class NcDashboard(models.Model):
         fac_cours     = fac_model.search_count(user_fac_domain + [('state', '=', 'in_progress')])
         fac_validated = fac_model.search_count(user_fac_domain + [('state', '=', 'validated')])
         fac_closed    = fac_model.search_count(user_fac_domain + [('state', '=', 'closed')])
+        fac_taux_cloture = round(fac_closed / fac_total * 100) if fac_total else 0
 
         # ── Plans SMI (tous temps) ──
         plan_domain = [('create_uid', '=', uid), ('is_global', '=', False)]
         plan_total     = plan_model.search_count(plan_domain)
-        plan_brouillon = plan_model.search_count(plan_domain + [('submission_state', '=', 'brouillon')])
-        plan_soumis    = plan_model.search_count(plan_domain + [('submission_state', '=', 'soumis')])
-        plan_integre   = plan_model.search_count(plan_domain + [('submission_state', '=', 'integre')])
-        plan_cloture   = plan_model.search_count(plan_domain + [('submission_state', '=', 'cloture')])
+        plan_brouillon = plan_model.search_count(plan_domain + [('state', '=', 'draft')])
+        plan_done      = plan_model.search_count(plan_domain + [('state', '=', 'done')])
 
-        # ── Évolution mensuelle (min 6 mois pour lisibilité du graphique) ──
-        nb_chart_months = max(period_months, 6)
+        # ── Évolution mensuelle (ancré sur le mois sélectionné) ──
+        nb_chart_months = period_months
         monthly_labels = []
         monthly_fnc = []
         monthly_fac = []
         for i in range(nb_chart_months - 1, -1, -1):
-            d = today - relativedelta(months=i)
+            d = ref - relativedelta(months=i)
             m_start = d.replace(day=1)
             m_end = (d + relativedelta(months=1)).replace(day=1)
             m_fnc_ids = fnc_model.search([
@@ -2240,51 +2258,39 @@ class NcDashboard(models.Model):
                 calendar_events[k] = {'fnc': False, 'fac': False}
             calendar_events[k]['fac'] = True
 
-        # ── Alertes (tous temps pour l'urgence) ──
+        # ── Alertes : FNC/FAC en cours > 7 jours depuis le changement d'état ──
         limit7 = str(today - timedelta(days=7))
         alerts = []
-
-        for rec in fnc_model.search(user_fnc_domain_all + [('state', '=', 'submitted')], limit=10):
-            days_wait = (today - fields.Date.from_string(str(rec.date))).days if rec.date else 0
-            alerts.append({
-                'id': rec.id,
-                'model': 'nc_management.nonconformity',
-                'name': rec.name or '',
-                'label': 'En attente RMQSE',
-                'days': days_wait,
-                'badge': 'orange' if days_wait <= 7 else 'red',
-                'kind': 'FNC',
-            })
 
         for rec in fnc_model.search(user_fnc_domain_all + [
             ('state', '=', 'in_progress'),
             ('date_in_progress', '!=', False),
             ('date_in_progress', '<=', limit7),
-        ], limit=10):
+        ], order='date_in_progress asc', limit=20):
             days_open = (today - fields.Date.from_string(str(rec.date_in_progress))).days
             alerts.append({
                 'id': rec.id,
                 'model': 'nc_management.nonconformity',
                 'name': rec.name or '',
-                'label': 'En cours %dj' % days_open,
+                'label': 'FNC en cours depuis %d jours' % days_open,
                 'days': days_open,
-                'badge': 'red',
+                'badge': 'red' if days_open > 14 else 'orange',
                 'kind': 'FNC',
             })
 
-        for fac_rec in fac_model.search(user_fac_domain_all + [
-            ('state', 'in', ['submitted', 'in_progress']),
-            ('date', '!=', False),
-            ('date', '<=', limit7),
-        ], limit=10):
-            days_open = (today - fields.Date.from_string(str(fac_rec.date))).days
+        for rec in fac_model.search(user_fac_domain_all + [
+            ('state', '=', 'in_progress'),
+            ('date_in_progress', '!=', False),
+            ('date_in_progress', '<=', limit7),
+        ], order='date_in_progress asc', limit=20):
+            days_open = (today - fields.Date.from_string(str(rec.date_in_progress))).days
             alerts.append({
-                'id': fac_rec.id,
+                'id': rec.id,
                 'model': 'nc_management.corrective_action',
-                'name': fac_rec.name or '',
-                'label': 'FAC retard %dj' % days_open,
+                'name': rec.name or '',
+                'label': 'FAC en cours depuis %d jours' % days_open,
                 'days': days_open,
-                'badge': 'red',
+                'badge': 'red' if days_open > 14 else 'orange',
                 'kind': 'FAC',
             })
 
@@ -2348,23 +2354,22 @@ class NcDashboard(models.Model):
             'fnc_validated': fnc_validated,
             'fnc_closed':    fnc_closed,
             'fnc_taux_validation': fnc_taux_validation,
-            'fac_total':     fac_total,
-            'fac_brouillon': fac_brouillon,
-            'fac_submitted': fac_submitted,
-            'fac_cours':     fac_cours,
-            'fac_validated': fac_validated,
-            'fac_closed':    fac_closed,
-            'plan_total':    plan_total,
+            'fac_total':       fac_total,
+            'fac_brouillon':   fac_brouillon,
+            'fac_submitted':   fac_submitted,
+            'fac_cours':       fac_cours,
+            'fac_validated':   fac_validated,
+            'fac_closed':      fac_closed,
+            'fac_taux_cloture': fac_taux_cloture,
+            'plan_total':     plan_total,
             'plan_brouillon': plan_brouillon,
-            'plan_soumis':   plan_soumis,
-            'plan_integre':  plan_integre,
-            'plan_cloture':  plan_cloture,
+            'plan_done':      plan_done,
             'monthly_labels':  monthly_labels,
             'monthly_fnc':     monthly_fnc,
             'monthly_fac':     monthly_fac,
             'calendar_events': calendar_events,
-            'calendar_year':   today.year,
-            'calendar_month':  today.month,
+            'calendar_year':   cal_year,
+            'calendar_month':  cal_month,
             'alerts':          alerts,
             'received_by_date': received_by_date,
         }

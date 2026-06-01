@@ -462,7 +462,7 @@ odoo.define('nc_management.dashboard', function(require){
 
         _renderReceivedDocs: function(docs, key){
             var self = this;
-            var label = key ? this._formatDateKey(key) : "Documents reçus aujourd'hui";
+            var label = key ? this._formatDateKey(key) : this._formatDateKey(todayKey());
             this.$('.received-sub').text(label);
 
             if(!docs.length){
@@ -529,17 +529,6 @@ odoo.define('nc_management.dashboard', function(require){
 
             // Plans SMI
             plans.forEach(function(item){
-                var stateMap = {
-                    soumis:    {label: 'En attente',  color: '#7c3aed', bg: '#f5f3ff'},
-                    integre:   {label: 'Intégré',     color: '#059669', bg: '#f0fdf4'},
-                    cloture:   {label: 'Clôturé',     color: '#64748b', bg: '#f1f5f9'},
-                    brouillon: {label: 'Brouillon',   color: '#94a3b8', bg: '#f8fafc'},
-                };
-                var st = stateMap[item.submission_state] || null;
-                var stateBadge = st
-                    ? '<span class="badge" style="background:' + st.bg + ';color:' + st.color + ';border:1px solid ' + st.color + '33">' + st.label + '</span>'
-                    : '';
-
                 var echeanceLine = item.date_prevue
                     ? '<div class="nc-notif-info" style="color:#94a3b8">Échéance : ' + _.escape(item.date_prevue) + '</div>'
                     : '';
@@ -550,9 +539,8 @@ odoo.define('nc_management.dashboard', function(require){
                       + '<div style="flex:1;min-width:0">'
                       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'
                       + '<div class="nc-notif-ref" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _.escape(item.name || '') + '</div>'
-                      + '<div style="display:flex;gap:4px;flex-shrink:0"><span class="badge purple">PLAN</span>' + stateBadge + '</div>'
+                      + '<span class="badge purple">PLAN</span>'
                       + '</div>'
-                      + '<div class="nc-notif-info" style="margin-top:3px;color:#6d28d9">' + _.escape(item.type || 'Plan action') + '</div>'
                       + echeanceLine
                       + '<div class="nc-notif-actions">'
                       + '<div class="btn-sm primary btn-open" style="background:#7c3aed;border-color:#7c3aed" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
@@ -568,7 +556,7 @@ odoo.define('nc_management.dashboard', function(require){
         _formatDateKey: function(key){
             var p = key.split('-');
             if(p.length !== 3) return key;
-            return 'Documents reçus le ' + p[2] + '/' + p[1] + '/' + p[0];
+            return p[2] + '/' + p[1] + '/' + p[0];
         },
 
         _renderDirectionPie: function(direction, kind){

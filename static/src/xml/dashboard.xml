@@ -6,11 +6,9 @@
 <div class="nc-inner">
 <div class="nc-header">
   <div>
-    <div class="nc-brand-sub">CIMENTERIE DE SÉTIF — GICA</div>
     <div class="nc-brand-title">Dashboard RMQSE</div>
   </div>
   <div class="nc-header-right">
-    <span style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.5px;text-transform:uppercase">Période stats</span>
     <div class="period-btn">
       <div class="pb active" data-period="1m">1 mois</div>
       <div class="pb" data-period="6m">6 mois</div>
@@ -25,13 +23,14 @@
 </div>
 
 <div>
-  <div class="section-title">Calendrier de réception — FNC &amp; FAC</div>
   <div class="g2">
 
     <!-- Fiches reçues : FNC regroupées avec leurs FAC dans un seul conteneur -->
     <div class="nc-card" style="max-height:400px;overflow-y:auto">
-      <div class="nc-card-title">Fiches reçues</div>
-      <div class="nc-card-sub received-sub">Documents reçus aujourd'hui</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="nc-card-title" style="margin-bottom:0">Fiches reçues</div>
+        <div class="received-sub" style="font-size:11px;color:#64748b"></div>
+      </div>
       <div class="received-list"></div>
     </div>
 
@@ -190,7 +189,6 @@
   <div class="g2" style="align-items:stretch">
     <div class="nc-card">
       <div class="nc-card-title">FNC &amp; FAC par direction</div>
-      <div class="nc-card-sub">Barres groupées · Cliquer sur une barre FNC pour afficher les types</div>
 
       <!-- Total global toutes directions + départements + services -->
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;padding:8px 12px;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd">
@@ -276,7 +274,6 @@
   <div class="g2">
     <div class="nc-card">
       <div class="nc-card-title">Diagramme global FNC &amp; FAC</div>
-      <div class="nc-card-sub">RMQSE + Tous les services combinés — par mois</div>
       <canvas id="globalChart" style="height:170px"></canvas>
       <div style="display:flex;gap:12px;margin-top:8px;justify-content:center">
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
@@ -286,7 +283,6 @@
 
     <div class="nc-card">
       <div class="nc-card-title">Alertes &amp; Notifications</div>
-      <div class="nc-card-sub">FAC à clôturer · FNC à valider · FAC non reçues &amp; à relancer</div>
 
       <t t-foreach="widget.stats.fac_a_cloturer" t-as="fac">
         <t t-if="fac.days > 7">

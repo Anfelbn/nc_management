@@ -2469,7 +2469,9 @@ class NcDashboard(models.Model):
                 rec = self.env[model].sudo().browse(record_id)
                 if not rec.exists():
                     return result
-                if rec.signale_par_id:
+                if rec.sent_by_id:
+                    full = rec.sent_by_id.name or ''
+                elif rec.signale_par_id:
                     full = rec.signale_par_id.name or ''
                 elif rec.submitted_by_id:
                     full = rec.submitted_by_id.name or ''
@@ -2489,7 +2491,9 @@ class NcDashboard(models.Model):
                 if not rec.exists():
                     return result
                 fnc = rec.fnc_id
-                if fnc and fnc.signale_par_id:
+                if rec.sent_by_id:
+                    full = rec.sent_by_id.name or ''
+                elif fnc and fnc.signale_par_id:
                     full = fnc.signale_par_id.name or ''
                 elif fnc and fnc.submitted_by_id:
                     full = fnc.submitted_by_id.name or ''

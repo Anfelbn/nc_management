@@ -1523,7 +1523,7 @@ class NcDashboard(models.Model):
         }
 
     @api.model
-    def get_stats(self, period=None):
+    def get_stats(self, period=None, target_year=None, target_month=None):
         from datetime import date, timedelta
         from dateutil.relativedelta import relativedelta
         import calendar as cal_mod
@@ -1532,13 +1532,17 @@ class NcDashboard(models.Model):
         fac = self.env['nc_management.corrective_action']
         plan = self.env['nc_management.plan_action_smi']
         today = date.today()
+        if target_year and target_month:
+            ref_date = date(int(target_year), int(target_month), 1)
+        else:
+            ref_date = today
         period_months = {
             '1m': 1,
             '6m': 6,
             '1y': 12,
         }.get(period or '1m', 1)
-        period_end = (today.replace(day=1) + relativedelta(months=1))
-        period_start = today.replace(day=1) - relativedelta(months=period_months - 1)
+        period_end = (ref_date.replace(day=1) + relativedelta(months=1))
+        period_start = ref_date.replace(day=1) - relativedelta(months=period_months - 1)
 
         fnc_period_domain = [
             ('date', '>=', period_start.strftime('%Y-%m-%d')),
@@ -1597,8 +1601,8 @@ class NcDashboard(models.Model):
         fnc_audit_interne = fnc.search_count(combined_fnc_domain + [('type_audit_interne','=',True)])
         fnc_audit_externe = fnc.search_count(combined_fnc_domain + [('type_audit_externe','=',True)])
 
-        # FNC en retard > 7 jours (créées par RMQSE, in_progress)
-        limit7 = str(today - timedelta(days=7))
+        # FNC en retard > 1 jour (TEST — remettre à 7 après validation)
+        limit7 = str(today - timedelta(days=1))
         fnc_retard_recs = fnc.search_read([
             ('state', '=', 'in_progress'),
             ('date', '<=', limit7),
@@ -1860,8 +1864,8 @@ class NcDashboard(models.Model):
                 'fac': fac.search_count(fac_received_period_domain + [('fnc_id.service_id', '!=', False)]),
             },
         }
-        result['calendar_year'] = today.year
-        result['calendar_month'] = today.month
+        result['calendar_year'] = ref_date.year
+        result['calendar_month'] = ref_date.month
         result['monthly_labels'] = monthly_labels
 
         result['fnc_audit'] = fnc.search_count(combined_fnc_domain + [('type_audit', '=', True)])
@@ -1932,6 +1936,15 @@ class NcDashboard(models.Model):
         result['plan_total']      = len(plan_this_period)
         result['plan_en_attente'] = len(plan_this_period.filtered(lambda p: p.submission_state == 'soumis'))
         result['plan_integres']   = len(plan_this_period.filtered(lambda p: p.submission_state == 'integre'))
+
+        mes_domain   = [('create_uid', '=', self.env.uid), ('is_global', '=', False)]
+        recus_domain = [('sent_to_rmqse', '=', True), ('is_global', '=', False), ('sent_by', '!=', self.env.uid)]
+        result['plan_mes_total']      = plan.search_count(mes_domain)
+        result['plan_mes_brouillon']  = plan.search_count(mes_domain   + [('state', '=', 'draft')])
+        result['plan_mes_realise']    = plan.search_count(mes_domain   + [('state', '=', 'done')])
+        result['plan_recus_total']    = plan.search_count(recus_domain)
+        result['plan_recus_brouillon']= plan.search_count(recus_domain + [('state', '=', 'draft')])
+        result['plan_recus_realise']  = plan.search_count(recus_domain + [('state', '=', 'done')])
         for plan_rec in plan_this_period:
             plan_date = plan_rec.date_envoi or plan_rec.mois_reception
             if not plan_date:
@@ -1960,7 +1973,7 @@ class NcDashboard(models.Model):
         # FAC non reçues : FAC validées par d'autres utilisateurs (pas RMQSE),
         # depuis > 7 jours, que la RMQSE doit recevoir et clôturer
         fac_non_recues_list = []
-        threshold_7 = today - timedelta(days=7)
+        threshold_7 = today - timedelta(days=1)  # TEST — remettre à 7 après validation
         for fac_rec in fac.search([
             ('state', '=', 'validated'),
             ('create_uid', '!=', self.env.uid),
@@ -2241,7 +2254,7 @@ class NcDashboard(models.Model):
             calendar_events[k]['fac'] = True
 
         # ── Alertes (tous temps pour l'urgence) ──
-        limit7 = str(today - timedelta(days=7))
+        limit7 = str(today - timedelta(days=1))  # TEST — remettre à 7 après validation
         alerts = []
 
         for rec in fnc_model.search(user_fnc_domain_all + [('state', '=', 'submitted')], limit=10):

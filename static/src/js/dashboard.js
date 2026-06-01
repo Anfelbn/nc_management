@@ -10,6 +10,9 @@ odoo.define('nc_management.dashboard', function(require){
         init: function(){
             this._super.apply(this, arguments);
             this.stats = this._emptyStats();
+            var now = new Date();
+            this._calYear  = now.getFullYear();
+            this._calMonth = now.getMonth() + 1;
         },
 
         _emptyStats: function(){
@@ -80,6 +83,12 @@ odoo.define('nc_management.dashboard', function(require){
                 plan_total: 0,
                 plan_en_attente: 0,
                 plan_integres: 0,
+                plan_mes_total: 0,
+                plan_mes_brouillon: 0,
+                plan_mes_realise: 0,
+                plan_recus_total: 0,
+                plan_recus_brouillon: 0,
+                plan_recus_realise: 0,
             };
         },
 
@@ -109,7 +118,7 @@ odoo.define('nc_management.dashboard', function(require){
                 $(this).addClass('active');
                 var period = $(this).data('period') || '1m';
                 self._reload(period);
-            });
+            });  // _calYear/_calMonth déjà à jour dans _reload
 
             this.$el.on('click', '.btn-open', function(){
                 var model = $(this).data('model');
@@ -356,7 +365,7 @@ odoo.define('nc_management.dashboard', function(require){
             this._rpc({
                 model:  'nc_management.dashboard',
                 method: 'get_stats',
-                args:   [period],
+                args:   [period, self._calYear, self._calMonth],
             }).then(function(stats){
                 self.stats = $.extend(self._emptyStats(), stats || {});
                 self.renderElement();
@@ -369,6 +378,9 @@ odoo.define('nc_management.dashboard', function(require){
             var now     = new Date();
             var year    = this.stats.calendar_year  || now.getFullYear();
             var month   = (this.stats.calendar_month || (now.getMonth() + 1)) - 1;
+            // Sync les variables d'instance avec la position courante du calendrier
+            self._calYear  = year;
+            self._calMonth = month + 1;
             var FR_M    = ['Janvier','Février','Mars','Avril','Mai','Juin',
                            'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
             var pickerYear = year;
@@ -443,13 +455,16 @@ odoo.define('nc_management.dashboard', function(require){
                 e.stopPropagation(); pickerYear++; renderPicker();
             });
 
-            // Sélection d'un mois → 2e clic
+            // Sélection d'un mois → 2e clic → recharge toutes les stats pour ce mois
             this.$('.cal-pm').off('click').on('click', function(e){
                 e.stopPropagation();
                 year  = pickerYear;
                 month = parseInt($(this).data('m'), 10);
                 self.$('.cal-picker').hide();
-                render(year, month);
+                self._calYear  = year;
+                self._calMonth = month + 1;
+                var period = self.$('.pb.active').data('period') || '1m';
+                self._reload(period);
             });
 
             render(year, month);

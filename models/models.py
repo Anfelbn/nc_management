@@ -267,8 +267,43 @@ class Nonconformity(models.Model):
                 'title': 'Champ requis',
                 'message': "Veuillez remplir la description de la non-conformité avant d'affecter la fonction et visa.",
             }}
+        if not self.signale_par_id:
+            self.fonction_visa = False
+            return {'warning': {
+                'title': 'Champ requis',
+                'message': "Veuillez renseigner le signalement avant d'affecter la fonction et visa.",
+            }}
+        if not self.date_signalement:
+            self.fonction_visa = False
+            return {'warning': {
+                'title': 'Champ requis',
+                'message': "Veuillez renseigner la date de signalement avant d'affecter la fonction et visa.",
+            }}
         if self.state == 'draft':
             self.state = 'submitted'
+
+    @api.onchange(
+        'type_nc_produit', 'type_reclamation', 'type_sst', 'type_environnement',
+        'type_travaux', 'type_audit', 'type_audit_interne', 'type_audit_externe',
+        'type_achat', 'type_reception', 'type_dysfonctionnement', 'type_autre',
+        'description', 'signale_par_id', 'date_signalement',
+    )
+    def _onchange_autofill_fonction_visa(self):
+        if self.fonction_visa:
+            return
+        has_type = any([
+            self.type_nc_produit, self.type_reclamation, self.type_sst,
+            self.type_environnement, self.type_travaux, self.type_audit,
+            self.type_audit_interne, self.type_audit_externe, self.type_achat,
+            self.type_reception, self.type_dysfonctionnement, self.type_autre,
+        ])
+        if not (has_type and self.description and self.description.strip()
+                and self.signale_par_id and self.date_signalement):
+            return
+        employee = self.env['hr.employee'].search(
+            [('user_id', '=', self.env.uid)], limit=1)
+        if employee:
+            self.fonction_visa = employee.visa_no or employee.job_id.name or employee.name
 
     @api.constrains('fonction_visa')
     def _check_fonction_visa_requirements(self):
@@ -291,6 +326,55 @@ class Nonconformity(models.Model):
                     "Veuillez remplir la description de la non-conformité "
                     "avant d'affecter la fonction et visa."
                 )
+            if not rec.signale_par_id:
+                raise ValidationError(
+                    "Veuillez renseigner le signalement avant d'affecter la fonction et visa."
+                )
+            if not rec.date_signalement:
+                raise ValidationError(
+                    "Veuillez renseigner la date de signalement avant d'affecter la fonction et visa."
+                )
+
+    @api.onchange('responsable_action_id')
+    def _onchange_responsable_action_id(self):
+        if not self.responsable_action_id:
+            return
+        if not self.realise_par_id:
+            self.responsable_action_id = False
+            return {'warning': {
+                'title': 'Champ requis',
+                'message': "Veuillez renseigner 'Réalisé par' avant d'affecter le responsable de l'action.",
+            }}
+        if not self.date_realisation:
+            self.responsable_action_id = False
+            return {'warning': {
+                'title': 'Champ requis',
+                'message': "Veuillez renseigner la date de réalisation avant d'affecter le responsable de l'action.",
+            }}
+
+    @api.onchange('realise_par_id', 'date_realisation')
+    def _onchange_autofill_responsable_action(self):
+        if self.responsable_action_id:
+            return
+        if not self.realise_par_id or not self.date_realisation:
+            return
+        employee = self.env['hr.employee'].search(
+            [('user_id', '=', self.env.uid)], limit=1)
+        if employee:
+            self.responsable_action_id = employee
+
+    @api.onchange('superieur_id', 'date_validation', 'signature')
+    def _onchange_autofill_signature(self):
+        employee = self.env['hr.employee'].search(
+            [('user_id', '=', self.env.uid)], limit=1)
+        if not employee:
+            return
+        if not self.superieur_id:
+            self.superieur_id = employee
+        if not self.date_validation:
+            self.date_validation = fields.Date.today()
+        if not self.signature:
+            self.signature = employee.visa_no or employee.job_id.name or employee.name
 
     # ── Valeurs par défaut depuis le compte employé ───────────
     @api.model
@@ -442,6 +526,10 @@ class Nonconformity(models.Model):
             manquants.append("un type de traitement")
         if not self.action_immediate:
             manquants.append("l'action immédiate")
+        if not self.realise_par_id:
+            manquants.append("Réalisé par")
+        if not self.date_realisation:
+            manquants.append("la date de réalisation")
         if not self.analyse_causes:
             manquants.append("l'analyse des causes")
         if not self.impact:
@@ -485,20 +573,21 @@ class Nonconformity(models.Model):
         self.ensure_one()
         employee = self.env['hr.employee'].search(
             [('user_id', '=', self.env.uid)], limit=1)
-        vals = {}
+        vals = {'state': 'validated'}
         if employee and not self.superieur_id:
             vals['superieur_id'] = employee.id
         if not self.date_validation:
             vals['date_validation'] = fields.Date.today()
-        if vals:
-            self.write(vals)
+        if not self.signature and employee:
+            vals['signature'] = employee.visa_no or employee.job_id.name or employee.name
+        self.write(vals)
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'nc_management.nonconformity',
             'res_id': self.id,
             'views': [[False, 'form']],
             'target': 'current',
-            'context': {'form_view_initial_mode': 'edit'},
+            'context': {'form_view_initial_mode': 'view'},
         }
 
     @api.multi

@@ -7,7 +7,7 @@
             <script type="text/javascript"
                     src="/nc_management/static/src/js/fnc_form.js"/>
             <script type="text/javascript"
-                    src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"/>
+                    src="/nc_management/static/src/js/Chart.min.js"/>
             <script type="text/javascript"
                     src="/nc_management/static/src/js/dashboard.js"/>
             <script type="text/javascript"

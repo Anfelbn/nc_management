@@ -1029,6 +1029,36 @@ class PlanActionSmi(models.Model):
                 '{table}{chart}</div>'
             ).format(table=table, chart=chart)
 
+    @api.multi
+    def _get_analyse_rows(self):
+        """Retourne les données par catégorie pour le rapport PDF."""
+        self.ensure_one()
+        children = self.child_plan_ids
+        sel = self._fields['nature'].selection
+        nature_list = sel if not callable(sel) else sel(self)
+        rows = []
+        for i, (nat, label) in enumerate(nature_list):
+            cat   = children.filtered(lambda p, n=nat: p.nature == n)
+            total = len(cat)
+            eff   = sum(1 for p in cat if p.efficacite == 'oui')
+            neff  = sum(1 for p in cat if p.efficacite == 'non')
+            r100  = sum(1 for p in cat if p.avancement == 100)
+            r50p  = sum(1 for p in cat if 50 < p.avancement < 100)
+            r50m  = sum(1 for p in cat if p.avancement <= 50)
+            taux  = round(eff / total * 100, 1) if total else 0.0
+            badge = '#1fa255' if taux > 80 else ('#cc8800' if taux >= 50 else '#d44535')
+            bar_h = int(taux * 120 / 100) if taux > 0 else 0
+            rows.append({
+                'label': label, 'total': total,
+                'eff': eff, 'neff': neff,
+                'r100': r100, 'r50p': r50p, 'r50m': r50m,
+                'taux': taux, 'badge': badge,
+                'color': self._CAT_COLORS[i % 4],
+                'bar_h': bar_h,
+                'spacer_h': 120 - bar_h,
+            })
+        return rows
+
     # ── Statistiques plan global (calculées) ──────────────────────
     nb_plans_integres = fields.Integer(
         'Nb plans intégrés', compute='_compute_global_stats')
@@ -1082,10 +1112,24 @@ class PlanActionSmi(models.Model):
 
     @api.model
     def create(self, vals):
-        if vals.get('name', 'New') == 'New' and vals.get('is_global'):
+        is_global = vals.get('is_global') or self._context.get('default_is_global')
+        if vals.get('name', 'New') == 'New' and is_global:
             from datetime import date as _date
-            today = _date.today()
-            vals['name'] = 'SMI-%02d-%04d' % (today.month, today.year)
+            if is_global and 'is_global' not in vals:
+                vals['is_global'] = True
+            date_ref = vals.get('mois_reception')
+            if date_ref:
+                if isinstance(date_ref, str):
+                    date_ref = _date(*[int(x) for x in date_ref[:10].split('-')])
+            else:
+                date_ref = _date.today()
+            base = 'SMI-%02d-%04d' % (date_ref.month, date_ref.year)
+            ref = base
+            counter = 2
+            while self.search([('is_global', '=', True), ('name', '=', ref)], limit=1):
+                ref = '%s-%d' % (base, counter)
+                counter += 1
+            vals['name'] = ref
         return super(PlanActionSmi, self).create(vals)
 
     @api.multi
@@ -1218,15 +1262,27 @@ class PlanActionSmi(models.Model):
 
     @api.multi
     def action_consolider_tous(self):
-        """Ouvre le wizard de sélection des plans à consolider."""
+        """Pré-crée le wizard et ses lignes en base, puis ouvre le popup."""
         self.ensure_one()
+        plans = self.env['nc_management.plan_action_smi'].search([
+            ('is_global', '=', False),
+            ('global_plan_id', '=', False),
+        ])
+        wizard = self.env['nc_management.consolidate_wizard'].create({
+            'global_plan_id': self.id,
+        })
+        for plan in plans:
+            self.env['nc_management.consolidate_wizard.line'].create({
+                'wizard_id': wizard.id,
+                'plan_id': plan.id,
+            })
         return {
             'type': 'ir.actions.act_window',
             'name': 'Consolider des plans',
             'res_model': 'nc_management.consolidate_wizard',
+            'res_id': wizard.id,
             'view_mode': 'form',
             'target': 'new',
-            'context': {'active_id': self.id},
         }
 
     @api.multi
@@ -2258,18 +2314,7 @@ class NcDashboard(models.Model):
                 calendar_events[k] = {'fnc': False, 'fac': False}
             calendar_events[k]['fac'] = True
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        # ── Alertes (tous temps pour l'urgence) ──
-        limit7 = str(today - timedelta(days=1))  # TEST — remettre à 7 après validation
-=======
-        # ── Alertes : FNC/FAC en cours > 1 jour depuis le changement d'état (test) ──
         limit7 = str(today - timedelta(days=1))
->>>>>>> Stashed changes
-=======
-        # ── Alertes : FNC/FAC en cours > 1 jour depuis le changement d'état (test) ──
-        limit7 = str(today - timedelta(days=1))
->>>>>>> Stashed changes
         alerts = []
 
         for rec in fnc_model.search(user_fnc_domain_all + [('state', '=', 'submitted')], limit=10):
@@ -2589,4 +2634,17 @@ class NcDashboard(models.Model):
         except Exception:
             pass
 
+        return result
+
+
+class ResUsers(models.Model):
+    _inherit = 'res.users'
+
+    @api.multi
+    def write(self, vals):
+        result = super(ResUsers, self).write(vals)
+        if 'lang' in vals and vals['lang']:
+            for user in self:
+                if user.partner_id:
+                    user.partner_id.sudo().write({'lang': vals['lang']})
         return result

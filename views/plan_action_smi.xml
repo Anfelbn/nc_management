@@ -238,10 +238,11 @@
     <field name="arch" type="xml">
         <form string="Plan d'Action d'Amélioration SMI">
             <header>
-                <!-- Consolider : intègre TOUS les plans non rattachés -->
+                <!-- Consolider : ouvre le wizard de sélection des plans -->
                 <button name="action_consolider_tous"
-                        string="Consolider des plans"
+                        string="Consolider"
                         type="object"
+                        class="oe_highlight"
                         attrs="{'invisible': [('submission_state', '=', 'cloture')]}"/>
                 <!-- Clôturer : crée automatiquement le plan suivant -->
                 <button name="action_cloturer_plan"
@@ -255,6 +256,7 @@
                 <!-- Champs techniques requis par attrs -->
                 <field name="nb_plans_integres" invisible="1"/>
                 <field name="submission_state"  invisible="1"/>
+                <field name="is_global"         invisible="1"/>
 
                 <div class="oe_title">
                     <h1><field name="name" readonly="1"/></h1>
@@ -469,7 +471,7 @@
     <field name="res_model">nc_management.plan_action_smi</field>
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_global', '=', True)]</field>
-    <field name="context">{'no_import': True}</field>
+    <field name="context">{'no_import': True, 'default_is_global': True}</field>
     <field name="view_ids" eval="[(5, 0, 0),
         (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_global')}),
         (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form_global')})]"/>
@@ -483,7 +485,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">18</field>
     <field name="arch" type="xml">
-        <tree string="Analyses d'Efficacité" import="false" create="false" delete="false">
+        <tree string="Analyses d'Efficacité" import="false" create="false">
             <field name="name"              string="Plan d'Amélioration"/>
             <field name="mois_reception"    string="Période"/>
             <field name="date_maj"          string="Date de clôture"/>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+<data>
+
+    <report
+        id="action_report_analyse_efficacite"
+        model="nc_management.plan_action_smi"
+        string="Analyse d'Efficacité"
+        report_type="qweb-pdf"
+        name="nc_management.report_analyse_efficacite_template"
+        file="nc_management.report_analyse_efficacite_template"
+        attachment_use="False"
+        menu="True"
+    />
+
+    <record id="action_server_print_analyse_efficacite" model="ir.actions.server">
+        <field name="name">Imprimer</field>
+        <field name="model_id" ref="model_nc_management_plan_action_smi"/>
+        <field name="binding_model_id" ref="model_nc_management_plan_action_smi"/>
+        <field name="state">code</field>
+        <field name="code">
+if records:
+    action = {
+        'type': 'ir.actions.report.xml',
+        'report_name': 'nc_management.report_analyse_efficacite_template',
+        'report_type': 'qweb-pdf',
+        'context': env.context,
+    }
+        </field>
+    </record>
+
+    <template id="report_analyse_efficacite_template">
+        <t t-call="web.html_container">
+            <t t-call="web.basic_layout">
+                <style>
+                    @page {
+                        size: A4 landscape;
+                        margin: 8mm;
+                    }
+                    /* Écraser les contraintes de largeur de basic_layout */
+                    .page, .o_report_layout_standard, div.page {
+                        width: 100% !important;
+                        max-width: none !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+                    body { font-family: Arial, sans-serif; font-size: 10px; color: #1a1a1a; }
+                    /* KPIs */
+                    .kpi-tbl  { width:100%; border-collapse:collapse; margin-bottom:10px; }
+                    .kpi-cell { width:24%; text-align:center; border:1.5px solid #2980b9;
+                                border-radius:6px; padding:5px 2px; }
+                    .kpi-lbl  { font-size:8px; color:#666; font-weight:bold;
+                                text-transform:uppercase; }
+                    .kpi-val  { font-size:20px; font-weight:bold; color:#2980b9; }
+                    /* Tableau */
+                    .stats    { width:100%; border-collapse:collapse; font-size:10px; }
+                    .stats th { background:#2c3e50; color:white; font-weight:bold;
+                                padding:6px 8px; text-align:center; white-space:nowrap; }
+                    .stats th.l { text-align:left; }
+                    .stats td   { padding:5px 8px; border-bottom:1px solid #ddd;
+                                  text-align:center; }
+                    .stats td.l { text-align:left; }
+                    .badge { color:white; padding:2px 8px; border-radius:10px;
+                             font-weight:bold; font-size:10px; }
+                    /* Graphique */
+                    .chart-wrap { border-left:2px solid #ccc; border-bottom:2px solid #ccc;
+                                  overflow:hidden; width:100%; }
+                    .bar-col    { float:left; text-align:center; box-sizing:border-box;
+                                  padding:0 1px; }
+                    .bar-pct    { font-size:8px; font-weight:bold; }
+                    .bar-block  { margin:0 auto; border-radius:3px 3px 0 0; }
+                    .bar-lbl    { font-size:7px; color:#333; padding-top:3px;
+                                  word-break:break-word; line-height:1.2; }
+                    .footer     { border-top:1px solid #ccc; margin-top:12px;
+                                  padding-top:4px; font-size:8px; color:#999;
+                                  text-align:center; }
+                </style>
+
+                <t t-foreach="docs" t-as="plan">
+                    <t t-set="rows" t-value="plan._get_analyse_rows()"/>
+                    <div style="width:100%;box-sizing:border-box;">
+
+                        <!-- En-tête -->
+                        <p style="font-size:15px;font-weight:bold;color:#2c3e50;
+                                  text-align:center;margin:0 0 3px 0;">
+                            Analyse d'Efficacité Globale
+                        </p>
+                        <p style="font-size:11px;text-align:center;color:#555;margin:0 0 10px 0;">
+                            <t t-esc="plan.name"/> —
+                            Période : <t t-esc="plan.mois_reception or ''"/> —
+                            Clôturé le : <t t-esc="plan.date_maj or ''"/>
+                        </p>
+
+                        <!-- KPIs -->
+                        <table class="kpi-tbl">
+                            <tr>
+                                <td class="kpi-cell">
+                                    <div class="kpi-lbl">Plans intégrés</div>
+                                    <div class="kpi-val"><t t-esc="plan.nb_plans_integres"/></div>
+                                </td>
+                                <td style="width:1%;"></td>
+                                <td class="kpi-cell">
+                                    <div class="kpi-lbl">Avancement global</div>
+                                    <div class="kpi-val"><t t-esc="plan.avancement_global"/>%</div>
+                                </td>
+                                <td style="width:1%;"></td>
+                                <td class="kpi-cell">
+                                    <div class="kpi-lbl">Taux de réalisation</div>
+                                    <div class="kpi-val"><t t-esc="plan.taux_realisation"/>%</div>
+                                </td>
+                                <td style="width:1%;"></td>
+                                <td class="kpi-cell">
+                                    <div class="kpi-lbl">Taux d'efficacité</div>
+                                    <div class="kpi-val"><t t-esc="plan.taux_efficacite"/>%</div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Tableau par catégorie -->
+                        <table class="stats">
+                            <thead>
+                                <tr>
+                                    <th class="l">Catégorie</th>
+                                    <th>Efficace</th>
+                                    <th>Non Efficace</th>
+                                    <th>Réalisé 100%</th>
+                                    <th>Réalisé &gt;50%</th>
+                                    <th>Réalisé &lt;50%</th>
+                                    <th>Taux Efficacité %</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="rows" t-as="r">
+                                    <tr t-att-style="'background:#f4f8fc;' if r_index % 2 else 'background:#ffffff;'">
+                                        <td class="l">
+                                            <span t-att-style="'color:%s;font-weight:bold;' % r['color']">
+                                                <t t-esc="r['label']"/>
+                                            </span>
+                                        </td>
+                                        <td style="color:#1fa255;font-weight:bold;"><t t-esc="r['eff']"/></td>
+                                        <td style="color:#d44535;font-weight:bold;"><t t-esc="r['neff']"/></td>
+                                        <td><t t-esc="r['r100']"/></td>
+                                        <td><t t-esc="r['r50p']"/></td>
+                                        <td><t t-esc="r['r50m']"/></td>
+                                        <td>
+                                            <span class="badge"
+                                                  t-att-style="'background:%s;' % r['badge']">
+                                                <t t-esc="r['taux']"/>%
+                                            </span>
+                                        </td>
+                                        <td style="font-weight:bold;"><t t-esc="r['total']"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Graphique barres verticales -->
+                        <p style="font-weight:bold;font-size:12px;color:#2c3e50;
+                                  margin:14px 0 6px 0;">
+                            Taux d'efficacité par catégorie (%)
+                        </p>
+                        <t t-set="col_w" t-value="str(round(100.0 / len(rows), 2)) + '%'"/>
+                        <div class="chart-wrap">
+                            <t t-foreach="rows" t-as="r">
+                                <div class="bar-col" t-att-style="'width:' + col_w + ';'">
+                                    <div class="bar-pct"
+                                         t-att-style="'color:%s;' % r['color']">
+                                        <t t-esc="int(r['taux'])"/>%
+                                    </div>
+                                    <div t-att-style="'height:%spx;' % r['spacer_h']"></div>
+                                    <div class="bar-block"
+                                         t-att-style="'height:' + str(r['bar_h']) + 'px;width:65%;background:' + r['color'] + ';'">
+                                    </div>
+                                    <div class="bar-lbl"><t t-esc="r['label']"/></div>
+                                </div>
+                            </t>
+                            <div style="clear:both;"></div>
+                        </div>
+
+                        <!-- Pied de page -->
+                        <p class="footer">
+                            Généré le
+                            <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y %H:%M')"/>
+                            — SCAEK / Responsable Qualité
+                        </p>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</data>
+</odoo>

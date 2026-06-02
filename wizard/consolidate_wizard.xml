@@ -6,31 +6,30 @@
     <field name="name">nc_management.consolidate_wizard.form</field>
     <field name="model">nc_management.consolidate_wizard</field>
     <field name="arch" type="xml">
-        <form string="Sélectionner les plans à consolider">
+        <form string="Consolider des plans">
             <sheet>
                 <field name="global_plan_id" invisible="1"/>
                 <group>
                     <p class="oe_grey">
-                        Cliquez sur <strong>Ajouter un élément</strong> pour sélectionner les plans à intégrer dans ce Plan d'Amélioration.
+                        Cochez les plans à intégrer (vos plans + plans reçus non encore intégrés), puis cliquez sur <strong>Consolider</strong>.
                     </p>
                 </group>
-                <field name="plan_ids"
-                       string="Plans à consolider"
-                       domain="[('is_global','=',False),('global_plan_id','=',False)]">
-                    <tree>
-                        <field name="name"           string="Référence"/>
-                        <field name="direction_id"   string="Direction"/>
-                        <field name="department_id"  string="Département"/>
-                        <field name="nature"         string="Nature"/>
+                <field name="line_ids" nolabel="1">
+                    <tree editable="bottom" create="false" delete="false">
+                        <field name="selected"      string="✓"/>
+                        <field name="plan_id"       string="Référence"/>
+                        <field name="direction_id"  string="Direction"/>
+                        <field name="department_id" string="Département"/>
+                        <field name="nature"        string="Nature"/>
                         <field name="responsable_id" string="Responsable"/>
-                        <field name="avancement"     string="Avancement %"/>
-                        <field name="sent_to_rmqse"  string="Plan reçu"/>
+                        <field name="avancement"    string="Avancement %"/>
+                        <field name="sent_to_rmqse" string="Plan reçu"/>
                     </tree>
                 </field>
             </sheet>
             <footer>
                 <button name="action_consolidate"
-                        string="Consolider les plans sélectionnés"
+                        string="Consolider"
                         type="object"
                         class="oe_highlight"/>
                 <button string="Annuler" class="oe_link" special="cancel"/>

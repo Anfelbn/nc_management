@@ -121,6 +121,15 @@ class FormTemplate(models.Model):
             'context': {'default_source_template_id': self.id},
         }
 
+    @api.multi
+    def action_preview(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/report/html/nc_management.report_template_preview/%s' % self.id,
+            'target': 'new',
+        }
+
     @api.model
     def get_active_template(self, doc_type):
         return self.search(

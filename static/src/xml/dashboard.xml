@@ -318,7 +318,7 @@
             <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — À valider</div>
             <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours en cours</div>
           </div>
-          <div class="btn-sm primary btn-validate-fnc" t-att-data-id="fnc.id">Valider</div>
+          <div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" t-att-data-id="fnc.id">Ouvrir</div>
         </div>
       </t>
 

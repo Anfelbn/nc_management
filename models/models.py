@@ -486,6 +486,7 @@ class Nonconformity(models.Model):
                 resp_user = employee.user_id if employee else self.env.user
                 fac_vals = {
                     'fnc_id': rec.id,
+                    'ref_document': rec.name,
                     'direction_id': rec.direction_id.id if rec.direction_id else False,
                     'rappel_nc': rec.description or '',
                     'analyse_causes': rec.analyse_causes or '',
@@ -692,9 +693,15 @@ class CorrectiveAction(models.Model):
     date         = fields.Date(string='Date', default=fields.Date.today)
     fnc_id       = fields.Many2one(
         'nc_management.nonconformity',
-        string='N° FNC ou autre document',
+        string='FNC liée',
         ondelete='set null',
         index=True
+    )
+    ref_document = fields.Char(string='N° FNC ou autre document')
+    fnc_ref_display = fields.Char(
+        string='N° FNC ou autre document (affiché)',
+        compute='_compute_fnc_ref_display',
+        store=False,
     )
     date_fnc     = fields.Date(string='Date FNC')
     responsable_id = fields.Many2one(
@@ -759,6 +766,8 @@ class CorrectiveAction(models.Model):
     @api.model
     def default_get(self, fields_list):
         defaults = super(CorrectiveAction, self).default_get(fields_list)
+        if 'responsable_id' in fields_list:
+            defaults['responsable_id'] = self.env.uid
         employee = self.env['hr.employee'].search(
             [('user_id', '=', self.env.uid)], limit=1)
         if employee:
@@ -770,10 +779,19 @@ class CorrectiveAction(models.Model):
                 dept = dept.parent_id
         return defaults
 
+    @api.depends('fnc_id', 'ref_document')
+    def _compute_fnc_ref_display(self):
+        for rec in self:
+            if rec.fnc_id:
+                rec.fnc_ref_display = rec.fnc_id.name
+            else:
+                rec.fnc_ref_display = rec.ref_document or ''
+
     # ── Remplissage auto via FNC ──────────────────────────────
     @api.onchange('fnc_id')
     def _onchange_fnc_id(self):
         if self.fnc_id:
+            self.ref_document = self.fnc_id.name
             self.rappel_nc = self.fnc_id.description
             self.analyse_causes = self.fnc_id.analyse_causes
             self.direction_id = self.fnc_id.direction_id
@@ -789,38 +807,63 @@ class CorrectiveAction(models.Model):
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'nc_management.corrective_action') or 'New'
         if not vals.get('responsable_id'):
-            if vals.get('fnc_id'):
-                fnc = self.env['nc_management.nonconformity'].browse(vals['fnc_id'])
-                user = fnc.assigned_to_id.user_id if fnc.assigned_to_id else False
-                vals['responsable_id'] = user.id if user else self.env.uid
-            else:
-                vals['responsable_id'] = self.env.uid
+            vals['responsable_id'] = self.env.uid
+        new_state = self._state_from_visas(
+            vals.get('visa_analyse'),
+            vals.get('visa_actions'),
+            vals.get('qse_visa'),
+            vals.get('visa_cloture'),
+        )
+        vals['state'] = new_state
         return super(CorrectiveAction, self).create(vals)
 
-    # ── Transitions d'état automatiques ──────────────────────
+    # ── Calcul d'état depuis les visas ───────────────────────
+    def _state_from_visas(self, visa_analyse, visa_actions, qse_visa, visa_cloture):
+        if visa_cloture:  return 'closed'
+        if qse_visa:      return 'validated'
+        if visa_actions:  return 'in_progress'
+        if visa_analyse:  return 'submitted'
+        return 'draft'
+
+    # ── Mise à jour visuelle en temps réel ───────────────────
+    @api.onchange('visa_analyse', 'visa_actions', 'qse_visa', 'visa_cloture')
+    def _onchange_visa_state(self):
+        new_state = self._state_from_visas(
+            self.visa_analyse, self.visa_actions, self.qse_visa, self.visa_cloture)
+        self.state = new_state
+        if new_state == 'validated' and not self.date_validated:
+            self.date_validated = fields.Date.today()
+        if new_state == 'closed':
+            if not self.date_cloture:
+                self.date_cloture = fields.Date.today()
+            if not self.cloture_par_id:
+                employee = self.env['hr.employee'].search(
+                    [('user_id', '=', self.env.uid)], limit=1)
+                if employee:
+                    self.cloture_par_id = employee
+
+    # ── Transitions d'état à la sauvegarde ───────────────────
     @api.multi
     def write(self, vals):
-        if 'state' not in vals:
-            for rec in self:
-                new_visa_analyse  = vals.get('visa_analyse',  rec.visa_analyse)
-                new_visa_actions  = vals.get('visa_actions',  rec.visa_actions)
-                new_qse_visa      = vals.get('qse_visa',      rec.qse_visa)
-                new_visa_cloture  = vals.get('visa_cloture',  rec.visa_cloture)
-
-                if new_visa_cloture and rec.state != 'closed':
-                    employee = self.env['hr.employee'].search(
+        for rec in self:
+            new_va  = vals.get('visa_analyse', rec.visa_analyse)
+            new_vac = vals.get('visa_actions', rec.visa_actions)
+            new_qv  = vals.get('qse_visa',     rec.qse_visa)
+            new_vc  = vals.get('visa_cloture', rec.visa_cloture)
+            new_state = rec._state_from_visas(new_va, new_vac, new_qv, new_vc)
+            # Toujours forcer l'état depuis les visas
+            vals = dict(vals, state=new_state)
+            if new_state == 'validated':
+                if not vals.get('date_validated') and not rec.date_validated:
+                    vals = dict(vals, date_validated=fields.Date.today())
+            if new_state == 'closed':
+                if not vals.get('cloture_par_id') and not rec.cloture_par_id:
+                    emp = self.env['hr.employee'].search(
                         [('user_id', '=', self.env.uid)], limit=1)
-                    vals = dict(vals, state='closed',
-                                cloture_par_id=employee.id if employee else False,
-                                date_cloture=fields.Date.today())
-                elif new_qse_visa and rec.state not in ('validated', 'closed'):
-                    vals = dict(vals, state='validated',
-                                date_validated=fields.Date.today())
-                elif new_visa_actions and rec.state not in ('in_progress', 'validated', 'closed'):
-                    vals = dict(vals, state='in_progress')
-                elif new_visa_analyse and rec.state == 'draft':
-                    vals = dict(vals, state='submitted')
-                break  # formulaire = un seul record à la fois
+                    vals = dict(vals, cloture_par_id=emp.id if emp else False)
+                if not vals.get('date_cloture') and not rec.date_cloture:
+                    vals = dict(vals, date_cloture=fields.Date.today())
+            break
         return super(CorrectiveAction, self).write(vals)
 
     @api.multi

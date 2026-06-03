@@ -32,15 +32,6 @@
     <field name="col3_field">name</field>
     <field name="col3_label">N° FAC</field>
 </record>
-<record id="line_fac_a2" model="nc_management.form_line">
-    <field name="section_id" ref="sec_fac_a_entete"/>
-    <field name="sequence">20</field>
-    <field name="line_type">row</field>
-    <field name="col1_field">fnc_id</field>
-    <field name="col1_label">N° FNC ou autre document</field>
-    <field name="col2_field">date_fnc</field>
-    <field name="col2_label">Date</field>
-</record>
 
 <!-- ── Section B : 1- Rappel NC ── -->
 <record id="sec_fac_b_rappel" model="nc_management.form_section">
@@ -192,4 +183,21 @@
 </record>
 
 </data>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Ligne mise à jour (noupdate="0") : col1_field forcé à fnc_ref_display
+     pour corriger le bug PDF (ancienne valeur "fnc_id" en base)
+     ═══════════════════════════════════════════════════════════════ -->
+<data noupdate="0">
+<record id="line_fac_a2" model="nc_management.form_line">
+    <field name="section_id" ref="sec_fac_a_entete"/>
+    <field name="sequence">20</field>
+    <field name="line_type">row</field>
+    <field name="col1_field">fnc_ref_display</field>
+    <field name="col1_label">N° FNC ou autre document</field>
+    <field name="col2_field">date_fnc</field>
+    <field name="col2_label">Date</field>
+</record>
+</data>
+
 </odoo>

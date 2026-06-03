@@ -238,7 +238,7 @@
             <field name="name"/>
             <field name="date"/>
             <field name="direction_id"/>
-            <field name="fnc_id"/>
+            <field name="ref_document"/>
             <field name="responsable_id"/>
             <field name="state"/>
         </tree>
@@ -253,7 +253,7 @@
         <search string="Rechercher FAC">
 
             <field name="name"         string="N° FAC"/>
-            <field name="fnc_id"       string="N° FNC"/>
+            <field name="ref_document" string="N° FNC ou autre document"/>
             <field name="direction_id" string="Direction"
                    domain="[('scaek_level','=','direction')]"/>
             <field name="responsable_id" string="Responsable"/>
@@ -261,7 +261,7 @@
             <filter string="Mes FAC" name="mes_fac"
                     domain="[('responsable_id','=',uid)]"/>
             <filter string="FAC reçus" name="toutes_fac"
-                    domain="[]"/>
+                    domain="[('responsable_id','!=',uid)]"/>
 
             <separator/>
 
@@ -317,9 +317,8 @@
                         <field name="responsable_id" readonly="1"/>
                     </group>
                     <group>
-                        <field name="fnc_id"
-                               domain="context.get('fnc_audit_domain', [])"
-                               context="{'default_type_audit_interne': context.get('default_type_audit_interne', False), 'default_type_audit_externe': context.get('default_type_audit_externe', False), 'default_type_audit': context.get('default_type_audit', False)}"/>
+                        <field name="ref_document"/>
+                        <field name="fnc_id" invisible="1"/>
                         <field name="date_fnc"/>
                     </group>
                 </group>
@@ -484,7 +483,7 @@
     <field name="res_model">nc_management.corrective_action</field>
     <field name="view_mode">tree,form</field>
     <field name="search_view_id" ref="view_corrective_action_search"/>
-    <field name="domain">[('fnc_id.type_audit_interne','=',False),('fnc_id.type_audit_externe','=',False),('fnc_id.type_audit','=',False)]</field>
+    <field name="domain">['|', ('fnc_id','=',False), '&amp;', '&amp;', ('fnc_id.type_audit_interne','=',False), ('fnc_id.type_audit_externe','=',False), ('fnc_id.type_audit','=',False)]</field>
     <field name="context">{'search_default_mes_fac': 1}</field>
 </record>
 

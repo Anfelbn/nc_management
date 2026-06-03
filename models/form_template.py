@@ -20,7 +20,8 @@ FIELD_RENDER_TYPES = {
     'fac_number_display': 'char', 'responsable_action_id': 'many2one',
     'superieur_id': 'many2one', 'date_validation': 'date', 'signature': 'char',
     # FAC
-    'responsable_id': 'many2one', 'fnc_id': 'many2one', 'date_fnc': 'date',
+    'responsable_id': 'many2one', 'ref_document': 'char', 'fnc_ref_display': 'char',
+    'fnc_id': 'many2one', 'date_fnc': 'date',
     'rappel_nc': 'text', 'responsable_analyse_id': 'many2one',
     'date_analyse': 'date', 'visa_analyse': 'char',
     'responsable_actions_id': 'many2one', 'date_actions': 'date', 'visa_actions': 'char',
@@ -59,7 +60,8 @@ ALL_FIELD_SELECTION = [
     ('superieur_id', 'Supérieur hiérarchique'),
     ('date_validation', 'Date de validation'), ('signature', 'Signature'),
     # FAC
-    ('responsable_id', 'Responsable (FAC)'), ('fnc_id', 'N° FNC ou autre document'),
+    ('responsable_id', 'Responsable (FAC)'), ('ref_document', 'N° FNC ou autre document'),
+    ('fnc_ref_display', 'N° FNC ou autre document (auto)'), ('fnc_id', 'FNC liée (interne)'),
     ('date_fnc', 'Date FNC'), ('rappel_nc', 'Rappel de la NC'),
     ('responsable_analyse_id', 'Responsable analyse'),
     ('date_analyse', 'Date analyse'), ('visa_analyse', 'Visa analyse'),

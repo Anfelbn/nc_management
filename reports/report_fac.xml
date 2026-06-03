@@ -146,7 +146,10 @@
                                                             </t>
                                                             <t t-else="">
                                                                 <t t-if="line.col1_label"><span><t t-esc="line.col1_label"/> : </span></t>
-                                                                <t t-if="line.render_type_col1 == 'many2one'"><t t-esc="doc[line.col1_field].name if doc[line.col1_field] else ''"/></t>
+                                                                <t t-if="line.render_type_col1 == 'many2one'">
+                                                                    <t t-if="doc[line.col1_field]"><t t-esc="doc[line.col1_field].name"/></t>
+                                                                    <t t-elif="line.col1_field == 'fnc_id'"><t t-esc="doc.ref_document or ''"/></t>
+                                                                </t>
                                                                 <t t-else=""><t t-esc="doc[line.col1_field] or ''"/></t>
                                                             </t>
                                                         </td>

@@ -826,9 +826,60 @@ class CorrectiveAction(models.Model):
         if visa_analyse:  return 'submitted'
         return 'draft'
 
-    # ── Mise à jour visuelle en temps réel ───────────────────
+    # ── Validation des champs requis avant visa (onchange) ───
     @api.onchange('visa_analyse', 'visa_actions', 'qse_visa', 'visa_cloture')
     def _onchange_visa_state(self):
+        warnings = []
+
+        if self.visa_analyse:
+            missing = []
+            if not self.rappel_nc:
+                missing.append("le rappel de la non-conformité")
+            if not self.analyse_causes:
+                missing.append("l'analyse des causes")
+            if not self.responsable_analyse_id:
+                missing.append("le responsable")
+            if not self.date_analyse:
+                missing.append("la date")
+            if missing:
+                self.visa_analyse = False
+                warnings.append("Section 2 : veuillez saisir " + ", ".join(missing) + ".")
+
+        if self.visa_actions:
+            missing = []
+            if not self.action_line_ids:
+                missing.append("au moins une ligne d'action")
+            if not self.responsable_actions_id:
+                missing.append("le responsable")
+            if not self.date_actions:
+                missing.append("la date")
+            if missing:
+                self.visa_actions = False
+                warnings.append("Section 3 : veuillez saisir " + ", ".join(missing) + ".")
+
+        if self.qse_visa:
+            missing = []
+            if not self.qse_nom_id:
+                missing.append("le nom")
+            if not self.qse_date:
+                missing.append("la date")
+            if missing:
+                self.qse_visa = False
+                warnings.append("Section 4 : veuillez saisir " + ", ".join(missing) + ".")
+
+        if self.visa_cloture:
+            missing = []
+            if not self.cloture_par_id:
+                missing.append("le responsable de clôture")
+            if not self.date_cloture:
+                missing.append("la date")
+            if missing:
+                self.visa_cloture = False
+                warnings.append("Clôture : veuillez saisir " + ", ".join(missing) + ".")
+
+        if warnings:
+            return {'warning': {'title': 'Saisie incomplète', 'message': '\n'.join(warnings)}}
+
         new_state = self._state_from_visas(
             self.visa_analyse, self.visa_actions, self.qse_visa, self.visa_cloture)
         self.state = new_state
@@ -842,6 +893,65 @@ class CorrectiveAction(models.Model):
                     [('user_id', '=', self.env.uid)], limit=1)
                 if employee:
                     self.cloture_par_id = employee
+
+    # ── Validation serveur (bloque la sauvegarde) ────────────
+    @api.constrains('visa_analyse')
+    def _check_visa_analyse(self):
+        for rec in self:
+            if rec.visa_analyse:
+                missing = []
+                if not rec.rappel_nc:
+                    missing.append("le rappel de la non-conformité")
+                if not rec.analyse_causes:
+                    missing.append("l'analyse des causes")
+                if not rec.responsable_analyse_id:
+                    missing.append("le responsable")
+                if not rec.date_analyse:
+                    missing.append("la date")
+                if missing:
+                    raise ValidationError(
+                        "Section 2 : veuillez saisir " + ", ".join(missing) + ".")
+
+    @api.constrains('visa_actions')
+    def _check_visa_actions(self):
+        for rec in self:
+            if rec.visa_actions:
+                missing = []
+                if not rec.action_line_ids:
+                    missing.append("au moins une ligne d'action")
+                if not rec.responsable_actions_id:
+                    missing.append("le responsable")
+                if not rec.date_actions:
+                    missing.append("la date")
+                if missing:
+                    raise ValidationError(
+                        "Section 3 : veuillez saisir " + ", ".join(missing) + ".")
+
+    @api.constrains('qse_visa')
+    def _check_qse_visa(self):
+        for rec in self:
+            if rec.qse_visa:
+                missing = []
+                if not rec.qse_nom_id:
+                    missing.append("le nom")
+                if not rec.qse_date:
+                    missing.append("la date")
+                if missing:
+                    raise ValidationError(
+                        "Section 4 : veuillez saisir " + ", ".join(missing) + ".")
+
+    @api.constrains('visa_cloture')
+    def _check_visa_cloture(self):
+        for rec in self:
+            if rec.visa_cloture:
+                missing = []
+                if not rec.cloture_par_id:
+                    missing.append("le responsable de clôture")
+                if not rec.date_cloture:
+                    missing.append("la date")
+                if missing:
+                    raise ValidationError(
+                        "Clôture : veuillez saisir " + ", ".join(missing) + ".")
 
     # ── Transitions d'état à la sauvegarde ───────────────────
     @api.multi

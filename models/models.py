@@ -719,6 +719,7 @@ class CorrectiveAction(models.Model):
     visa_analyse           = fields.Char(string='Visa analyse')
 
     # ── Section 3 — Actions décidées ─────────────────────────
+    description_actions    = fields.Text(string='Description des actions')
     action_line_ids        = fields.One2many('nc_management.action_line', 'fac_id', string='Actions décidées')
     responsable_actions_id = fields.Many2one('hr.employee', string='Responsable actions',
                                context={'no_create': True, 'no_create_edit': True})

@@ -542,6 +542,23 @@ odoo.define('nc_management.dashboard', function(require){
             });
 
 
+            // FAC standalone (sans FNC liée)
+            orphFacs.forEach(function(fac){
+                html += '<div style="border:1px solid #fecaca;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#fff5f5">'
+                      + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;">'
+                      + '<div class="nc-avatar avatar-red avatar-clickable" data-model="nc_management.corrective_action" data-id="' + fac.id + '" title="' + _.escape(fac.sender_name || 'Émetteur') + '">' + _.escape(fac.sender_initials || '?') + '</div>'
+                      + '<div style="flex:1;min-width:0">'
+                      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                      + '<div class="nc-notif-ref">' + _.escape(fac.name || '') + ' · Action corrective</div>'
+                      + '<span class="badge red">FAC</span>'
+                      + '</div>'
+                      + '<div class="nc-notif-actions">'
+                      + '<div class="btn-sm primary btn-open" data-model="nc_management.corrective_action" data-id="' + fac.id + '">Ouvrir FAC</div>'
+                      + '<div class="btn-sm btn-reply" data-model="nc_management.corrective_action" data-id="' + fac.id + '" data-partner-id="">Répondre</div>'
+                      + '</div>'
+                      + '</div></div></div>';
+            });
+
             // Plans SMI
             plans.forEach(function(item){
                 var echeanceLine = item.date_prevue

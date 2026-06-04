@@ -37,19 +37,23 @@ class SendFncWizard(models.TransientModel):
             new_state = 'submitted'
             msg = 'FNC soumise par <b>%s</b> et assignée à <b>%s</b>.' % (
                 self.env.user.name, recipient.name)
-            extra_vals = {'submitted_by_id': self.env.user.id}
+            extra_vals = {
+                'submitted_by_id': self.env.user.id,
+                'assigned_to_id': recipient.id,
+                'current_handler_uid': recipient.user_id.id if recipient.user_id else False,
+            }
 
         elif fnc.state == 'submitted':
-            new_state = 'in_progress'
-            msg = 'Traitement complété par <b>%s</b> — envoyé à <b>%s</b> pour validation.' % (
+            new_state = 'submitted'
+            msg = 'FNC transmise par <b>%s</b> à <b>%s</b> pour traitement de la NC.' % (
                 self.env.user.name, recipient.name)
-            extra_vals = {}
+            extra_vals = {'current_handler_uid': recipient.user_id.id if recipient.user_id else False}
 
         elif fnc.state == 'in_progress':
-            new_state = 'validated'
-            msg = 'FNC validée par <b>%s</b> — envoyée à <b>%s</b> pour clôture.' % (
-                fnc.superieur_id.name, recipient.name)
-            extra_vals = {}
+            new_state = 'in_progress'
+            msg = 'FNC transmise par <b>%s</b> à <b>%s</b>.' % (
+                self.env.user.name, recipient.name)
+            extra_vals = {'assigned_to_id': recipient.id}
 
         elif fnc.state == 'validated':
             note_part = '<br/>Message : %s' % self.note if self.note else ''
@@ -66,7 +70,7 @@ class SendFncWizard(models.TransientModel):
         else:
             raise UserError("Cette FNC ne peut pas être envoyée dans son état actuel.")
 
-        vals = {'state': new_state, 'assigned_to_id': recipient.id, 'date_envoi': fields.Date.today(), 'sent_by_id': self.env.uid}
+        vals = {'state': new_state, 'date_envoi': fields.Date.today(), 'sent_by_id': self.env.uid}
         vals.update(extra_vals)
         fnc.write(vals)
 

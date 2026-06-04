@@ -169,6 +169,8 @@ class Nonconformity(models.Model):
         'hr.employee', string="Responsable de l'action",
         context={'no_create': True, 'no_create_edit': True},
         track_visibility='onchange')
+    current_handler_uid = fields.Many2one(
+        'res.users', string='Destinataire courant', copy=False)
     submitted_by_id = fields.Many2one(
         'res.users', string='Soumis par',
         readonly=True)
@@ -538,17 +540,17 @@ class Nonconformity(models.Model):
         return manquants
 
     @api.onchange('impact', 'action_immediate', 'analyse_causes',
+                  'realise_par_id', 'date_realisation',
                   'trait_reprise', 'trait_declassement', 'trait_retour_fourn',
                   'trait_recyclage', 'trait_reparation', 'trait_autre')
     def _onchange_traitement_complet(self):
         if self.state != 'submitted':
             return
         if not self._traitement_complet():
-            if not self.assigned_to_id:
-                employee = self.env['hr.employee'].search(
-                    [('user_id', '=', self.env.uid)], limit=1)
-                if employee:
-                    self.assigned_to_id = employee
+            employee = self.env['hr.employee'].search(
+                [('user_id', '=', self.env.uid)], limit=1)
+            if employee:
+                self.assigned_to_id = employee
 
     @api.onchange('assigned_to_id')
     def _onchange_assigned_to_id(self):
@@ -668,8 +670,13 @@ class Nonconformity(models.Model):
             'type_achat', 'type_reception', 'type_dysfonctionnement', 'type_autre',
         ]
         for field in _all:
-            # Champ qui vient d'être coché (True maintenant, False avant)
             if getattr(self, field) and not getattr(self._origin, field, False):
+                if self.name == 'New':
+                    setattr(self, field, False)
+                    return {'warning': {
+                        'title': 'Numéro FNC requis',
+                        'message': "Veuillez d'abord générer le numéro FNC avant de sélectionner le type de non-conformité.",
+                    }}
                 for other in _all:
                     if other != field:
                         setattr(self, other, False)
@@ -2756,8 +2763,10 @@ class NcDashboard(models.Model):
 
         # ── Calendrier (tous temps) ──
         calendar_events = {}
-        for fnc_rec in fnc_model.search([
+        for fnc_rec in fnc_model.sudo().search([
+            '|',
             ('assigned_to_id.user_id', '=', uid),
+            ('current_handler_uid', '=', uid),
             ('date_envoi', '!=', False),
         ]):
             k = str(fnc_rec.date_envoi)[:10]
@@ -2833,8 +2842,10 @@ class NcDashboard(models.Model):
                 received_by_date[day_key] = []
             received_by_date[day_key].append(item)
 
-        for fnc_rec in fnc_model.search([
+        for fnc_rec in fnc_model.sudo().search([
+            '|',
             ('assigned_to_id.user_id', '=', uid),
+            ('current_handler_uid', '=', uid),
             ('date_envoi', '!=', False),
         ], order='date_envoi desc, id desc'):
             k = str(fnc_rec.date_envoi)[:10]

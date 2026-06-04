@@ -1,7 +1,7 @@
 {
     'name': 'NC Management',
     'summary': 'NC Management module',
-    'version': '11.0.0.4',
+    'version': '11.0.1.0',
     'category': 'Tools',
     'author': 'Your Name',
 
@@ -24,6 +24,7 @@
         'wizard/export_plan_wizard.xml',
         'wizard/export_smi_analysis_wizard.xml',
         'wizard/consolidate_wizard.xml',
+        'wizard/consolidate_improvement_wizard.xml',
         'wizard/plan_efficacite_wizard.xml',
         'wizard/plan_number_wizard.xml',
         'reports/report_fnc.xml',
@@ -35,6 +36,8 @@
         'views/views.xml',
         'views/form_template_views.xml',
         'views/plan_action_smi.xml',
+        'views/smi_improvement_plan_views.xml',
+        'views/smi_global_plan_views.xml',
         'views/dashboard.xml',
         'data/default_fnc_template.xml',
         'data/default_fac_template.xml',

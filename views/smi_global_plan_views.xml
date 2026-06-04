@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ============================================================ -->
+<!--  VUE LISTE — Plans d'Action (niveau 1) consolidée            -->
+<!--  utilisée dans l'onglet du Plan Global                       -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_action_plan_tree_global">
+    <field name="name">nc_management.plan_action_smi.tree.global_embed</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="priority">20</field>
+    <field name="arch" type="xml">
+        <tree string="Plans d'Action consolidés" import="false"
+              create="false" delete="false"
+              decoration-success="state == 'cloture'"
+              decoration-warning="state == 'realise'"
+              decoration-muted="state in ('draft', 'done')"
+              decoration-danger="is_late == True">
+            <field name="name"            string="Référence"/>
+            <field name="improvement_plan_id"
+                   string="Plan d'Amélioration"/>
+            <field name="direction_id"    string="Direction"/>
+            <field name="nature"          string="Nature"/>
+            <field name="description"     string="Description"/>
+            <field name="action"          string="Action"/>
+            <field name="responsable_id"  string="Responsable"/>
+            <field name="date_prevue"     string="Date prévue"/>
+            <field name="date_realisation" string="Date réalisation"/>
+            <field name="avancement"      string="Avancement %"
+                   widget="progressbar"/>
+            <field name="efficacite"      string="Efficacité"/>
+            <field name="state"           string="État"/>
+            <field name="is_late"         invisible="1"/>
+        </tree>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  VUE KANBAN — Plans par état (pour le Plan Global)           -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_action_plan_kanban_global">
+    <field name="name">nc_management.plan_action_smi.kanban.global</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="priority">20</field>
+    <field name="arch" type="xml">
+        <kanban default_group_by="state" quick_create="false">
+            <field name="name"/>
+            <field name="state"/>
+            <field name="nature"/>
+            <field name="responsable_id"/>
+            <field name="avancement"/>
+            <field name="efficacite"/>
+            <field name="improvement_plan_id"/>
+            <field name="date_prevue"/>
+            <templates>
+                <t t-name="kanban-box">
+                    <div class="oe_kanban_card oe_kanban_global_click">
+                        <div class="oe_kanban_content">
+                            <strong>
+                                <field name="name"/>
+                            </strong>
+                            <div class="o_kanban_record_subtitle text-muted">
+                                <field name="improvement_plan_id"/>
+                            </div>
+                            <div>
+                                <span class="badge badge-pill">
+                                    <field name="nature"/>
+                                </span>
+                            </div>
+                            <div class="o_kanban_record_bottom mt4">
+                                <div class="oe_kanban_bottom_left">
+                                    <field name="avancement" widget="progressbar"/>
+                                </div>
+                                <div class="oe_kanban_bottom_right">
+                                    <field name="responsable_id"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </templates>
+        </kanban>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  VUE LISTE — Plan Global (liste des plans globaux)           -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_global_plan_tree">
+    <field name="name">nc_management.smi_global_plan.tree</field>
+    <field name="model">nc_management.smi_global_plan</field>
+    <field name="arch" type="xml">
+        <tree string="Plan d'Action Global SMI" import="false"
+              create="false">
+            <field name="name"/>
+            <field name="nb_directions"   string="Directions"/>
+            <field name="nb_plans_total"  string="Plans total"/>
+            <field name="nb_en_cours"     string="En cours"/>
+            <field name="nb_realises"     string="Réalisés"/>
+            <field name="nb_clotures"     string="Clôturés"/>
+            <field name="taux_avancement" string="Avancement %"/>
+            <field name="taux_efficacite" string="Efficacité %"/>
+            <field name="date_derniere_maj" string="Dernière MAJ"/>
+        </tree>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  VUE FORMULAIRE — Plan Global SMI (niveau 3)                 -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_global_plan_form">
+    <field name="name">nc_management.smi_global_plan.form</field>
+    <field name="model">nc_management.smi_global_plan</field>
+    <field name="arch" type="xml">
+        <form string="Plan d'Action Global SMI">
+            <header>
+                <!-- Retour à l'état actuel depuis une vue historique -->
+                <button name="action_retour_actuel"
+                        string="&#8635; Retour à l'état actuel"
+                        type="object"
+                        class="btn-warning"
+                        attrs="{'invisible': [('vue_historique', '=', False)]}"/>
+            </header>
+            <sheet>
+                <field name="vue_historique" invisible="1"/>
+
+                <!-- Bandeau vue historique -->
+                <div class="alert alert-warning"
+                     attrs="{'invisible': [('vue_historique', '=', False)]}">
+                    <strong>&#9888; Vue historique</strong> —
+                    Vous consultez l'état du plan global à la date
+                    sélectionnée. Ce n'est pas l'état actuel.
+                    Cliquez sur <em>"Retour à l'état actuel"</em> pour
+                    revenir en temps réel.
+                </div>
+
+                <div class="oe_title">
+                    <h1><field name="name"/></h1>
+                </div>
+
+                <!-- Sélecteur de date historique + date dernière MAJ -->
+                <group>
+                    <group string="Navigation temporelle">
+                        <field name="date_consultation"
+                               help="Sélectionnez une date passée pour voir l'état du plan global à ce moment précis."/>
+                        <field name="date_derniere_maj"
+                               string="Dernière mise à jour"
+                               readonly="1"/>
+                    </group>
+                    <group string="Statistiques (temps réel)"
+                           attrs="{'invisible': [('vue_historique', '=', True)]}">
+                        <field name="nb_directions"   string="Directions impliquées"/>
+                        <field name="nb_plans_total"  string="Plans total"/>
+                        <field name="nb_en_cours"     string="En cours"/>
+                        <field name="nb_realises"     string="Réalisés"/>
+                        <field name="nb_clotures"     string="Clôturés (Efficaces)"/>
+                        <field name="taux_avancement" string="Avancement global %"/>
+                        <field name="taux_efficacite" string="Efficacité %"/>
+                    </group>
+                </group>
+
+                <!-- Zone historique (visible uniquement quand date sélectionnée) -->
+                <group attrs="{'invisible': [('vue_historique', '=', False)]}">
+                    <field name="historique_html"
+                           widget="html"
+                           nolabel="1"
+                           readonly="1"
+                           colspan="2"/>
+                </group>
+
+                <!-- Onglets : vue temps réel (visible quand pas en mode historique) -->
+                <notebook attrs="{'invisible': [('vue_historique', '=', True)]}">
+
+                    <!-- Plans par direction -->
+                    <page string="Plans d'Amélioration (par direction)">
+                        <field name="improvement_plan_ids" readonly="1">
+                            <tree string="Plans d'Amélioration" import="false"
+                                  decoration-success="state == 'soumis'"
+                                  decoration-info="state == 'brouillon'">
+                                <field name="name"            string="Référence"/>
+                                <field name="direction_id"    string="Direction"/>
+                                <field name="nb_plans"        string="Plans"/>
+                                <field name="taux_avancement" string="Avancement %"
+                                       widget="progressbar"/>
+                                <field name="taux_efficacite" string="Efficacité %"/>
+                                <field name="state"           string="État"/>
+                                <field name="date_soumission" string="Date soumission"/>
+                            </tree>
+                        </field>
+                    </page>
+
+                    <!-- Vue consolidée de tous les plans d'action -->
+                    <page string="Tous les Plans d'Action">
+                        <field name="direct_plan_ids"
+                               context="{'default_direct_global_plan_id': active_id,
+                                         'search_default_en_cours': 1}">
+                            <tree string="Plans d'Action (RMQSE direct)"
+                                  import="false"
+                                  decoration-success="state == 'cloture'"
+                                  decoration-warning="state == 'realise'"
+                                  decoration-danger="is_late == True">
+                                <field name="name"           string="Référence"/>
+                                <field name="nature"         string="Nature"/>
+                                <field name="description"    string="Description"
+                                      />
+                                <field name="action"         string="Action"/>
+                                <field name="responsable_id" string="Responsable"/>
+                                <field name="date_prevue"    string="Date prévue"/>
+                                <field name="avancement"     string="Avancement %"
+                                       widget="progressbar"/>
+                                <field name="efficacite"
+                                       attrs="{'invisible': [('avancement', '&lt;', 100)],
+                                               'readonly':  [('state', '=', 'cloture')]}"/>
+                                <field name="state"          string="État"/>
+                                <field name="is_late"        invisible="1"/>
+                            </tree>
+                        </field>
+                    </page>
+
+                </notebook>
+
+            </sheet>
+            <div class="oe_chatter">
+                <field name="message_follower_ids" widget="mail_followers"/>
+                <field name="activity_ids"         widget="mail_activity"/>
+                <field name="message_ids"          widget="mail_thread"/>
+            </div>
+        </form>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  VUE RECHERCHE — Plans d'Action (dans Plan Global)           -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_action_plan_search_global">
+    <field name="name">nc_management.plan_action_smi.search.global</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="priority">20</field>
+    <field name="arch" type="xml">
+        <search string="Rechercher Plan d'Action">
+            <field name="name"           string="Référence"/>
+            <field name="improvement_plan_id"
+                   string="Plan d'Amélioration"/>
+            <field name="responsable_id" string="Responsable"/>
+            <separator/>
+            <filter string="En cours"   name="en_cours"
+                    domain="[('state', 'in', ['en_cours', 'draft'])]"/>
+            <filter string="Réalisés"   name="realise"
+                    domain="[('state', '=', 'realise')]"/>
+            <filter string="Clôturés"   name="cloture"
+                    domain="[('state', 'in', ['cloture', 'done'])]"/>
+            <filter string="Efficaces"  name="efficaces"
+                    domain="[('efficacite', '=', 'oui')]"/>
+            <filter string="Non efficaces" name="non_efficaces"
+                    domain="[('efficacite', '=', 'non')]"/>
+            <filter string="En retard"  name="en_retard"
+                    domain="[('is_late', '=', True)]"/>
+            <separator/>
+            <group expand="0" string="Grouper par">
+                <filter string="Direction"   name="group_direction"
+                        context="{'group_by': 'improvement_plan_id.direction_id'}"/>
+                <filter string="Nature"      name="group_nature"
+                        context="{'group_by': 'nature'}"/>
+                <filter string="État"        name="group_state"
+                        context="{'group_by': 'state'}"/>
+                <filter string="Responsable" name="group_responsable"
+                        context="{'group_by': 'responsable_id'}"/>
+                <filter string="Mois prév."  name="group_mois"
+                        context="{'group_by': 'date_prevue:month'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  ACTION FENÊTRE — Plan Global SMI                            -->
+<!-- ============================================================ -->
+<record model="ir.actions.act_window"
+        id="action_smi_global_plan">
+    <field name="name">Plan d'Action Global SMI</field>
+    <field name="res_model">nc_management.smi_global_plan</field>
+    <field name="view_mode">form,tree</field>
+    <field name="context">{'no_import': True}</field>
+    <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'form',
+                'view_id': ref('view_smi_global_plan_form')}),
+        (0, 0, {'view_mode': 'tree',
+                'view_id': ref('view_smi_global_plan_tree')})]"/>
+</record>
+
+<!-- Action pour voir tous les plans d'action dans le Plan Global -->
+<record model="ir.actions.act_window"
+        id="action_smi_all_action_plans">
+    <field name="name">Plans d'Action Consolidés</field>
+    <field name="res_model">nc_management.plan_action_smi</field>
+    <field name="view_mode">tree,kanban,form</field>
+    <field name="domain">[('improvement_plan_id', '!=', False)]</field>
+    <field name="context">{'no_import': True}</field>
+    <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'tree',
+                'view_id': ref('view_smi_action_plan_tree_global')}),
+        (0, 0, {'view_mode': 'kanban',
+                'view_id': ref('view_smi_action_plan_kanban_global')})]"/>
+    <field name="search_view_id"
+           ref="view_smi_action_plan_search_global"/>
+</record>
+
+<!-- Les vues et actions du Plan Global restent disponibles
+     mais aucun menu dédié : accès via le Plan d'Amélioration SMI existant -->
+
+</data>
+</odoo>

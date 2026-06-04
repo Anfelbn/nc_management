@@ -365,7 +365,7 @@ class Nonconformity(models.Model):
 
     @api.onchange('superieur_id', 'date_validation', 'signature')
     def _onchange_autofill_signature(self):
-        employee = self.env['hr.employee'].search(
+        employee = self.env['hr.employee'].sudo().search(
             [('user_id', '=', self.env.uid)], limit=1)
         if not employee:
             return
@@ -1077,31 +1077,50 @@ class PlanActionSmi(models.Model):
         store=True
     )
 
-    @api.depends('global_plan_id')
+    @api.depends('global_plan_id', 'improvement_plan_id',
+                 'improvement_plan_id.global_plan_id')
     def _compute_is_integrated(self):
         for rec in self:
-            rec.is_integrated = 'Oui' if rec.global_plan_id else 'Non'
-    description = fields.Text(string="Brève description de la non-conformité, remarque et/ou point sensible / ou Objectif d'amélioration")
-    causes = fields.Text(string='Causes')
-    action = fields.Text(string='Action')
-    responsable_id = fields.Many2one('hr.employee', string='Responsable',
-                       context={'no_create': True, 'no_create_edit': True})
-    moyens = fields.Char(string='Moyens Nécessaires (matériels, financiers, humains)')
+            # Intégré via ancien système OU nouveau système
+            is_old = bool(rec.global_plan_id)
+            is_new = bool(
+                rec.improvement_plan_id and
+                rec.improvement_plan_id.global_plan_id)
+            rec.is_integrated = 'Oui' if (is_old or is_new) else 'Non'
+    description = fields.Text(
+        string="Brève description de la non-conformité, remarque et/ou point sensible / ou Objectif d'amélioration",
+        track_visibility='onchange')
+    causes = fields.Text(string='Causes', track_visibility='onchange')
+    action = fields.Text(string='Action', track_visibility='onchange')
+    responsable_id = fields.Many2one(
+        'hr.employee', string='Responsable',
+        context={'no_create': True, 'no_create_edit': True},
+        track_visibility='onchange')
+    moyens = fields.Char(
+        string='Moyens Nécessaires (matériels, financiers, humains)',
+        track_visibility='onchange')
     duree_estimee = fields.Char(string='Durée Estimée')
-    date_prevue = fields.Date(string='Date Prévue')
+    date_prevue = fields.Date(
+        string='Date Prévue', track_visibility='onchange')
     date_lancement = fields.Date(string='Date de Lancement')
-    date_realisation = fields.Date(string='Date de Réalisation')
-    avancement = fields.Integer(string='État Avancement (%)', default=0)
+    date_realisation = fields.Date(
+        string='Date de Réalisation', track_visibility='onchange')
+    avancement = fields.Integer(
+        string='État Avancement (%)', default=0,
+        track_visibility='onchange')
     duree_reelle = fields.Char(string='Durée Réelle')
     critere_efficacite = fields.Text(string="Critère d'Efficacité")
     efficacite = fields.Selection([
         ('oui', 'OUI'),
         ('non', 'NON'),
-    ], string='Efficacité')
+    ], string='Efficacité', track_visibility='onchange')
     remarque = fields.Text(string='Remarque (si non efficace)')
     state = fields.Selection([
-        ('draft', 'Brouillon'),
-        ('done',  'Réalisé'),
+        ('draft',    'Brouillon'),
+        ('done',     'Réalisé'),
+        ('en_cours', 'En cours'),
+        ('realise',  'Réalisé'),
+        ('cloture',  'Clôturé'),
     ], string='Avancement', default='draft', track_visibility='onchange')
 
     # ── Cycle de vie RMQSE ────────────────────────────────────────
@@ -1133,6 +1152,23 @@ class PlanActionSmi(models.Model):
         'global_plan_id',
         string='Plans intégrés',
     )
+
+    # ── Liens vers la nouvelle hiérarchie 3 niveaux ───────────────
+
+    # Lien vers le Plan d'Amélioration de direction (niveau 2)
+    improvement_plan_id = fields.Many2one(
+        'nc_management.smi_improvement_plan',
+        string="Plan d'Amélioration (direction)",
+        ondelete='set null',
+        index=True,
+        track_visibility='onchange')
+
+    # Lien direct vers le Plan Global — pour plans ajoutés par la RMQSE
+    direct_global_plan_id = fields.Many2one(
+        'nc_management.smi_global_plan',
+        string='Plan Global (direct RMQSE)',
+        ondelete='set null',
+        index=True)
 
     # ── Analyse HTML (tableau + graphique, catégories dynamiques) ──
     analyse_html = fields.Html(
@@ -1373,6 +1409,19 @@ class PlanActionSmi(models.Model):
                 ref = '%s-%d' % (base, counter)
                 counter += 1
             vals['name'] = ref
+        # Nouveau cycle de vie : plans liés à un Plan d'Amélioration (niveau 2)
+        if (vals.get('improvement_plan_id') or
+                vals.get('direct_global_plan_id')):
+            if 'state' not in vals:
+                vals['state'] = 'en_cours'
+        # Numérotation SMI/PLAN/YYYY/NNNN pour les plans du nouveau système
+        if (vals.get('name', 'New') == 'New' and
+                (vals.get('improvement_plan_id') or
+                 vals.get('direct_global_plan_id'))):
+            seq = self.env['ir.sequence'].next_by_code(
+                'nc_management.smi_action_plan')
+            if seq:
+                vals['name'] = seq
         return super(PlanActionSmi, self).create(vals)
 
     @api.multi
@@ -1395,14 +1444,180 @@ class PlanActionSmi(models.Model):
 
     @api.onchange('efficacite')
     def _onchange_efficacite(self):
-        if self.efficacite:
+        if not self.efficacite:
+            return
+        # Nouveau cycle de vie (plans liés à un Plan d'Amélioration)
+        if self.improvement_plan_id or self.direct_global_plan_id:
+            if self.efficacite == 'oui':
+                self.state = 'cloture'
+            # 'non' → reste 'realise', direction va modifier le plan
+        else:
+            # Ancien comportement
             self.state = 'done'
+
+    @api.onchange('avancement')
+    def _onchange_avancement_smi(self):
+        """Gestion du cycle de vie basé sur l'avancement (nouveau système)."""
+        if not (self.improvement_plan_id or self.direct_global_plan_id):
+            return
+        if self.state == 'cloture':
+            # Plan clôturé = définitif, aucune modification
+            self.avancement = min(self.avancement, 100)
+            return
+        if self.avancement >= 100:
+            self.avancement = 100
+            if self.state != 'realise':
+                self.state = 'realise'
+        else:
+            if self.state == 'realise':
+                # La direction remet le plan en cours → reset efficacité
+                self.state = 'en_cours'
+                self.efficacite = False
+
+    # ── Champs suivis pour notification dans le plan global ───────
+    _GLOBAL_TRACKED_FIELDS = [
+        'action', 'causes', 'description',
+        'date_prevue', 'date_realisation',
+        'avancement', 'efficacite',
+        'responsable_id', 'state', 'moyens',
+    ]
+    _GLOBAL_FIELD_LABELS = {
+        'action':           'Action',
+        'causes':           'Causes',
+        'description':      'Description',
+        'date_prevue':      'Date prévue',
+        'date_realisation': 'Date de réalisation',
+        'avancement':       'Avancement (%)',
+        'efficacite':       'Efficacité',
+        'responsable_id':   'Responsable',
+        'state':            'État',
+        'moyens':           'Moyens',
+    }
 
     @api.multi
     def write(self, vals):
-        if vals.get('efficacite'):
-            vals['state'] = 'done'
+        # ── Transitions d'état pour le nouveau cycle de vie ───────
+        if not self.env.context.get('_skip_smi_state'):
+            for rec in self:
+                rec_s = rec.sudo()
+                if not (rec_s.improvement_plan_id or rec_s.direct_global_plan_id):
+                    break  # ancien système, géré après
+                current_state = vals.get('state', rec_s.state)
+                if current_state == 'cloture':
+                    break  # plan clôturé = immuable
+                av = vals.get('avancement', rec_s.avancement)
+                if 'efficacite' in vals:
+                    eff = vals['efficacite']
+                    if eff == 'oui':
+                        vals['state'] = 'cloture'
+                    elif not eff and av < 100:
+                        vals['state'] = 'en_cours'
+                elif 'avancement' in vals:
+                    if av >= 100:
+                        if current_state not in ('cloture', 'realise'):
+                            vals.setdefault('state', 'realise')
+                        vals['avancement'] = 100
+                    elif av < 100 and current_state == 'realise':
+                        vals['state'] = 'en_cours'
+                        if 'efficacite' not in vals:
+                            vals['efficacite'] = False
+                break  # formulaire = un seul record à la fois
+
+        # Ancien comportement compatibilité
+        if vals.get('efficacite') and 'state' not in vals:
+            # Vérifier si c'est un ancien plan (sans improvement_plan_id)
+            for rec in self:
+                rec_s = rec.sudo()
+                if not rec_s.improvement_plan_id and not rec_s.direct_global_plan_id:
+                    vals['state'] = 'done'
+                break
+
+        # ── Sauvegarder les anciennes valeurs pour comparaison ────
+        records_data = {}
+        tracked = self._GLOBAL_TRACKED_FIELDS
+        if any(f in vals for f in tracked):
+            for rec in self:
+                rec_s = rec.sudo()
+                global_plan = None
+                if rec_s.improvement_plan_id:
+                    global_plan = rec_s.improvement_plan_id.global_plan_id
+                elif rec_s.direct_global_plan_id:
+                    global_plan = rec_s.direct_global_plan_id
+                if not global_plan:
+                    continue
+                old_vals = {}
+                for f in tracked:
+                    v = getattr(rec_s, f)
+                    if hasattr(v, 'id'):
+                        old_vals[f] = (v.id, v.name)
+                    else:
+                        old_vals[f] = v
+                records_data[rec.id] = {
+                    'global_plan': global_plan,
+                    'old': old_vals,
+                    'direction': (
+                        rec_s.improvement_plan_id.direction_id.name
+                        if rec_s.improvement_plan_id and
+                        rec_s.improvement_plan_id.direction_id
+                        else '-'),
+                    'ref': rec_s.name,
+                }
+
         res = super(PlanActionSmi, self).write(vals)
+
+        # ── Poster les modifications dans le chatter du plan global ──
+        if records_data:
+            from datetime import datetime as _dt
+            now_str = _dt.now().strftime('%d/%m/%Y à %H:%M')
+            user_name = self.env.user.name
+
+            for rec in self:
+                if rec.id not in records_data:
+                    continue
+                data = records_data[rec.id]
+                global_plan = data['global_plan']
+                old = data['old']
+                changes = []
+                labels = self._GLOBAL_FIELD_LABELS
+                for f, new_val in vals.items():
+                    if f not in tracked:
+                        continue
+                    old_raw = old.get(f)
+                    if isinstance(old_raw, tuple):
+                        old_id, old_name = old_raw
+                        old_display = old_name or '-'
+                    else:
+                        old_display = old_raw if old_raw is not None else '-'
+                    if isinstance(new_val, int) and f == 'responsable_id':
+                        emp = self.env['hr.employee'].browse(new_val)
+                        new_display = emp.name if emp.exists() else str(new_val)
+                    elif new_val is None or new_val is False:
+                        new_display = '-'
+                    else:
+                        new_display = str(new_val)
+                    if str(old_display) != str(new_display):
+                        label = labels.get(f, f)
+                        changes.append(
+                            '<li><b>%s</b> : %s &rarr; %s</li>' %
+                            (label, old_display, new_display))
+                if changes:
+                    body = (
+                        '<p>Direction <b>%s</b> a modifié le plan '
+                        '<b>%s</b> :</p>'
+                        '<ul>%s</ul>'
+                        '<p><em>Modifié par %s le %s</em></p>'
+                    ) % (
+                        data['direction'], data['ref'],
+                        ''.join(changes),
+                        user_name, now_str,
+                    )
+                    global_plan.sudo().message_post(
+                        body=body,
+                        message_type='notification',
+                        subtype='mail.mt_comment',
+                    )
+
+        # ── Ancien mécanisme date_maj (compat) ────────────────────
         if not self.env.context.get('_skip_date_maj') and 'date_maj' not in vals:
             plans_amelioration = self.filtered('is_global')
             if plans_amelioration:
@@ -1414,6 +1629,7 @@ class PlanActionSmi(models.Model):
             if parents:
                 parents.with_context(_skip_date_maj=True).write(
                     {'date_maj': fields.Datetime.now()})
+
         return res
 
     @api.onchange('nature')

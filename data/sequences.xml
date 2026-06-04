@@ -29,5 +29,27 @@
         <field name="number_increment">1</field>
     </record>
 
+    <!-- Séquence Niveau 1 : Plans d'Action individuels (nouveau système) -->
+    <record id="seq_smi_action_plan" model="ir.sequence">
+        <field name="name">SMI Plan d'Action (niveau 1)</field>
+        <field name="code">nc_management.smi_action_plan</field>
+        <field name="prefix">SMI/PLAN/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="use_date_range">True</field>
+    </record>
+
+    <!-- Séquence Niveau 2 : Plans d'Amélioration par direction -->
+    <record id="seq_smi_improvement_plan" model="ir.sequence">
+        <field name="name">SMI Plan d'Amélioration (niveau 2)</field>
+        <field name="code">nc_management.smi_improvement_plan</field>
+        <field name="prefix">SMI/PAA/%(year)s/</field>
+        <field name="padding">3</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="use_date_range">True</field>
+    </record>
+
 </data>
 </odoo>

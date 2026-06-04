@@ -73,7 +73,8 @@
 </record>
 
 <!-- ============================================================ -->
-<!--  FORM — PLAN STANDARD                                         -->
+<!--  FORM — PLAN D'ACTION NIVEAU 1 (nouveau cycle de vie SMI)   -->
+<!--  Utilisé pour les plans liés à un Plan d'Amélioration        -->
 <!-- ============================================================ -->
 <record model="ir.ui.view" id="view_plan_smi_form">
     <field name="name">nc_management.plan_action_smi.form</field>
@@ -82,28 +83,49 @@
     <field name="arch" type="xml">
         <form string="Plan d'Action Amélioration SMI">
             <header>
-                <!-- Générer le numéro de référence -->
+                <!-- Ancien système : Générer numéro + Envoyer -->
                 <button name="action_generate_plan_number"
                         string="Générer le numéro du plan"
                         type="object"
                         class="oe_highlight"
-                        attrs="{'invisible': ['|', ('name', '!=', 'New'), ('is_global', '=', True)]}"/>
-                <!-- Bouton envoi : NC User uniquement, plan avec numéro généré -->
+                        attrs="{'invisible': ['|',
+                            ('name', '!=', 'New'),
+                            ('is_global', '=', True),
+                            ('improvement_plan_id', '!=', False)]}"/>
                 <button name="action_open_send_plan_wizard"
                         string="Envoyer"
                         type="object"
                         class="oe_highlight"
                         groups="nc_management.group_nc_utilisateur"
-                        attrs="{'invisible': [('name', '=', 'New')]}"/>
-                <!-- Barre de statut avancement -->
+                        attrs="{'invisible': ['|',
+                            ('name', '=', 'New'),
+                            ('improvement_plan_id', '!=', False)]}"/>
+
+                <!-- Nouveau cycle de vie : barre d'état étendue -->
                 <field name="state" widget="statusbar"
-                       statusbar_visible="draft,done"/>
+                       statusbar_visible="en_cours,realise,cloture,draft,done"/>
             </header>
             <sheet>
-                <!-- Champs techniques requis par attrs -->
-                <field name="submission_state" invisible="1"/>
-                <field name="is_global"        invisible="1"/>
-                <field name="sent_to_rmqse"    invisible="1"/>
+                <!-- Champs techniques -->
+                <field name="submission_state"     invisible="1"/>
+                <field name="is_global"            invisible="1"/>
+                <field name="sent_to_rmqse"        invisible="1"/>
+                <field name="improvement_plan_id"  invisible="1"/>
+                <field name="direct_global_plan_id" invisible="1"/>
+
+                <!-- Bandeau : plan clôturé (définitif) -->
+                <div class="alert alert-success"
+                     attrs="{'invisible': [('state', '!=', 'cloture')]}">
+                    <strong>&#10003; Plan clôturé — Action efficace.</strong>
+                    Ce plan est définitivement clôturé. Aucune modification n'est possible.
+                </div>
+
+                <!-- Bandeau : en attente d'évaluation d'efficacité -->
+                <div class="alert alert-warning"
+                     attrs="{'invisible': [('state', '!=', 'realise')]}">
+                    <strong>&#9654; Plan réalisé (avancement 100%).</strong>
+                    Veuillez évaluer l'efficacité de l'action ci-dessous.
+                </div>
 
                 <div class="oe_title">
                     <h1><field name="name" readonly="1"/></h1>
@@ -113,16 +135,22 @@
                 <group string="Organisation">
                     <group>
                         <field name="direction_id"
-                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
+                               attrs="{'readonly': ['|',
+                                   ('state', '=', 'cloture'),
+                                   ('submission_state', '!=', 'brouillon')]}"
                                options="{'no_create': True, 'no_create_edit': True}"/>
                         <field name="department_id"
                                attrs="{'invisible': [('direction_id', '=', False)],
-                                       'readonly':  [('submission_state', '!=', 'brouillon')]}"
+                                       'readonly':  ['|',
+                                           ('state', '=', 'cloture'),
+                                           ('submission_state', '!=', 'brouillon')]}"
                                domain="[('scaek_level','=','departement'),('parent_id','=',direction_id)]"
                                options="{'no_create': True, 'no_create_edit': True}"/>
                         <field name="service_id"
                                attrs="{'invisible': [('department_id', '=', False)],
-                                       'readonly':  [('submission_state', '!=', 'brouillon')]}"
+                                       'readonly':  ['|',
+                                           ('state', '=', 'cloture'),
+                                           ('submission_state', '!=', 'brouillon')]}"
                                domain="[('scaek_level','=','service'),('parent_id','=',department_id)]"
                                options="{'no_create': True, 'no_create_edit': True}"/>
                     </group>
@@ -140,32 +168,32 @@
                 <group string="Identification">
                     <group>
                         <field name="nature"
-                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"/>
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"/>
                         <field name="fnc_id"
-                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
-                               options="{'no_create': True, 'no_create_edit': True}"/>
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"/>
                     </group>
                     <group/>
                 </group>
 
                 <!-- Description -->
-                <group string="Brève description de la non-conformité, remarque et/ou point sensible / ou Objectif d'amélioration">
+                <group string="Description / Objectif d'amélioration">
                     <field name="description" nolabel="1" colspan="2"
-                           attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
-                           placeholder="Décrivez la non-conformité, remarque et/ou point sensible, ou l'objectif d'amélioration..."/>
+                           attrs="{'readonly': [('state', '=', 'cloture')]}"
+                           placeholder="Décrivez la non-conformité ou l'objectif d'amélioration..."/>
                 </group>
 
                 <!-- Causes / Action -->
                 <group>
                     <group string="Causes">
                         <field name="causes" nolabel="1"
-                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"
                                placeholder="Analysez les causes..."/>
                     </group>
                     <group string="Action">
                         <field name="action" nolabel="1"
-                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
-                               placeholder="Décrivez l'action à mener..."/>
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"
+                               placeholder="Décrivez l'action corrective ou préventive..."/>
                     </group>
                 </group>
 
@@ -173,57 +201,75 @@
                 <group string="Ressources">
                     <group>
                         <field name="responsable_id"
-                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"
                                options="{'no_create': True, 'no_create_edit': True}"/>
                         <field name="duree_estimee"
-                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"/>
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"/>
                     </group>
                     <group>
                         <field name="moyens"
-                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"/>
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"/>
                     </group>
                 </group>
 
                 <!-- Dates -->
                 <group string="Dates">
                     <group>
-                        <field name="date_prevue"/>
-                        <field name="date_lancement"/>
+                        <field name="date_prevue"
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"/>
+                        <field name="date_lancement"
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"/>
                     </group>
                     <group>
-                        <field name="date_realisation"/>
+                        <field name="date_realisation"
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"/>
+                        <field name="duree_reelle"
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"/>
                     </group>
                 </group>
 
                 <!-- Avancement -->
                 <group string="Avancement">
                     <group>
-                        <field name="avancement"/>
+                        <field name="avancement"
+                               attrs="{'readonly': [('state', '=', 'cloture')]}"
+                               widget="progressbar"/>
                     </group>
-                    <group>
-                        <field name="duree_reelle"/>
-                    </group>
+                    <group/>
                 </group>
 
-                <!-- Efficacité -->
+                <!-- Critère d'Efficacité -->
                 <group string="Critère d'Efficacité">
                     <field name="critere_efficacite" nolabel="1" colspan="2"
-                           attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"
-                           placeholder="Définissez le critère d'efficacité..."/>
+                           attrs="{'readonly': [('state', '=', 'cloture')]}"
+                           placeholder="Définissez le critère pour juger l'efficacité..."/>
                 </group>
 
-                <group string="Résultat">
+                <!-- Résultat d'efficacité :
+                     INVISIBLE si avancement < 100 (nouveau système)
+                     ou si pas encore réalisé (état draft/en_cours) -->
+                <group string="Évaluation d'Efficacité">
                     <group>
-                        <field name="efficacite"/>
+                        <field name="efficacite"
+                               attrs="{'invisible': ['|',
+                                   ('avancement', '&lt;', 100),
+                                   ('state', 'in', ['en_cours', 'draft'])],
+                                       'readonly': [('state', '=', 'cloture')]}"/>
                     </group>
                     <group>
                         <field name="remarque"
-                               attrs="{'invisible': [('efficacite', '!=', 'non')]}"
-                               placeholder="Précisez la raison..."/>
+                               attrs="{'invisible': [('efficacite', '!=', 'non')],
+                                       'readonly':  [('state', '=', 'cloture')]}"
+                               placeholder="Si non efficace, précisez la raison et planifiez une nouvelle action..."/>
                     </group>
                 </group>
 
             </sheet>
+            <div class="oe_chatter">
+                <field name="message_follower_ids" widget="mail_followers"/>
+                <field name="activity_ids"         widget="mail_activity"/>
+                <field name="message_ids"          widget="mail_thread"/>
+            </div>
         </form>
     </field>
 </record>
@@ -548,17 +594,25 @@
 <!-- ============================================================ -->
 
 <!-- Plan Action SMI :
-     - NC users  : feuille (pas de sous-menus visibles) → cliquable → affiche Mes Plans
-     - RMQSE     : dropdown avec 3 sous-menus (Mes Plans / Plan Amélioration / Analyse) -->
+     - NC Utilisateur : dropdown avec 2 sous-menus (Mes Plans / Plan d'Amélioration)
+     - RMQSE          : dropdown avec 3 sous-menus (Mes Plans / Plan Amélioration / Analyse) -->
 <menuitem
     name="Plan Action SMI"
     id="nc_management.menu_plan_smi_root"
     parent="nc_management.menu_root"
-    action="action_mes_plans_smi"
     groups="nc_management.group_nc_utilisateur,nc_management.group_responsable_qualite"
     sequence="25"/>
 
-<!-- Mes Plans : sous-menu RMQSE (sequence 1) -->
+<!-- Mes Plans NC Utilisateur : plans individuels (niveau 1) filtrés -->
+<menuitem
+    name="Mes Plans"
+    id="nc_management.menu_mes_plans_nc_user"
+    parent="nc_management.menu_plan_smi_root"
+    action="action_mes_plans_smi"
+    groups="nc_management.group_nc_utilisateur"
+    sequence="1"/>
+
+<!-- Mes Plans RMQSE (sequence 1) -->
 <menuitem
     name="Mes Plans"
     id="nc_management.menu_mes_plans_smi"

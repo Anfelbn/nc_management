@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ============================================================ -->
+<!--  VUE LISTE — Plans d'Amélioration SMI (niveau 2)            -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_improvement_plan_tree">
+    <field name="name">nc_management.smi_improvement_plan.tree</field>
+    <field name="model">nc_management.smi_improvement_plan</field>
+    <field name="arch" type="xml">
+        <tree string="Plans d'Action d'Amélioration SMI" import="false"
+              decoration-info="state == 'brouillon'"
+              decoration-success="state == 'soumis'">
+            <field name="name"            string="Référence"/>
+            <field name="direction_id"    string="Direction"/>
+            <field name="department_id"   string="Département"/>
+            <field name="nb_plans"        string="Plans"/>
+            <field name="nb_en_cours"     string="En cours"/>
+            <field name="nb_clotures"     string="Clôturés"/>
+            <field name="taux_avancement" string="Avancement %"
+                   widget="progressbar"/>
+            <field name="taux_efficacite" string="Efficacité %"/>
+            <field name="state"           string="État"/>
+            <field name="date_soumission" string="Date soumission"/>
+        </tree>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  VUE FORMULAIRE — Plan d'Amélioration SMI (niveau 2)        -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_improvement_plan_form">
+    <field name="name">nc_management.smi_improvement_plan.form</field>
+    <field name="model">nc_management.smi_improvement_plan</field>
+    <field name="arch" type="xml">
+        <form string="Plan d'Action d'Amélioration SMI">
+            <header>
+                <!-- Consolider : ajouter des plans individuels dans ce plan -->
+                <button name="action_consolider"
+                        string="Consolider"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('state', '!=', 'brouillon')]}"/>
+                <!-- Soumettre : visible seulement si brouillon -->
+                <button name="action_soumettre"
+                        string="Soumettre à la Responsable Qualité"
+                        type="object"
+                        attrs="{'invisible': [('state', '!=', 'brouillon')]}"
+                        confirm="Soumettre ce plan à la Responsable Qualité ? Cette action est irréversible."/>
+                <field name="state" widget="statusbar"
+                       statusbar_visible="brouillon,soumis"
+                       readonly="1"/>
+            </header>
+            <sheet>
+                <field name="state" invisible="1"/>
+
+                <!-- Bandeau plan soumis -->
+                <div class="alert alert-success"
+                     attrs="{'invisible': [('state', '!=', 'soumis')]}">
+                    <strong>Plan soumis à la Responsable Qualité.</strong>
+                    Les plans d'action sont maintenant visibles dans le Plan Global SMI.
+                </div>
+
+                <div class="oe_title">
+                    <h1><field name="name" readonly="1"/></h1>
+                </div>
+
+                <!-- Synthèse statistiques -->
+                <group attrs="{'invisible': [('nb_plans', '=', 0)]}">
+                    <group string="Synthèse">
+                        <field name="nb_plans"        string="Plans total"/>
+                        <field name="nb_en_cours"     string="En cours"/>
+                        <field name="nb_clotures"     string="Clôturés (Efficaces)"/>
+                    </group>
+                    <group>
+                        <field name="taux_avancement" string="Avancement global %"/>
+                        <field name="taux_efficacite" string="Efficacité %"/>
+                    </group>
+                </group>
+
+                <!-- Organisation -->
+                <group string="Organisation">
+                    <group>
+                        <field name="direction_id"
+                               attrs="{'readonly': [('state', '!=', 'brouillon')]}"
+                               options="{'no_create': True, 'no_create_edit': True}"/>
+                        <field name="department_id"
+                               attrs="{'readonly':  [('state', '!=', 'brouillon')],
+                                       'invisible': [('direction_id', '=', False)]}"
+                               domain="[('scaek_level','=','departement'),('parent_id','=',direction_id)]"
+                               options="{'no_create': True, 'no_create_edit': True}"/>
+                        <field name="service_id"
+                               attrs="{'readonly':  [('state', '!=', 'brouillon')],
+                                       'invisible': [('department_id', '=', False)]}"
+                               domain="[('scaek_level','=','service'),('parent_id','=',department_id)]"
+                               options="{'no_create': True, 'no_create_edit': True}"/>
+                    </group>
+                    <group>
+                        <field name="submitted_by_id"
+                               attrs="{'invisible': [('state', '=', 'brouillon')]}"
+                               readonly="1"/>
+                        <field name="date_soumission"
+                               attrs="{'invisible': [('state', '=', 'brouillon')]}"
+                               readonly="1"/>
+                        <field name="global_plan_id"
+                               attrs="{'invisible': [('state', '=', 'brouillon')]}"
+                               readonly="1"/>
+                    </group>
+                </group>
+
+                <!-- Description -->
+                <group string="Objet / Périmètre">
+                    <field name="description" nolabel="1" colspan="2"
+                           attrs="{'readonly': [('state', '!=', 'brouillon')]}"
+                           placeholder="Décrivez l'objet et le périmètre de ce plan d'action..."/>
+                </group>
+
+                <!-- Plans d'action niveau 1 (onglet) -->
+                <notebook>
+                    <page string="Plans d'Action">
+                        <field name="plan_ids"
+                               attrs="{'readonly': [('state', '!=', 'brouillon')]}"
+                               context="{'default_improvement_plan_id': active_id}">
+                            <tree string="Plans d'Action" editable="bottom"
+                                  decoration-success="state == 'cloture'"
+                                  decoration-warning="state == 'realise'"
+                                  decoration-danger="is_late == True">
+                                <field name="name"            string="Référence" readonly="1"/>
+                                <field name="nature"          string="Nature"/>
+                                <field name="description"     string="Description"/>
+                                <field name="action"          string="Action"/>
+                                <field name="responsable_id"  string="Responsable"
+                                       options="{'no_create': True}"/>
+                                <field name="date_prevue"     string="Date prévue"/>
+                                <field name="avancement"      string="Avancement %"
+                                       widget="progressbar"/>
+                                <field name="efficacite"      string="Efficacité"
+                                       attrs="{'invisible': [('avancement', '&lt;', 100)],
+                                               'readonly':  [('state', '=', 'cloture')]}"/>
+                                <field name="state"           string="État"/>
+                                <field name="is_late"         invisible="1"/>
+                            </tree>
+                        </field>
+                    </page>
+                </notebook>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  VUE RECHERCHE — Plans d'Amélioration                        -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_improvement_plan_search">
+    <field name="name">nc_management.smi_improvement_plan.search</field>
+    <field name="model">nc_management.smi_improvement_plan</field>
+    <field name="arch" type="xml">
+        <search string="Rechercher Plan d'Amélioration">
+            <field name="name"         string="Référence"/>
+            <field name="direction_id"/>
+            <separator/>
+            <filter string="Mes Plans" name="mes_plans"
+                    domain="[('create_uid', '=', uid)]"/>
+            <filter string="Brouillon"  name="brouillon"
+                    domain="[('state', '=', 'brouillon')]"/>
+            <filter string="Soumis"     name="soumis"
+                    domain="[('state', '=', 'soumis')]"/>
+            <group expand="1" string="Grouper par">
+                <filter string="Direction"  name="group_direction"
+                        context="{'group_by': 'direction_id'}"/>
+                <filter string="État"       name="group_state"
+                        context="{'group_by': 'state'}"/>
+                <filter string="Mois"       name="group_mois"
+                        context="{'group_by': 'date_soumission:month'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  ACTIONS FENÊTRE                                              -->
+<!-- ============================================================ -->
+
+<!-- Action : Ouvrir/créer le plan unique du NC Utilisateur connecté -->
+<record model="ir.actions.server" id="action_smi_improvement_plan_user">
+    <field name="name">Plan d'Action d'Amélioration SMI</field>
+    <field name="model_id"
+           ref="nc_management.model_nc_management_smi_improvement_plan"/>
+    <field name="state">code</field>
+    <field name="code">action = model.action_open_my_plan()</field>
+</record>
+
+<!-- Action : Tous les Plans d'Amélioration (RMQSE) -->
+<record model="ir.actions.act_window"
+        id="action_smi_improvement_plan_rmqse">
+    <field name="name">Plans d'Amélioration — Toutes directions</field>
+    <field name="res_model">nc_management.smi_improvement_plan</field>
+    <field name="view_mode">tree,form</field>
+    <field name="context">{'search_default_group_direction': 1}</field>
+    <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'tree',
+                'view_id': ref('view_smi_improvement_plan_tree')}),
+        (0, 0, {'view_mode': 'form',
+                'view_id': ref('view_smi_improvement_plan_form')})]"/>
+    <field name="search_view_id"
+           ref="view_smi_improvement_plan_search"/>
+</record>
+
+<!-- ============================================================ -->
+<!--  MENUS                                                        -->
+<!-- ============================================================ -->
+
+<!-- Sous-menu "Plan d'Action d'Amélioration" pour NC Utilisateur -->
+<menuitem
+    name="Plan d'Action d'Amélioration"
+    id="nc_management.menu_smi_improvement_plan_user"
+    parent="nc_management.menu_plan_smi_root"
+    action="action_smi_improvement_plan_user"
+    groups="nc_management.group_nc_utilisateur"
+    sequence="5"/>
+
+</data>
+</odoo>

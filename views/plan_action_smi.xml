@@ -10,16 +10,15 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">10</field>
     <field name="arch" type="xml">
-        <tree string="Mes Plans" import="false"
+        <tree string="Mes Plans" import="false" class="smi_plan_tree"
               decoration-danger="is_late == True">
-            <field name="name"            string="Référence"/>
-            <field name="direction_id"    string="Direction"/>
             <field name="nature"          string="Nature"/>
+            <field name="name"            string="Référence"/>
             <field name="responsable_id"  string="Responsable"/>
+            <field name="date_realisation" string="Date de réalisation"/>
             <field name="avancement"      string="Avancement %"/>
             <field name="efficacite"      string="Efficacité"/>
-            <field name="date_realisation" string="Date de réalisation"/>
-            <field name="state"           string="État"/>
+            <field name="etat_avancement" string="État"/>
             <field name="is_integrated"   string="Intégré au plan d'amélioration"/>
             <field name="is_late"         invisible="1"/>
             <field name="submission_state" invisible="1"/>
@@ -101,9 +100,10 @@
                             ('name', '=', 'New'),
                             ('improvement_plan_id', '!=', False)]}"/>
 
-                <!-- Nouveau cycle de vie : barre d'état étendue -->
-                <field name="state" widget="statusbar"
-                       statusbar_visible="en_cours,realise,cloture,draft,done"/>
+                <!-- Barre d'état : 3 états pilotés par l'avancement -->
+                <field name="etat_avancement" widget="statusbar"
+                       statusbar_visible="non_realise,en_cours,realise"/>
+                <field name="state" invisible="1"/>
             </header>
             <sheet>
                 <!-- Champs techniques -->
@@ -231,9 +231,10 @@
                 <!-- Avancement -->
                 <group string="Avancement">
                     <group>
-                        <field name="avancement"
+                        <field name="avancement_choice"
                                attrs="{'readonly': [('state', '=', 'cloture')]}"
-                               widget="progressbar"/>
+                               widget="radio"/>
+                        <field name="avancement" invisible="1"/>
                     </group>
                     <group/>
                 </group>

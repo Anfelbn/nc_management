@@ -1115,6 +1115,15 @@ class PlanActionSmi(models.Model):
     avancement = fields.Integer(
         string='État Avancement (%)', default=0,
         track_visibility='onchange')
+    avancement_choice = fields.Selection([
+        ('0',   '0%'),
+        ('25',  '25%'),
+        ('50',  '50%'),
+        ('75',  '75%'),
+        ('100', '100%'),
+    ], string='État Avancement (%)',
+       compute='_compute_avancement_choice',
+       inverse='_set_avancement_choice')
     duree_reelle = fields.Char(string='Durée Réelle')
     critere_efficacite = fields.Text(string="Critère d'Efficacité")
     efficacite = fields.Selection([
@@ -1145,6 +1154,20 @@ class PlanActionSmi(models.Model):
                 rec.etat_avancement = 'en_cours'
             else:
                 rec.etat_avancement = 'non_realise'
+
+    @api.depends('avancement')
+    def _compute_avancement_choice(self):
+        for rec in self:
+            rec.avancement_choice = (
+                str(rec.avancement)
+                if rec.avancement in (0, 25, 50, 75, 100)
+                else '0'
+            )
+
+    def _set_avancement_choice(self):
+        for rec in self:
+            if rec.avancement_choice is not False:
+                rec.avancement = int(rec.avancement_choice)
 
     # ── Cycle de vie RMQSE ────────────────────────────────────────
     submission_state = fields.Selection([

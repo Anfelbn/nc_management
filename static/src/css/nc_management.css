@@ -125,4 +125,5 @@ canvas{display:block;width:100%}
 .smi_plan_tree thead th {
     background-color: #1a2e5a !important;
     color: white !important;
+    white-space: nowrap !important;
 }

@@ -12,6 +12,8 @@
                     src="/nc_management/static/src/js/dashboard.js"/>
             <script type="text/javascript"
                     src="/nc_management/static/src/js/plan_smi.js"/>
+            <script type="text/javascript"
+                    src="/nc_management/static/src/js/smi_plan_filter.js"/>
         </xpath>
     </template>
 </odoo>

@@ -156,7 +156,7 @@ class SmiGlobalPlan(models.Model):
                     ('mail_message_id.model',   '=', model),
                     ('field', '=', field_name),
                     ('mail_message_id.date',    '<=', date_limit),
-                ], order='mail_message_id.date desc', limit=1)
+                ], order='id desc', limit=1)
                 if not tracking:
                     return default
                 if field_name in ('avancement',):

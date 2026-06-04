@@ -10,3 +10,4 @@ from . import consolidate_wizard
 from . import consolidate_improvement_wizard
 from . import plan_efficacite_wizard
 from . import plan_number_wizard
+from . import consulter_version_wizard

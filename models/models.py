@@ -1130,6 +1130,22 @@ class PlanActionSmi(models.Model):
         ('cloture',  'Clôturé'),
     ], string='Avancement', default='draft', track_visibility='onchange')
 
+    etat_avancement = fields.Selection([
+        ('non_realise', 'Non réalisé'),
+        ('en_cours',    'En cours'),
+        ('realise',     'Réalisé'),
+    ], string='État', compute='_compute_etat_avancement', store=True)
+
+    @api.depends('avancement')
+    def _compute_etat_avancement(self):
+        for rec in self:
+            if rec.avancement >= 100:
+                rec.etat_avancement = 'realise'
+            elif rec.avancement > 0:
+                rec.etat_avancement = 'en_cours'
+            else:
+                rec.etat_avancement = 'non_realise'
+
     # ── Cycle de vie RMQSE ────────────────────────────────────────
     submission_state = fields.Selection([
         ('brouillon', 'Brouillon'),
@@ -1152,13 +1168,74 @@ class PlanActionSmi(models.Model):
         ondelete='set null',
         index=True,
     )
-    mois_reception = fields.Date('Date de création')
-    date_maj       = fields.Datetime("Dernière mise à jour", readonly=True)
-    child_plan_ids = fields.One2many(
+    mois_reception  = fields.Date('Date de création')
+    date_maj        = fields.Datetime("Dernière mise à jour", readonly=True)
+    version_number  = fields.Integer('Version', default=1)
+    child_plan_ids  = fields.One2many(
         'nc_management.plan_action_smi',
         'global_plan_id',
         string='Plans intégrés',
     )
+
+    # ── Filtres UI (ne déclenchent pas date_maj) ──────────────────
+    filter_nature = fields.Selection([
+        ('nc_produit',               'NC Produit'),
+        ('reclamation_pi',           'Réclamation Client ou PI'),
+        ('environnement',            'Environnement'),
+        ('sst',                      'SST'),
+        ('audit_externe',            'Audit Externe'),
+        ('audit_interne',            'Audit Interne'),
+        ('swot',                     'SWOT'),
+        ('risque',                   'Risque'),
+        ('objectif_non_atteint',     'Objectif non atteint'),
+        ('decision_revue_direction', 'Décision revue direction'),
+        ('amelioration',             'Amélioration'),
+        ('nc_reglementaire',         'NC réglementaire'),
+    ], string='Nature', default=False)
+
+    filter_direction_id = fields.Many2one(
+        'hr.department',
+        domain=[('scaek_level', '=', 'direction')],
+        string='Direction',
+        default=False,
+        context={'no_create': True, 'no_create_edit': True})
+
+    # Plans affichés après application des filtres UI
+    child_plan_ids_display = fields.Many2many(
+        'nc_management.plan_action_smi',
+        compute='_compute_child_display',
+        string='Plans intégrés',
+        store=False)
+
+    @api.depends('child_plan_ids', 'filter_nature', 'filter_direction_id')
+    def _compute_child_display(self):
+        for rec in self:
+            children = rec.child_plan_ids
+            if rec.filter_nature:
+                children = children.filtered(
+                    lambda c: c.nature == rec.filter_nature)
+            if rec.filter_direction_id:
+                children = children.filtered(
+                    lambda c: c.direction_id == rec.filter_direction_id)
+            rec.child_plan_ids_display = children
+
+    @api.multi
+    def action_reset_filters(self):
+        """Réinitialise les filtres Nature et Direction."""
+        self.ensure_one()
+        self.with_context(_skip_date_maj=True).write({
+            'filter_nature': False,
+            'filter_direction_id': False,
+        })
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'nc_management.plan_action_smi',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_plan_smi_form_global').id,
+            'target': 'current',
+        }
 
     # ── Liens vers la nouvelle hiérarchie 3 niveaux ───────────────
 
@@ -1177,6 +1254,37 @@ class PlanActionSmi(models.Model):
         ondelete='set null',
         index=True)
 
+    # ── Référence affichée avec numéro de version ─────────────────
+    name_display = fields.Char(
+        string='Référence',
+        compute='_compute_name_display',
+        store=False)
+
+    _BASE_SMI_RE = None  # lazy init
+
+    @api.depends('name', 'version_number', 'is_global')
+    def _compute_name_display(self):
+        import re
+        _re = re.compile(r'^(SMI-\d{2}-\d{4})(?:-\d+)?$')
+        for rec in self:
+            if rec.is_global and rec.name and rec.name != 'New':
+                m = _re.match(rec.name)
+                base = m.group(1) if m else rec.name
+                rec.name_display = '%s-V%d' % (base, rec.version_number or 1)
+            else:
+                rec.name_display = rec.name or 'New'
+
+    # ── Traçabilité historique (vue à une date donnée) ────────────
+    date_consultation = fields.Date(
+        string="Voir l'état à la date",
+        help="Sélectionnez une date passée pour voir l'état du plan à ce moment précis.")
+
+    historique_html = fields.Html(
+        string='État historique',
+        compute='_compute_plan_historique_html',
+        sanitize=False,
+        store=False)
+
     # ── Analyse HTML (tableau + graphique, catégories dynamiques) ──
     analyse_html = fields.Html(
         string='Analyse Efficacité',
@@ -1186,6 +1294,120 @@ class PlanActionSmi(models.Model):
 
     # 4 couleurs en rotation pour les catégories (modérément sombres)
     _CAT_COLORS = ['#2575b8', '#d44535', '#1fa255', '#cc8800']
+
+    @api.depends('date_consultation', 'child_plan_ids')
+    def _compute_plan_historique_html(self):
+        from datetime import datetime as _dt
+
+        th  = ('padding:8px 12px;text-align:left;white-space:nowrap;'
+               'border-bottom:2px solid #dee2e6;color:white;')
+        td  = 'padding:7px 12px;border-bottom:1px solid #eee;'
+        tdc = td + 'text-align:center;'
+
+        STATE_LABELS = {
+            'en_cours': 'En cours', 'realise': 'Réalisé',
+            'cloture': 'Clôturé', 'draft': 'Brouillon', 'done': 'Réalisé',
+        }
+        EFF_LABELS = {
+            'oui': 'OUI', 'non': 'NON',
+            False: '-', None: '-', '': '-',
+        }
+
+        for rec in self:
+            if not rec.is_global or not rec.date_consultation:
+                rec.historique_html = ''
+                continue
+
+            date_limit = fields.Datetime.to_string(
+                _dt.combine(
+                    fields.Date.from_string(str(rec.date_consultation)),
+                    _dt.max.time()))
+
+            plans = rec.child_plan_ids.filtered(
+                lambda p: p.create_date and p.create_date <= date_limit)
+
+            if not plans:
+                rec.historique_html = (
+                    '<p style="color:#888;padding:16px;">'
+                    "Aucun plan n'existait à cette date.</p>")
+                continue
+
+            def _val(res_id, field_name, default):
+                tracking = self.env['mail.tracking.value'].sudo().search([
+                    ('mail_message_id.res_id',  '=', res_id),
+                    ('mail_message_id.model',   '=', 'nc_management.plan_action_smi'),
+                    ('field',                   '=', field_name),
+                    ('mail_message_id.date',    '<=', date_limit),
+                ], order='id desc', limit=1)
+                if not tracking:
+                    return default
+                if field_name == 'avancement':
+                    return tracking.new_value_integer
+                return tracking.new_value_char or default
+
+            nature_sel = rec._fields['nature'].selection
+            nature_labels = dict(
+                nature_sel if not callable(nature_sel) else nature_sel(rec))
+
+            rows = ''
+            for i, plan in enumerate(plans):
+                hist_state = _val(plan.id, 'state',     plan.state)
+                hist_av    = _val(plan.id, 'avancement', plan.avancement)
+                hist_eff   = _val(plan.id, 'efficacite', plan.efficacite or '')
+
+                state_lbl = STATE_LABELS.get(hist_state, hist_state or 'Brouillon')
+                eff_lbl   = EFF_LABELS.get(hist_eff, '-')
+                bg = '#fff' if i % 2 == 0 else '#f8f9fa'
+                sc = (
+                    '#1fa255' if hist_state in ('cloture', 'done')
+                    else '#cc8800' if hist_state == 'realise'
+                    else '#2575b8')
+
+                rows += (
+                    '<tr style="background:{bg};">'
+                    '<td style="{td}">{nature}</td>'
+                    '<td style="{td}"><b>{ref}</b></td>'
+                    '<td style="{td}">{direction}</td>'
+                    '<td style="{td}">{responsable}</td>'
+                    '<td style="{tdc}">{av}%</td>'
+                    '<td style="{tdc}"><span style="color:{sc};font-weight:bold;">'
+                    '{state}</span></td>'
+                    '<td style="{tdc}">{eff}</td>'
+                    '</tr>'
+                ).format(
+                    bg=bg, td=td, tdc=tdc,
+                    nature=nature_labels.get(plan.nature, plan.nature or '-'),
+                    ref=plan.name,
+                    direction=plan.direction_id.name if plan.direction_id else '-',
+                    responsable=plan.responsable_id.name if plan.responsable_id else '-',
+                    av=hist_av if hist_av is not None else 0,
+                    state=state_lbl, sc=sc, eff=eff_lbl,
+                )
+
+            consul_str = fields.Date.from_string(
+                str(rec.date_consultation)).strftime('%d/%m/%Y')
+            thead = (
+                '<thead><tr style="background:#1a2e5a;">'
+                '<th style="{th}">Nature</th>'
+                '<th style="{th}">Référence</th>'
+                '<th style="{th}">Direction</th>'
+                '<th style="{th}">Responsable</th>'
+                '<th style="{th}">Avancement %</th>'
+                '<th style="{th}">État</th>'
+                '<th style="{th}">Efficacité</th>'
+                '</tr></thead>'
+            ).format(th=th)
+
+            rec.historique_html = (
+                '<div style="font-family:Arial,sans-serif;">'
+                '<div style="background:#fff3cd;border:1px solid #ffc107;'
+                'border-radius:4px;padding:12px 16px;margin-bottom:12px;">'
+                '<b>&#9888; Vue historique au {date}</b> — '
+                "Voici l'état du plan à cette date.</div>"
+                '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+                '{thead}<tbody>{rows}</tbody></table>'
+                '</div>'
+            ).format(date=consul_str, thead=thead, rows=rows)
 
     @api.depends('child_plan_ids.nature', 'child_plan_ids.efficacite',
                  'child_plan_ids.avancement', 'is_global', 'submission_state')
@@ -1350,11 +1572,12 @@ class PlanActionSmi(models.Model):
         'Nb plans intégrés', compute='_compute_global_stats')
     avancement_global = fields.Integer(
         'Avancement global (%)', compute='_compute_global_stats')
-    nb_realises      = fields.Integer('Réalisés',          compute='_compute_global_stats')
-    nb_en_cours      = fields.Integer('En cours',          compute='_compute_global_stats')
-    nb_en_retard     = fields.Integer('En retard',         compute='_compute_global_stats')
-    taux_realisation = fields.Integer('Taux de réalisation (%)', compute='_compute_global_stats')
-    taux_efficacite  = fields.Integer("Taux d'efficacité (%)",   compute='_compute_global_stats')
+    nb_realises       = fields.Integer('Plans réalisés',       compute='_compute_global_stats')
+    nb_en_cours       = fields.Integer('Plans en cours',       compute='_compute_global_stats')
+    nb_non_realises   = fields.Integer('Plans non réalisés',   compute='_compute_global_stats')
+    nb_en_retard      = fields.Integer('En retard',            compute='_compute_global_stats')
+    taux_realisation  = fields.Integer('Taux de réalisation (%)', compute='_compute_global_stats')
+    taux_efficacite   = fields.Integer("Taux d'efficacité (%)",   compute='_compute_global_stats')
     etat_global      = fields.Selection([
         ('brouillon', 'Brouillon'),
         ('en_cours',  'En cours'),
@@ -1372,19 +1595,27 @@ class PlanActionSmi(models.Model):
                 rec.etat_global = 'brouillon'
 
     @api.depends('child_plan_ids.avancement', 'child_plan_ids.state',
-                 'child_plan_ids.is_late', 'child_plan_ids.efficacite')
+                 'child_plan_ids.is_late', 'child_plan_ids.efficacite',
+                 'filter_nature', 'filter_direction_id')
     def _compute_global_stats(self):
         for rec in self:
             children = rec.child_plan_ids
+            if rec.filter_nature:
+                children = children.filtered(
+                    lambda c: c.nature == rec.filter_nature)
+            if rec.filter_direction_id:
+                children = children.filtered(
+                    lambda c: c.direction_id == rec.filter_direction_id)
             nb = len(children)
             rec.nb_plans_integres = nb
             rec.avancement_global = int(sum(c.avancement for c in children) / nb) if nb else 0
-            rec.nb_realises       = sum(1 for c in children if c.state == 'done')
-            rec.nb_en_cours       = sum(1 for c in children if c.state == 'draft')
-            rec.nb_en_retard      = sum(1 for c in children if c.is_late)
-            nb_efficaces          = sum(1 for c in children if c.efficacite == 'oui')
-            rec.taux_realisation  = int(rec.nb_realises / nb * 100) if nb else 0
-            rec.taux_efficacite   = int(nb_efficaces / nb * 100) if nb else 0
+            rec.nb_realises      = sum(1 for c in children if c.avancement >= 100)
+            rec.nb_en_cours      = sum(1 for c in children if 0 < c.avancement < 100)
+            rec.nb_non_realises  = sum(1 for c in children if c.avancement == 0)
+            rec.nb_en_retard     = sum(1 for c in children if c.is_late)
+            nb_efficaces         = sum(1 for c in children if c.efficacite == 'oui')
+            rec.taux_realisation = int(rec.nb_realises / nb * 100) if nb else 0
+            rec.taux_efficacite  = int(nb_efficaces / nb * 100) if nb else 0
 
     @api.depends('date_prevue', 'state')
     def _compute_is_late(self):
@@ -1626,16 +1857,21 @@ class PlanActionSmi(models.Model):
 
         # ── Ancien mécanisme date_maj (compat) ────────────────────
         if not self.env.context.get('_skip_date_maj') and 'date_maj' not in vals:
-            plans_amelioration = self.filtered('is_global')
-            if plans_amelioration:
-                plans_amelioration.with_context(_skip_date_maj=True).write(
-                    {'date_maj': fields.Datetime.now()})
-            parents = self.filtered(
-                lambda r: not r.is_global and r.global_plan_id
-            ).mapped('global_plan_id')
-            if parents:
-                parents.with_context(_skip_date_maj=True).write(
-                    {'date_maj': fields.Datetime.now()})
+            # Ne pas toucher date_maj si seul date_consultation change
+            if set(vals.keys()) - {'date_consultation', 'filter_nature', 'filter_direction_id'}:
+                plans_amelioration = self.filtered('is_global')
+                if plans_amelioration:
+                    for plan in plans_amelioration:
+                        plan.with_context(_skip_date_maj=True).write({
+                            'date_maj': fields.Datetime.now(),
+                            'version_number': (plan.version_number or 1) + 1,
+                        })
+                parents = self.filtered(
+                    lambda r: not r.is_global and r.global_plan_id
+                ).mapped('global_plan_id')
+                if parents:
+                    parents.with_context(_skip_date_maj=True).write(
+                        {'date_maj': fields.Datetime.now()})
 
         return res
 
@@ -1752,6 +1988,36 @@ class PlanActionSmi(models.Model):
         }
 
     @api.multi
+    def action_open_consulter_version_wizard(self):
+        """Ouvre le popup de sélection de date pour consulter une version passée."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Consulter une version passée',
+            'res_model': 'nc_management.consulter_version_wizard',
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_consulter_version_wizard_form').id,
+            'target': 'new',
+            'context': {'default_plan_id': self.id},
+        }
+
+    @api.multi
+    def action_retour_actuel_plan(self):
+        """Efface la date de consultation pour revenir à l'état en temps réel."""
+        self.ensure_one()
+        self.with_context(_skip_date_maj=True).write({'date_consultation': False})
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'nc_management.plan_action_smi',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_plan_smi_form_global').id,
+            'target': 'current',
+        }
+
+    @api.multi
     def action_cloturer_plan(self):
         """Clôture le plan actuel et crée automatiquement le suivant
         en y intégrant tous les plans créés/reçus après la date_maj courante."""
@@ -1798,6 +2064,34 @@ class PlanActionSmi(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'nc_management.plan_action_smi',
             'res_id': new_plan.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_plan_smi_form_global').id,
+            'target': 'current',
+        }
+
+    @api.model
+    def action_open_global_plan(self):
+        """Ouvre directement le Plan d'Amélioration en cours (le plus récent non clôturé).
+        Si aucun n'existe, en crée un nouveau."""
+        plan = self.search([
+            ('is_global', '=', True),
+            ('submission_state', '!=', 'cloture'),
+        ], order='create_date desc', limit=1)
+        if not plan:
+            plan = self.search([
+                ('is_global', '=', True),
+            ], order='create_date desc', limit=1)
+        if not plan:
+            plan = self.create({
+                'is_global': True,
+                'submission_state': 'brouillon',
+                'mois_reception': fields.Date.today(),
+            })
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'nc_management.plan_action_smi',
+            'res_id': plan.id,
             'view_mode': 'form',
             'view_id': self.env.ref(
                 'nc_management.view_plan_smi_form_global').id,

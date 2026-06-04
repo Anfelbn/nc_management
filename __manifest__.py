@@ -27,6 +27,7 @@
         'wizard/consolidate_improvement_wizard.xml',
         'wizard/plan_efficacite_wizard.xml',
         'wizard/plan_number_wizard.xml',
+        'wizard/consulter_version_wizard.xml',
         'reports/report_fnc.xml',
         'reports/report_fac.xml',
         'reports/report_revision.xml',

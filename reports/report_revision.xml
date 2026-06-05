@@ -64,7 +64,7 @@
                         <div style="font-size:10px;">CEMENT COMPANY OF AIN EL KEBIRA</div>
                     </td>
                     <td style="width:30%; vertical-align:middle;">
-                        <span>Référence : FNC 002/700</span>
+                        <span>Référence : <t t-esc="doc_rev.reference or ''"/></span>
                     </td>
                 </tr>
                 <tr style="height: 25px;">
@@ -136,7 +136,7 @@
                 <tr class="cell-sm"><td style="width:50%;">N° Fiche d'action :</td><td colspan="2" style="width:50%;">Responsable de l'action(s) :</td></tr>
                 <tr class="cell-sm"><td>Le supérieur hiérarchique :</td><td>Date :</td><td>Signature :</td></tr>
             </table>
-            <div class="footer-ref"><span>FNC 002/700</span></div>
+            <div class="footer-ref"><t t-esc="doc_rev.reference or ''"/></div>
         </div>
     </template>
 
@@ -167,7 +167,7 @@
                         <div style="font-size:10px;">CEMENT COMPANY OF AIN EL KEBIRA</div>
                     </td>
                     <td style="width:30%; vertical-align:middle;">
-                        <span>Référence : FAC 003/700</span>
+                        <span>Référence : <t t-esc="doc_rev.reference or ''"/></span>
                     </td>
                 </tr>
                 <tr style="height: 25px;">
@@ -224,7 +224,7 @@
                 <tr class="cell-sm"><td colspan="3">- Extension possible de l'action : <span class="checkbox">&#9744;</span> Non <span style="margin-left: 20px;"><span class="checkbox">&#9744;</span> Oui</span></td></tr>
                 <tr class="cell-sm"><td style="width:50%;">Clôturée par :</td><td style="width:25%;">Date :</td><td style="width:25%;">Visa :</td></tr>
             </table>
-            <div class="footer-ref"><span>FAC 003/700</span></div>
+            <div class="footer-ref"><t t-esc="doc_rev.reference or ''"/></div>
         </div>
     </template>
 

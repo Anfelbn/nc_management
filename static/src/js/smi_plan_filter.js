@@ -29,6 +29,27 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
             avCol: 4,
             effCol: 6,
         },
+        // FNC — liste autonome : checkbox(0) N°FNC(1) Date(2) Direction(3)
+        //   Département(4) Service(5) Signalé par(6) Responsable(7) État(8)
+        'fnc_list_tree': {
+            filterCols: {
+                1: 'N° FNC', 2: 'Date', 3: 'Direction',
+                4: 'Département', 5: 'Service',
+                6: 'Signalé par', 7: 'Responsable action', 8: 'État',
+            },
+            avCol: -1,
+            effCol: -1,
+        },
+        // FAC — liste autonome : checkbox(0) N°FAC(1) Date(2) Direction(3)
+        //   Réf. FNC(4) Responsable(5) État(6)
+        'fac_list_tree': {
+            filterCols: {
+                1: 'N° FAC', 2: 'Date', 3: 'Direction',
+                4: 'Réf. FNC', 5: 'Responsable', 6: 'État',
+            },
+            avCol: -1,
+            effCol: -1,
+        },
     };
 
     // ── Initialisation via MutationObserver ──────────────────────────
@@ -46,14 +67,7 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
                 $table.find('thead th').each(function (idx) {
                     if (!config.filterCols[idx]) return;
                     var $th = $(this);
-                    $th.css('cursor', 'pointer').addClass('smi-filterable-th');
-                    $th.append(
-                        '<span class="smi-flt-icon" style="' +
-                        'display:inline-block;margin-left:5px;width:15px;height:15px;' +
-                        'border-radius:3px;background:#1a2e5a;color:#fff;' +
-                        'font-size:9px;line-height:15px;text-align:center;' +
-                        'vertical-align:middle;font-style:normal;">▼</span>'
-                    );
+                    $th.addClass('smi-filterable-th');
                     $th.on('click.smifilter', function (e) {
                         e.stopPropagation();
                         _openMenu($table, idx, $th);
@@ -134,13 +148,8 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
         }
         $table.data('smi-active-filters', filters);
 
-        var $th   = $table.find('thead th').eq(colIdx);
-        var $icon = $th.find('.smi-flt-icon');
-        if (filters[colIdx]) {
-            $icon.css({ background: '#d44535', fontWeight: 'bold' }).text('×');
-        } else {
-            $icon.css({ background: '#1a2e5a', fontWeight: 'normal' }).text('▼');
-        }
+        var $th = $table.find('thead th').eq(colIdx);
+        $th.toggleClass('smi-col-filtered', !!filters[colIdx]);
 
         $table.find('tbody tr').each(function () {
             var $row    = $(this);

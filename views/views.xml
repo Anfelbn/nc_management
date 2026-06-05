@@ -18,7 +18,7 @@
     <field name="name">nc_management.nonconformity.tree</field>
     <field name="model">nc_management.nonconformity</field>
     <field name="arch" type="xml">
-        <tree string="Fiches Non-Conformité" class="nc_list_tree">
+        <tree string="Fiches Non-Conformité" class="nc_list_tree fnc_list_tree">
             <field name="name"/>
             <field name="date"/>
             <field name="direction_id"/>
@@ -234,7 +234,7 @@
     <field name="name">nc_management.corrective_action.tree</field>
     <field name="model">nc_management.corrective_action</field>
     <field name="arch" type="xml">
-        <tree string="Fiches Action Corrective" class="nc_list_tree">
+        <tree string="Fiches Action Corrective" class="nc_list_tree fac_list_tree">
             <field name="name"/>
             <field name="date"/>
             <field name="direction_id"/>

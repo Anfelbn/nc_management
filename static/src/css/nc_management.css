@@ -351,9 +351,21 @@ textarea.o_input:focus {
     white-space: nowrap !important;
 }
 
-/* ── Icône de filtre dans les en-têtes Plans SMI ── */
-.smi_plan_tree thead th .smi-flt-icon {
-    background: #2563eb !important;
+/* ── Colonnes filtrables : curseur pointer au survol ── */
+.smi_plan_tree thead th.smi-filterable-th,
+.smi_hist_tree thead th.smi-filterable-th,
+.fnc_list_tree thead th.smi-filterable-th,
+.fac_list_tree thead th.smi-filterable-th {
+    cursor: pointer !important;
+}
+
+/* ── Colonne avec filtre actif : soulignement blanc ── */
+.smi_plan_tree thead th.smi-col-filtered,
+.smi_hist_tree thead th.smi-col-filtered,
+.fnc_list_tree thead th.smi-col-filtered,
+.fac_list_tree thead th.smi-col-filtered {
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
 }
 
 /* ── Avancement — checkboxes carrés horizontaux ── */

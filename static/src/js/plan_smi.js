@@ -199,5 +199,24 @@ odoo.define('nc_management.plan_smi', function(require) {
     });
 
     core.action_registry.add('nc_plan_smi', PlanSmi);
+
+    // ── Navigation avec clear_breadcrumbs ──────────────────────────
+    // Utilisé par les actions "Consulter version" et "← Version actuelle"
+    // pour naviguer vers un plan sans empiler le breadcrumb.
+    var ClearNavigate = Widget.extend({
+        init: function(parent, action) {
+            this._super(parent);
+            this._innerAction = action.params.inner_action;
+        },
+        start: function() {
+            var self = this;
+            setTimeout(function() {
+                self.do_action(self._innerAction, {clear_breadcrumbs: true});
+            }, 0);
+            return this._super.apply(this, arguments);
+        },
+    });
+    core.action_registry.add('nc_management.clear_and_navigate', ClearNavigate);
+
     return PlanSmi;
 });

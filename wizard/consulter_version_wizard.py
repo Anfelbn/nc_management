@@ -40,14 +40,21 @@ class ConsulterVersionWizard(models.TransientModel):
 
         view_ref = self.return_view_ref or 'nc_management.view_plan_smi_form_global'
         flags = {'create': False} if view_ref == 'nc_management.view_plan_smi_form_analyse' else {}
-        return {
+        view_id = self.env.ref(view_ref).id
+        inner_action = {
             'type': 'ir.actions.act_window',
             'name': "Plan d'Action d'Amélioration SMI",
             'res_model': 'nc_management.plan_action_smi',
             'res_id': historical_plan.id,
             'view_mode': 'form',
-            'view_id': self.env.ref(view_ref).id,
+            'views': [[view_id, 'form']],
+            'view_id': view_id,
             'target': 'current',
             'flags': flags,
             'context': {'default_is_global': True},
+        }
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'nc_management.clear_and_navigate',
+            'params': {'inner_action': inner_action},
         }

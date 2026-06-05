@@ -1359,10 +1359,7 @@ class PlanActionSmi(models.Model):
             # n'avait pas encore changé d'état depuis sa création (brouillon).
             plans = rec.env['nc_management.plan_action_smi'].browse()
             for p in rec.child_plan_ids:
-                if not p.create_date or p.create_date > date_limit:
-                    continue
-                hist_sub = _val(p.id, 'submission_state', None)
-                if hist_sub == 'integre':
+                if p.create_date and p.create_date <= date_limit:
                     plans |= p
 
             if not plans:
@@ -2063,7 +2060,12 @@ class PlanActionSmi(models.Model):
         """Efface date_consultation sur ce plan et revient au plan actif courant."""
         self.ensure_one()
         self.with_context(_skip_date_maj=True).write({'date_consultation': False})
-        return self.env['nc_management.plan_action_smi'].action_open_global_plan()
+        inner = self.env['nc_management.plan_action_smi'].action_open_global_plan()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'nc_management.clear_and_navigate',
+            'params': {'inner_action': inner},
+        }
 
     @api.multi
     def action_cloturer_plan(self):
@@ -2148,14 +2150,15 @@ class PlanActionSmi(models.Model):
                 'submission_state': 'brouillon',
                 'mois_reception': fields.Date.today(),
             })
+        view_id = self.env.ref('nc_management.view_plan_smi_form_global').id
         return {
             'type': 'ir.actions.act_window',
             'name': "Plan d'Action d'Amélioration SMI",
             'res_model': 'nc_management.plan_action_smi',
             'res_id': plan.id,
             'view_mode': 'form',
-            'view_id': self.env.ref(
-                'nc_management.view_plan_smi_form_global').id,
+            'views': [[view_id, 'form']],
+            'view_id': view_id,
             'target': 'current',
             'context': {'default_is_global': True},
         }

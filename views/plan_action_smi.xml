@@ -330,7 +330,7 @@
 
                 <group string="Synthèse">
                     <group>
-                        <field name="mois_reception"    string="Date de création"/>
+                        <field name="mois_reception"    string="Date de création" readonly="1"/>
                         <field name="nb_plans_integres" string="Plans intégrés"/>
                         <field name="nb_realises"       string="Plans réalisés"/>
                         <field name="nb_en_cours"       string="Plans en cours"/>

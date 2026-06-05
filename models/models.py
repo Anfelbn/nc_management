@@ -1321,10 +1321,6 @@ class PlanActionSmi(models.Model):
         td  = 'padding:7px 12px;border-bottom:1px solid #eee;'
         tdc = td + 'text-align:center;'
 
-        STATE_LABELS = {
-            'en_cours': 'En cours', 'realise': 'Réalisé',
-            'cloture': 'Clôturé', 'draft': 'Brouillon', 'done': 'Réalisé',
-        }
         EFF_LABELS = {
             'oui': 'OUI', 'non': 'NON',
             False: '-', None: '-', '': '-',
@@ -1374,17 +1370,20 @@ class PlanActionSmi(models.Model):
 
             rows = ''
             for i, plan in enumerate(plans):
-                hist_state = _val(plan.id, 'state',     plan.state)
-                hist_av    = _val(plan.id, 'avancement', plan.avancement)
-                hist_eff   = _val(plan.id, 'efficacite', plan.efficacite or '')
+                hist_av  = _val(plan.id, 'avancement', plan.avancement)
+                hist_eff = _val(plan.id, 'efficacite', plan.efficacite or '')
 
-                state_lbl = STATE_LABELS.get(hist_state, hist_state or 'Brouillon')
-                eff_lbl   = EFF_LABELS.get(hist_eff, '-')
+                # État calculé depuis l'avancement historique (cohérent avec etat_avancement)
+                av_int = hist_av if hist_av is not None else 0
+                if av_int >= 100:
+                    state_lbl, sc = 'Réalisé',     '#1fa255'
+                elif av_int > 0:
+                    state_lbl, sc = 'En cours',    '#cc8800'
+                else:
+                    state_lbl, sc = 'Non réalisé', '#d44535'
+
+                eff_lbl = EFF_LABELS.get(hist_eff, '-')
                 bg = '#fff' if i % 2 == 0 else '#f8f9fa'
-                sc = (
-                    '#1fa255' if hist_state in ('cloture', 'done')
-                    else '#cc8800' if hist_state == 'realise'
-                    else '#2575b8')
 
                 rows += (
                     '<tr style="background:{bg};">'
@@ -1427,7 +1426,7 @@ class PlanActionSmi(models.Model):
                 'border-radius:4px;padding:12px 16px;margin-bottom:12px;">'
                 '<b>&#9888; Vue historique au {date}</b> — '
                 "Voici l'état du plan à cette date.</div>"
-                '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+                '<table class="smi_hist_tree" style="width:100%;border-collapse:collapse;font-size:13px;">'
                 '{thead}<tbody>{rows}</tbody></table>'
                 '</div>'
             ).format(date=consul_str, thead=thead, rows=rows)

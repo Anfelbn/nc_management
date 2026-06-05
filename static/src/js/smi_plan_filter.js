@@ -3,43 +3,61 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
 
     require('web.dom_ready');
 
-    // ── Indices des colonnes filtrables dans .smi_plan_tree ──────────
-    // Nature=0, Référence=1, Direction=2, Responsable=3,
-    // Date Prévue=4, Avancement%=5, Efficacité=6, État=7
-    var FILTERABLE_COLS = {
-        0: { label: 'Nature',    statKey: 'nature' },
-        2: { label: 'Direction', statKey: 'direction' },
+    // ── Configuration par type de table ─────────────────────────────
+    // avCol  : index colonne "Avancement %"
+    // effCol : index colonne "Efficacité"
+    var TABLE_CONFIGS = {
+        // Colonnes : Nature(0) Référence(1) Direction(2) Responsable(3)
+        //            Date Prévue(4) Avancement%(5) Efficacité(6) État(7)
+        'smi_plan_tree': {
+            filterCols: {
+                0: 'Nature', 1: 'Référence', 2: 'Direction',
+                3: 'Responsable', 4: 'Date Prévue',
+                5: 'Avancement %', 6: 'Efficacité', 7: 'État',
+            },
+            avCol: 5,
+            effCol: 6,
+        },
+        // Colonnes : Nature(0) Référence(1) Direction(2) Responsable(3)
+        //            Avancement%(4) État(5) Efficacité(6)
+        'smi_hist_tree': {
+            filterCols: {
+                0: 'Nature', 1: 'Référence', 2: 'Direction',
+                3: 'Responsable', 4: 'Avancement %',
+                5: 'État', 6: 'Efficacité',
+            },
+            avCol: 4,
+            effCol: 6,
+        },
     };
 
     // ── Initialisation via MutationObserver ──────────────────────────
-    var _observer = new MutationObserver(function () {
-        _init();
-    });
+    var _observer = new MutationObserver(function () { _init(); });
     _observer.observe(document.body, { childList: true, subtree: true });
-
-    // Lancement initial (cas où le formulaire est déjà chargé)
     $(document).ready(function () { _init(); });
 
-    // ── Initialise les en-têtes filtrables ───────────────────────────
     function _init() {
-        $('.smi_plan_tree:not(.smi-filter-ready)').each(function () {
-            var $table = $(this).addClass('smi-filter-ready');
-            $table.data('smi-active-filters', {});
+        $.each(TABLE_CONFIGS, function (cls, config) {
+            $('.' + cls + ':not(.smi-filter-ready)').each(function () {
+                var $table = $(this).addClass('smi-filter-ready');
+                $table.data('smi-active-filters', {});
+                $table.data('smi-config', config);
 
-            $table.find('thead th').each(function (idx) {
-                if (!FILTERABLE_COLS[idx]) return;
-                var $th = $(this);
-                $th.css('cursor', 'pointer').addClass('smi-filterable-th');
-                $th.append(
-                    '<span class="smi-flt-icon" style="' +
-                    'display:inline-block;margin-left:5px;width:15px;height:15px;' +
-                    'border-radius:3px;background:#1a2e5a;color:#fff;' +
-                    'font-size:9px;line-height:15px;text-align:center;' +
-                    'vertical-align:middle;font-style:normal;">▼</span>'
-                );
-                $th.on('click.smifilter', function (e) {
-                    e.stopPropagation();
-                    _openMenu($table, idx, $th);
+                $table.find('thead th').each(function (idx) {
+                    if (!config.filterCols[idx]) return;
+                    var $th = $(this);
+                    $th.css('cursor', 'pointer').addClass('smi-filterable-th');
+                    $th.append(
+                        '<span class="smi-flt-icon" style="' +
+                        'display:inline-block;margin-left:5px;width:15px;height:15px;' +
+                        'border-radius:3px;background:#1a2e5a;color:#fff;' +
+                        'font-size:9px;line-height:15px;text-align:center;' +
+                        'vertical-align:middle;font-style:normal;">▼</span>'
+                    );
+                    $th.on('click.smifilter', function (e) {
+                        e.stopPropagation();
+                        _openMenu($table, idx, $th);
+                    });
                 });
             });
         });
@@ -47,10 +65,8 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
 
     // ── Ouvre le menu déroulant de filtre ────────────────────────────
     function _openMenu($table, colIdx, $th) {
-        // Fermer tout menu ouvert
         _closeMenu();
 
-        // Collecter les valeurs uniques de cette colonne
         var values = [];
         $table.find('tbody tr').each(function () {
             var v = $(this).find('td').eq(colIdx).text().trim();
@@ -58,7 +74,7 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
         });
         if (!values.length) return;
 
-        var filters = $table.data('smi-active-filters') || {};
+        var filters    = $table.data('smi-active-filters') || {};
         var currentVal = filters[colIdx] || null;
 
         var $menu = $('<div id="smi-filter-menu" style="' +
@@ -67,7 +83,6 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
             'box-shadow:0 6px 18px rgba(0,0,0,.18);' +
             'min-width:190px;padding:5px 0;font-size:13px;"></div>');
 
-        // Option "Tous"
         var $all = $('<div style="padding:8px 16px;cursor:pointer;' +
                      'color:#6c757d;border-bottom:1px solid #f0f0f0;">— Tous —</div>');
         $all.hover(
@@ -96,12 +111,10 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
             $menu.append($item);
         });
 
-        // Positionner sous l'en-tête
         var off = $th.offset();
         $menu.css({ top: off.top + $th.outerHeight() + 2, left: off.left });
         $('body').append($menu);
 
-        // Fermer au clic extérieur
         $(document).one('click.smifltclose', function () { _closeMenu(); });
     }
 
@@ -121,8 +134,7 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
         }
         $table.data('smi-active-filters', filters);
 
-        // Mettre à jour l'icône de l'en-tête
-        var $th = $table.find('thead th').eq(colIdx);
+        var $th   = $table.find('thead th').eq(colIdx);
         var $icon = $th.find('.smi-flt-icon');
         if (filters[colIdx]) {
             $icon.css({ background: '#d44535', fontWeight: 'bold' }).text('×');
@@ -130,9 +142,8 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
             $icon.css({ background: '#1a2e5a', fontWeight: 'normal' }).text('▼');
         }
 
-        // Afficher/masquer les lignes
         $table.find('tbody tr').each(function () {
-            var $row = $(this);
+            var $row    = $(this);
             var visible = true;
             $.each(filters, function (idx, val) {
                 if (val && $row.find('td').eq(parseInt(idx)).text().trim() !== val) {
@@ -143,13 +154,12 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
             $row.toggle(visible);
         });
 
-        // Recalculer les stats
         _updateStats($table);
     }
 
     // ── Recalcule les stats depuis les lignes visibles ───────────────
     function _updateStats($table) {
-        // Exclure la ligne vide d'Odoo (add-row n'a qu'1 cellule)
+        var config   = $table.data('smi-config') || { avCol: 5, effCol: 6 };
         var $rows    = $table.find('tbody tr:visible').filter(function () {
             return $(this).find('td').length > 1;
         });
@@ -162,8 +172,8 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
 
         $rows.each(function () {
             var $tds = $(this).find('td');
-            var av   = parseInt($tds.eq(5).text()) || 0;  // Avancement %
-            var eff  = $tds.eq(6).text().trim().toLowerCase(); // Efficacité
+            var av   = parseInt($tds.eq(config.avCol).text()) || 0;
+            var eff  = $tds.eq(config.effCol).text().trim().toLowerCase();
             avSum += av;
 
             if (av >= 100) realises++;
@@ -173,9 +183,9 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
             if (eff === 'oui') efficaces++;
         });
 
-        var avancement  = total ? Math.round(avSum / total) : 0;
-        var tauxReal    = total ? Math.round(realises  / total * 100) : 0;
-        var tauxEff     = total ? Math.round(efficaces / total * 100) : 0;
+        var avancement = total ? Math.round(avSum / total) : 0;
+        var tauxReal   = total ? Math.round(realises  / total * 100) : 0;
+        var tauxEff    = total ? Math.round(efficaces / total * 100) : 0;
 
         var $sheet = $table.closest('.o_form_sheet');
         _setStat($sheet, 'nb_plans_integres', total);
@@ -188,8 +198,6 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
     }
 
     function _setStat($sheet, fieldName, value) {
-        // Les champs sont des <span name="fieldName"> directs (pas d'enfant)
-        // On exclut o_invisible_modifier pour cibler le champ visible
         $sheet
             .find('[name="' + fieldName + '"]:not(.o_invisible_modifier)')
             .first()

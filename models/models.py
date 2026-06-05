@@ -1446,9 +1446,9 @@ class PlanActionSmi(models.Model):
         from datetime import datetime as _dt
 
         def badge(t):
-            if t > 80: return '#1fa255'
-            if t >= 50: return '#cc8800'
-            return '#d44535'
+            if t == 100: return '#1fa255'
+            if t == 0:   return '#d44535'
+            return '#cc8800'
 
         th  = 'padding:10px 14px;text-align:center;white-space:nowrap;'
         thl = 'padding:10px 14px;text-align:left;'
@@ -1523,7 +1523,7 @@ class PlanActionSmi(models.Model):
             for i, r in enumerate(rows):
                 bg  = '#ffffff' if i % 2 == 0 else '#f4f4f4'
                 bc  = badge(r['taux'])
-                cc  = rec._CAT_COLORS[i % 4]
+                cc  = '#1a2e5a'
                 bdg = ('<span style="background:{bc};color:white;padding:3px 10px;'
                        'border-radius:12px;font-weight:bold;font-size:12px;">'
                        '{t:.1f}%</span>').format(bc=bc, t=r['taux'])
@@ -2193,29 +2193,22 @@ class PlanActionSmi(models.Model):
 
     @api.model
     def action_open_analyse_efficacite(self):
-        """Ouvre directement le Plan d'Amélioration clôturé le plus récent."""
+        """Ouvre directement le Plan d'Amélioration global le plus récent."""
         plan = self.search([
             ('is_global', '=', True),
-            ('submission_state', '=', 'cloture'),
         ], order='create_date desc', limit=1)
         if not plan:
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': "Analyse d'Efficacité",
-                    'message': "Aucun plan d'amélioration clôturé disponible.",
-                    'type': 'warning',
-                    'sticky': False,
-                },
-            }
+            raise UserError("Aucun plan d'amélioration global disponible.")
+        stored_id = self.env.ref('nc_management.action_analyse_efficacite_form').id
+        view_id = self.env.ref('nc_management.view_plan_smi_form_analyse').id
         return {
+            'id': stored_id,
             'type': 'ir.actions.act_window',
+            'name': "Analyse d'Efficacité",
             'res_model': 'nc_management.plan_action_smi',
             'res_id': plan.id,
             'view_mode': 'form',
-            'view_id': self.env.ref(
-                'nc_management.view_plan_smi_form_analyse').id,
+            'view_id': view_id,
             'target': 'current',
             'flags': {'create': False},
         }

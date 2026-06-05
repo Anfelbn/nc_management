@@ -591,7 +591,16 @@
     </field>
 </record>
 
-<!-- Analyse d'Efficacité — ouvre directement le formulaire du plan clôturé le plus récent -->
+<!-- Action fenêtre stockée pour la vue analyse (nécessaire pour que l'URL garde le contexte au refresh) -->
+<record id="action_analyse_efficacite_form" model="ir.actions.act_window">
+    <field name="name">Analyse d'Efficacité</field>
+    <field name="res_model">nc_management.plan_action_smi</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="view_plan_smi_form_analyse"/>
+    <field name="target">current</field>
+</record>
+
+<!-- Analyse d'Efficacité — ouvre directement le formulaire du plan global le plus récent -->
 <record model="ir.actions.server" id="action_plan_smi_analyse_efficacite">
     <field name="name">Analyse d'Efficacité</field>
     <field name="model_id" ref="model_nc_management_plan_action_smi"/>

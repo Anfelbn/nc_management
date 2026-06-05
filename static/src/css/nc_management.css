@@ -170,6 +170,17 @@ canvas{display:block;width:100%}
 .o_main_navbar {
     background-color: #1a2e5a !important;
 }
+/* Texte blanc pour contrer la règle globale `a { color: #1a2e5a }` */
+.o_main_navbar a,
+.o_main_navbar a:hover,
+.o_main_navbar a:focus,
+.o_main_navbar .o_menu_sections a,
+.o_main_navbar .o_menu_sections a:hover,
+.o_main_navbar .o_menu_sections a:focus,
+.o_main_navbar > a,
+.o_main_navbar > button {
+    color: #fff !important;
+}
 .o_main_navbar > a:hover,
 .o_main_navbar > a:focus,
 .o_main_navbar > button:hover,
@@ -220,9 +231,21 @@ canvas{display:block;width:100%}
     color: #1a2e5a !important;
 }
 
-/* ── Liens ── */
-a { color: #1a2e5a !important; }
-a:hover, a:focus { color: #2563eb !important; }
+/* ── Liens (hors navbar pour ne pas écraser le blanc d'Odoo) ── */
+.o_form_view a,
+.o_list_view a,
+.o_control_panel a,
+.o_breadcrumb a,
+.o_content a {
+    color: #1a2e5a !important;
+}
+.o_form_view a:hover, .o_form_view a:focus,
+.o_list_view a:hover, .o_list_view a:focus,
+.o_control_panel a:hover, .o_control_panel a:focus,
+.o_breadcrumb a:hover, .o_breadcrumb a:focus,
+.o_content a:hover, .o_content a:focus {
+    color: #2563eb !important;
+}
 
 /* ── Focus / outline sur les inputs ── */
 .o_field_widget input:focus,

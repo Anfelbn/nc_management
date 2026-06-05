@@ -10,12 +10,15 @@ class ConsolidateWizardLine(models.TransientModel):
     plan_id       = fields.Many2one('nc_management.plan_action_smi', string='Référence', readonly=True)
     selected      = fields.Boolean(string='Sélectionner', default=False)
 
-    direction_id  = fields.Many2one(related='plan_id.direction_id',  string='Direction',    readonly=True)
-    department_id = fields.Many2one(related='plan_id.department_id', string='Département',  readonly=True)
-    nature        = fields.Selection(related='plan_id.nature',       string='Nature',       readonly=True)
-    responsable_id= fields.Many2one(related='plan_id.responsable_id',string='Responsable',  readonly=True)
-    avancement    = fields.Integer(related='plan_id.avancement',     string='Avancement %', readonly=True)
-    sent_to_rmqse = fields.Boolean(related='plan_id.sent_to_rmqse',  string='Plan reçu',    readonly=True)
+    direction_id   = fields.Many2one(related='plan_id.direction_id',    string='Direction',    readonly=True)
+    department_id  = fields.Many2one(related='plan_id.department_id',  string='Département',  readonly=True)
+    nature         = fields.Selection(related='plan_id.nature',         string='Nature',       readonly=True)
+    responsable_id = fields.Many2one(related='plan_id.responsable_id', string='Responsable',  readonly=True)
+    date_realisation = fields.Date(related='plan_id.date_realisation', string='Date de réalisation', readonly=True)
+    avancement     = fields.Integer(related='plan_id.avancement',       string='Avancement %', readonly=True)
+    efficacite     = fields.Selection(related='plan_id.efficacite',     string='Efficacité',   readonly=True)
+    etat_avancement= fields.Selection(related='plan_id.etat_avancement',string='État',         readonly=True)
+    sent_to_rmqse  = fields.Boolean(related='plan_id.sent_to_rmqse',   string='Plan reçu',    readonly=True)
 
 
 class ConsolidateWizard(models.TransientModel):

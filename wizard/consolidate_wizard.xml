@@ -6,24 +6,23 @@
     <field name="name">nc_management.consolidate_wizard.form</field>
     <field name="model">nc_management.consolidate_wizard</field>
     <field name="arch" type="xml">
-        <form string="Consolider des plans">
+        <form string="Consolider des plans d'action d'améliorations">
             <sheet>
                 <field name="global_plan_id" invisible="1"/>
-                <group>
-                    <p class="oe_grey">
-                        Cochez les plans à intégrer (vos plans + plans reçus non encore intégrés), puis cliquez sur <strong>Consolider</strong>.
-                    </p>
-                </group>
                 <field name="line_ids" nolabel="1">
-                    <tree editable="bottom" create="false" delete="false">
-                        <field name="selected"      string="✓"/>
-                        <field name="plan_id"       string="Référence"/>
-                        <field name="direction_id"  string="Direction"/>
-                        <field name="department_id" string="Département"/>
-                        <field name="nature"        string="Nature"/>
+                    <tree editable="bottom" create="false" delete="false"
+                          class="smi_plan_tree">
+                        <field name="selected"       string="✓"/>
+                        <field name="nature"         string="Nature"/>
+                        <field name="plan_id"        string="Référence"/>
+                        <field name="direction_id"   string="Direction"/>
                         <field name="responsable_id" string="Responsable"/>
-                        <field name="avancement"    string="Avancement %"/>
-                        <field name="sent_to_rmqse" string="Plan reçu"/>
+                        <field name="date_realisation" string="Date de réalisation"/>
+                        <field name="avancement"     string="Avancement %"/>
+                        <field name="efficacite"     string="Efficacité"/>
+                        <field name="etat_avancement" string="État"/>
+                        <field name="sent_to_rmqse"  invisible="1"/>
+                        <field name="department_id"  invisible="1"/>
                     </tree>
                 </field>
             </sheet>
@@ -39,7 +38,7 @@
 </record>
 
 <record id="action_consolidate_wizard" model="ir.actions.act_window">
-    <field name="name">Consolider des plans</field>
+    <field name="name">Consolider des plans d'action d'améliorations</field>
     <field name="res_model">nc_management.consolidate_wizard</field>
     <field name="view_mode">form</field>
     <field name="target">new</field>

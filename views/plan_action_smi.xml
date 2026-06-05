@@ -350,7 +350,7 @@
                                 <field name="name"             string="Référence"/>
                                 <field name="direction_id"     string="Direction"/>
                                 <field name="responsable_id"   string="Responsable"/>
-                                <field name="date_prevue"      string="Date Prévue"/>
+                                <field name="date_realisation" string="Date de réalisation"/>
                                 <field name="avancement"       string="Avancement %"/>
                                 <field name="efficacite"       string="Efficacité"/>
                                 <field name="etat_avancement"  string="État"/>

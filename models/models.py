@@ -1055,7 +1055,8 @@ class PlanActionSmi(models.Model):
         ('amelioration',            'Amélioration'),
         ('nc_reglementaire',        'NC réglementaire'),
     ], string='Nature')
-    fnc_id = fields.Many2one('nc_management.nonconformity', string='Référence')
+    fnc_id = fields.Many2one('nc_management.nonconformity', string='Référence FNC')
+    reference = fields.Char(string='Référence')
     direction_id = fields.Many2one(
         'hr.department',
         domain=[('scaek_level', '=', 'direction')],
@@ -1104,6 +1105,13 @@ class PlanActionSmi(models.Model):
         'hr.employee', string='Responsable',
         context={'no_create': True, 'no_create_edit': True},
         track_visibility='onchange')
+    responsable_ids = fields.Many2many(
+        'hr.employee',
+        'plan_smi_responsable_rel',
+        'plan_id',
+        'employee_id',
+        string='Responsable(s)',
+        context={'no_create': True, 'no_create_edit': True})
     moyens = fields.Char(
         string='Moyens Nécessaires (matériels, financiers, humains)',
         track_visibility='onchange')
@@ -1713,6 +1721,27 @@ class PlanActionSmi(models.Model):
                 'nc_management.smi_action_plan')
             if seq:
                 vals['name'] = seq
+        # Auto-numérotation Plan01-2026 pour les plans individuels (Mes Plans)
+        if (vals.get('name', 'New') == 'New' and
+                not is_global and
+                not vals.get('improvement_plan_id') and
+                not vals.get('direct_global_plan_id')):
+            import re as _re_plan
+            from datetime import date as _date_plan
+            year = _date_plan.today().year
+            existing = self.search([
+                ('is_global', '=', False),
+                ('improvement_plan_id', '=', False),
+                ('direct_global_plan_id', '=', False),
+                ('name', 'like', 'Plan%-' + str(year)),
+            ])
+            _re_p = _re_plan.compile(r'^Plan(\d+)-%d$' % year)
+            max_seq = 0
+            for p in existing:
+                m = _re_p.match(p.name or '')
+                if m:
+                    max_seq = max(max_seq, int(m.group(1)))
+            vals['name'] = 'Plan%02d-%d' % (max_seq + 1, year)
         return super(PlanActionSmi, self).create(vals)
 
     @api.multi

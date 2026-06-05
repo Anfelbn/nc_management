@@ -127,3 +127,46 @@ canvas{display:block;width:100%}
     color: white !important;
     white-space: nowrap !important;
 }
+
+/* ── Avancement — checkboxes carrés horizontaux ── */
+.smi_av_group .o_field_radio {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 28px;
+    padding: 6px 0;
+}
+.smi_av_group .o_field_radio .o_radio_item {
+    display: flex !important;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #1e293b;
+}
+.smi_av_group .o_field_radio input[type="radio"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #1a2e5a;
+    border-radius: 3px;
+    background: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background .15s, border-color .15s;
+    position: relative;
+}
+.smi_av_group .o_field_radio input[type="radio"]:checked {
+    background: #1a2e5a;
+    border-color: #1a2e5a;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolyline points='1.5,5 4,7.5 8.5,2.5' stroke='white' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 10px 10px;
+}
+.smi_av_group .o_field_radio input[type="radio"]:hover:not(:checked) {
+    border-color: #2563eb;
+    background: #eff6ff;
+}

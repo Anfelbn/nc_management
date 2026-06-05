@@ -121,11 +121,216 @@ canvas{display:block;width:100%}
 .nsm-msg-body{font-size:13px;color:#334155;background:#f8fafc;border-radius:9px;padding:10px 13px;border:1px solid #e2e8f0;line-height:1.5;word-break:break-word}
 
 
-/* ── Plans intégrés — en-têtes bleu nuit ── */
+/* ══════════════════════════════════════════════════════════════════
+   COULEUR GLOBALE MODULE — bleu nuit #1a2e5a (remplace mauve Odoo)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Boutons primaires (oe_highlight / btn-primary) ── */
+.btn-primary,
+.btn-primary:focus,
+.oe_highlight {
+    background-color: #1a2e5a !important;
+    border-color:     #1a2e5a !important;
+    color: #fff !important;
+}
+.btn-primary:hover,
+.btn-primary:active,
+.oe_highlight:hover,
+.oe_highlight:active {
+    background-color: #253f7a !important;
+    border-color:     #253f7a !important;
+    color: #fff !important;
+}
+
+/* ── Barre d'état (statusbar) ── */
+/* État courant : .btn-primary.disabled = texte mauve → bleu nuit */
+.o_form_statusbar .o_statusbar_status .o_arrow_button.btn-primary.disabled {
+    color: #1a2e5a !important;
+    background-color: #f0f4ff !important;
+}
+/* Flèche de l'état courant */
+.o_form_statusbar .o_statusbar_status .o_arrow_button.btn-primary.disabled:before {
+    border-left-color: #e8edf5 !important;
+}
+.o_form_statusbar .o_statusbar_status .o_arrow_button.btn-primary.disabled:after {
+    border-left-color: #f0f4ff !important;
+}
+/* Hover sur les états cliquables */
+.o_form_statusbar .o_statusbar_status .o_arrow_button:not(.disabled):hover,
+.o_form_statusbar .o_statusbar_status .o_arrow_button:not(.disabled):focus {
+    color: #1a2e5a !important;
+    background-color: #e8edf5 !important;
+}
+.o_form_statusbar .o_statusbar_status .o_arrow_button:not(.disabled):hover:after,
+.o_form_statusbar .o_statusbar_status .o_arrow_button:not(.disabled):focus:after {
+    border-left-color: #e8edf5 !important;
+}
+
+/* ── Barre de navigation principale (navbar) ── */
+.o_main_navbar {
+    background-color: #1a2e5a !important;
+}
+.o_main_navbar > a:hover,
+.o_main_navbar > a:focus,
+.o_main_navbar > button:hover,
+.o_main_navbar > button:focus,
+.o_main_navbar .open .dropdown-toggle {
+    background-color: #253f7a !important;
+}
+
+/* ── Dropdown du menu principal (Plan Action SMI → sous-menus) ── */
+.o_main_navbar .open .dropdown-menu > li > a {
+    background-color: #1a2e5a !important;
+    color: #fff !important;
+}
+.o_main_navbar .open .dropdown-menu > li > a:hover,
+.o_main_navbar .open .dropdown-menu > li > a:focus {
+    background-color: #253f7a !important;
+    color: #fff !important;
+}
+.o_main_navbar .open .dropdown-menu > li > a.dropdown-toggle {
+    background-color: #2a3f6a !important;
+    pointer-events: none;
+}
+
+/* ── Items de menu actifs et hover ── */
+.o_menu_sections > li.active > a,
+.o_menu_sections > li > a:hover,
+.o_menu_sections > li > a:focus,
+.o_menu_sections .o_nav_entry:hover,
+.o_menu_sections .o_nav_entry.active,
+.o_menu_sections .o_menu_entry:hover,
+.o_menu_sections .o_menu_entry.active,
+.o_menu_sections a.active,
+.o_menu_sections a:hover {
+    color: #fff !important;
+    background-color: #253f7a !important;
+}
+
+/* ── Extra menu items overflow ── */
+.o_main_navbar .o_extra_menu_items.open > ul > li > a {
+    background-color: #1a2e5a !important;
+    color: #fff !important;
+    border-bottom-color: #253f7a !important;
+}
+
+/* ── Pager ── */
+.o_pager .o_pager_value,
+.o_pager button:hover {
+    color: #1a2e5a !important;
+}
+
+/* ── Liens ── */
+a { color: #1a2e5a !important; }
+a:hover, a:focus { color: #2563eb !important; }
+
+/* ── Focus / outline sur les inputs ── */
+.o_field_widget input:focus,
+.o_field_widget textarea:focus,
+.o_field_widget select:focus,
+input.o_input:focus,
+textarea.o_input:focus {
+    border-color: #1a2e5a !important;
+    box-shadow: 0 0 0 2px rgba(26,46,90,.15) !important;
+    outline: none !important;
+}
+
+/* ── Dropdown actif (component-active-color = #7c7bad) ── */
+.dropdown-menu > li.active > a,
+.dropdown-menu > li.active > a:hover,
+.dropdown-menu > li.active > a:focus,
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus {
+    background-color: #1a2e5a !important;
+    color: #fff !important;
+}
+
+/* ── Nav pills actives ── */
+.nav-pills > li.active > a,
+.nav-pills > li.active > a:hover,
+.nav-pills > li.active > a:focus {
+    background-color: #1a2e5a !important;
+    color: #fff !important;
+}
+
+/* ── Pagination ── */
+.pagination > li.active > a,
+.pagination > li.active > span {
+    background-color: #1a2e5a !important;
+    border-color: #1a2e5a !important;
+    color: #fff !important;
+}
+.pagination > li > a:hover,
+.pagination > li > span:hover {
+    color: #1a2e5a !important;
+}
+
+/* ── Labels Bootstrap ── */
+.label-primary { background-color: #1a2e5a !important; }
+
+/* ── Panel primary ── */
+.panel-primary > .panel-heading {
+    background-color: #1a2e5a !important;
+    border-color: #1a2e5a !important;
+}
+.panel-primary { border-color: #1a2e5a !important; }
+
+/* ── Select2 (champs Many2one) ── */
+.select2-container-active .select2-choice,
+.select2-container-multi.select2-container-active .select2-choices,
+.select2-drop-active {
+    border-color: #1a2e5a !important;
+}
+.select2-results .select2-highlighted {
+    background: #1a2e5a !important;
+    color: #fff !important;
+}
+
+/* ── Badges many2many_tags ── */
+.badge.badge-pill,
+.o_field_many2manytags .badge,
+.o_tag {
+    background-color: #1a2e5a !important;
+    border-color:     #1a2e5a !important;
+    color: #fff !important;
+}
+
+/* ── Cases à cocher Odoo ── */
+.o_field_boolean input[type="checkbox"]:checked + span,
+.o_list_view .o_field_boolean input[type="checkbox"]:checked + span {
+    background-color: #1a2e5a !important;
+    border-color:     #1a2e5a !important;
+}
+
+/* ── Progress bar ── */
+.progress-bar,
+.o_progressbar_value {
+    background-color: #1a2e5a !important;
+}
+
+/* ── Breadcrumb — élément actif ── */
+.o_control_panel .breadcrumb-item.active,
+.o_control_panel .breadcrumb-item a {
+    color: #1a2e5a !important;
+}
+
+/* ── Sélection de lignes liste ── */
+.o_list_view tbody tr.o_data_row.o_row_handle:hover,
+.o_list_view tbody tr.o_selected_row {
+    background-color: rgba(26,46,90,.06) !important;
+}
+
+/* ── En-têtes bleu nuit — FNC, FAC et Plans SMI ── */
+.nc_list_tree thead th,
 .smi_plan_tree thead th {
     background-color: #1a2e5a !important;
-    color: white !important;
+    color: #fff !important;
     white-space: nowrap !important;
+}
+
+/* ── Icône de filtre dans les en-têtes Plans SMI ── */
+.smi_plan_tree thead th .smi-flt-icon {
+    background: #2563eb !important;
 }
 
 /* ── Avancement — checkboxes carrés horizontaux ── */

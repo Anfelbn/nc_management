@@ -1039,7 +1039,8 @@ class PlanActionSmi(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string='Référence', required=True, copy=False,
-                       readonly=True, default='New')
+                       readonly=True, default='New',
+                       track_visibility='onchange')
     nature = fields.Selection([
         ('nc_produit',              'NC Produit'),
         ('reclamation_pi',          'Réclamation Client ou PI'),
@@ -1285,17 +1286,10 @@ class PlanActionSmi(models.Model):
 
     _BASE_SMI_RE = None  # lazy init
 
-    @api.depends('name', 'version_number', 'is_global')
+    @api.depends('name', 'is_global')
     def _compute_name_display(self):
-        import re
-        _re = re.compile(r'^(SMI-\d{2}-\d{4})(?:-\d+)?$')
         for rec in self:
-            if rec.is_global and rec.name and rec.name != 'New':
-                m = _re.match(rec.name)
-                base = m.group(1) if m else rec.name
-                rec.name_display = '%s-V%d' % (base, rec.version_number or 1)
-            else:
-                rec.name_display = rec.name or 'New'
+            rec.name_display = rec.name or 'New'
 
     # ── Traçabilité historique (vue à une date donnée) ────────────
     date_consultation = fields.Date(
@@ -1346,15 +1340,6 @@ class PlanActionSmi(models.Model):
                     fields.Date.from_string(str(rec.date_consultation)),
                     _dt.max.time()))
 
-            plans = rec.child_plan_ids.filtered(
-                lambda p: p.create_date and p.create_date <= date_limit)
-
-            if not plans:
-                rec.historique_html = (
-                    '<p style="color:#888;padding:16px;">'
-                    "Aucun plan n'existait à cette date.</p>")
-                continue
-
             def _val(res_id, field_name, default):
                 tracking = self.env['mail.tracking.value'].sudo().search([
                     ('mail_message_id.res_id',  '=', res_id),
@@ -1367,6 +1352,24 @@ class PlanActionSmi(models.Model):
                 if field_name == 'avancement':
                     return tracking.new_value_integer
                 return tracking.new_value_char or default
+
+            # Inclure uniquement les plans qui étaient déjà intégrés à cette date.
+            # submission_state est tracké : le dernier enregistrement ≤ date_limit
+            # donne l'état réel à cette date. Si aucun enregistrement → le plan
+            # n'avait pas encore changé d'état depuis sa création (brouillon).
+            plans = rec.env['nc_management.plan_action_smi'].browse()
+            for p in rec.child_plan_ids:
+                if not p.create_date or p.create_date > date_limit:
+                    continue
+                hist_sub = _val(p.id, 'submission_state', None)
+                if hist_sub == 'integre':
+                    plans |= p
+
+            if not plans:
+                rec.historique_html = (
+                    '<p style="color:#888;padding:16px;">'
+                    "Aucun plan n'était intégré à cette date.</p>")
+                continue
 
             nature_sel = rec._fields['nature'].selection
             nature_labels = dict(
@@ -1433,8 +1436,11 @@ class PlanActionSmi(models.Model):
             ).format(date=consul_str, thead=thead, rows=rows)
 
     @api.depends('child_plan_ids.nature', 'child_plan_ids.efficacite',
-                 'child_plan_ids.avancement', 'is_global', 'submission_state')
+                 'child_plan_ids.avancement', 'is_global', 'submission_state',
+                 'date_consultation')
     def _compute_analyse_html(self):
+        from datetime import datetime as _dt
+
         def badge(t):
             if t > 80: return '#1fa255'
             if t >= 50: return '#cc8800'
@@ -1453,6 +1459,29 @@ class PlanActionSmi(models.Model):
                     'Aucune donnée disponible.</p>')
                 continue
 
+            # Reconstruction historique si une date est sélectionnée
+            date_limit = None
+            if rec.date_consultation:
+                date_limit = fields.Datetime.to_string(
+                    _dt.combine(
+                        fields.Date.from_string(str(rec.date_consultation)),
+                        _dt.max.time()))
+                children = children.filtered(
+                    lambda p: p.create_date and p.create_date <= date_limit)
+
+            def _hist_val(plan_id, field_name, default, is_int=False):
+                if not date_limit:
+                    return default
+                tracking = self.env['mail.tracking.value'].sudo().search([
+                    ('mail_message_id.res_id', '=', plan_id),
+                    ('mail_message_id.model', '=', 'nc_management.plan_action_smi'),
+                    ('field', '=', field_name),
+                    ('mail_message_id.date', '<=', date_limit),
+                ], order='id desc', limit=1)
+                if not tracking:
+                    return default
+                return tracking.new_value_integer if is_int else (tracking.new_value_char or default)
+
             # Toutes les natures de la sélection, même celles à zéro
             sel = rec._fields['nature'].selection
             nature_labels = dict(sel if not callable(sel) else sel(rec))
@@ -1462,11 +1491,11 @@ class PlanActionSmi(models.Model):
             for nat in all_natures:
                 cat   = children.filtered(lambda p: p.nature == nat)
                 total = len(cat)
-                eff   = sum(1 for p in cat if p.efficacite == 'oui')
-                neff  = sum(1 for p in cat if p.efficacite == 'non')
-                r100  = sum(1 for p in cat if p.avancement == 100)
-                r50p  = sum(1 for p in cat if 50 < p.avancement < 100)
-                r50m  = sum(1 for p in cat if p.avancement <= 50)
+                eff   = sum(1 for p in cat if _hist_val(p.id, 'efficacite', p.efficacite) == 'oui')
+                neff  = sum(1 for p in cat if _hist_val(p.id, 'efficacite', p.efficacite) == 'non')
+                r100  = sum(1 for p in cat if _hist_val(p.id, 'avancement', p.avancement, is_int=True) == 100)
+                r50p  = sum(1 for p in cat if 50 < _hist_val(p.id, 'avancement', p.avancement, is_int=True) < 100)
+                r50m  = sum(1 for p in cat if _hist_val(p.id, 'avancement', p.avancement, is_int=True) <= 50)
                 taux  = round(eff / total * 100, 1) if total else 0.0
                 rows.append(dict(nat=nat, label=nature_labels.get(nat, nat),
                                  total=total, eff=eff, neff=neff,
@@ -1654,6 +1683,7 @@ class PlanActionSmi(models.Model):
     def create(self, vals):
         is_global = vals.get('is_global') or self._context.get('default_is_global')
         if vals.get('name', 'New') == 'New' and is_global:
+            import re as _re_create
             from datetime import date as _date
             if is_global and 'is_global' not in vals:
                 vals['is_global'] = True
@@ -1663,13 +1693,17 @@ class PlanActionSmi(models.Model):
                     date_ref = _date(*[int(x) for x in date_ref[:10].split('-')])
             else:
                 date_ref = _date.today()
-            base = 'SMI-%02d-%04d' % (date_ref.month, date_ref.year)
-            ref = base
-            counter = 2
-            while self.search([('is_global', '=', True), ('name', '=', ref)], limit=1):
-                ref = '%s-%d' % (base, counter)
-                counter += 1
-            vals['name'] = ref
+            year = date_ref.year
+            # Trouver le plus grand numéro séquentiel existant pour cette année
+            existing = self.search([('is_global', '=', True),
+                                    ('name', 'like', '-%d' % year)])
+            _re_seq = _re_create.compile(r'^SMI(\d+)-%d$' % year)
+            max_seq = 0
+            for p in existing:
+                m = _re_seq.match(p.name or '')
+                if m:
+                    max_seq = max(max_seq, int(m.group(1)))
+            vals['name'] = 'SMI%02d-%d' % (max_seq + 1, year)
         # Nouveau cycle de vie : plans liés à un Plan d'Amélioration (niveau 2)
         if (vals.get('improvement_plan_id') or
                 vals.get('direct_global_plan_id')):
@@ -1887,7 +1921,6 @@ class PlanActionSmi(models.Model):
                     for plan in plans_amelioration:
                         plan.with_context(_skip_date_maj=True).write({
                             'date_maj': fields.Datetime.now(),
-                            'version_number': (plan.version_number or 1) + 1,
                         })
                 parents = self.filtered(
                     lambda r: not r.is_global and r.global_plan_id
@@ -2027,18 +2060,10 @@ class PlanActionSmi(models.Model):
 
     @api.multi
     def action_retour_actuel_plan(self):
-        """Efface la date de consultation pour revenir à l'état en temps réel."""
+        """Efface date_consultation sur ce plan et revient au plan actif courant."""
         self.ensure_one()
         self.with_context(_skip_date_maj=True).write({'date_consultation': False})
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'nc_management.plan_action_smi',
-            'res_id': self.id,
-            'view_mode': 'form',
-            'view_id': self.env.ref(
-                'nc_management.view_plan_smi_form_global').id,
-            'target': 'current',
-        }
+        return self.env['nc_management.plan_action_smi'].action_open_global_plan()
 
     @api.multi
     def action_cloturer_plan(self):
@@ -2047,6 +2072,18 @@ class PlanActionSmi(models.Model):
         self.ensure_one()
         if self.submission_state == 'cloture':
             raise UserError("Ce Plan d'Amélioration est déjà clôturé.")
+
+        if self.mois_reception:
+            from dateutil.relativedelta import relativedelta as _rd
+            from datetime import date as _date_cls
+            date_creation = fields.Date.from_string(str(self.mois_reception))
+            date_min = date_creation + _rd(months=3)
+            if _date_cls.today() < date_min:
+                raise UserError(
+                    "Ce Plan d'Amélioration ne peut être clôturé qu'au moins "
+                    "3 mois après sa date de création.\n"
+                    "Date minimale de clôture : %s"
+                    % date_min.strftime('%d/%m/%Y'))
 
         cutoff = self.date_maj or self.create_date
 
@@ -2113,12 +2150,77 @@ class PlanActionSmi(models.Model):
             })
         return {
             'type': 'ir.actions.act_window',
+            'name': "Plan d'Action d'Amélioration SMI",
             'res_model': 'nc_management.plan_action_smi',
             'res_id': plan.id,
             'view_mode': 'form',
             'view_id': self.env.ref(
                 'nc_management.view_plan_smi_form_global').id,
             'target': 'current',
+            'context': {'default_is_global': True},
+        }
+
+    @api.model
+    def action_open_analyse_efficacite(self):
+        """Ouvre directement le Plan d'Amélioration clôturé le plus récent."""
+        plan = self.search([
+            ('is_global', '=', True),
+            ('submission_state', '=', 'cloture'),
+        ], order='create_date desc', limit=1)
+        if not plan:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': "Analyse d'Efficacité",
+                    'message': "Aucun plan d'amélioration clôturé disponible.",
+                    'type': 'warning',
+                    'sticky': False,
+                },
+            }
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'nc_management.plan_action_smi',
+            'res_id': plan.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_plan_smi_form_analyse').id,
+            'target': 'current',
+            'flags': {'create': False},
+        }
+
+    @api.multi
+    def action_open_analyser_wizard(self):
+        """Ouvre le popup de sélection de date pour analyser l'efficacité à une date passée."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Analyser l'efficacité à une date",
+            'res_model': 'nc_management.consulter_version_wizard',
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_analyser_efficacite_wizard_form').id,
+            'target': 'new',
+            'context': {
+                'default_plan_id': self.id,
+                'default_return_view_ref': 'nc_management.view_plan_smi_form_analyse',
+            },
+        }
+
+    @api.multi
+    def action_retour_analyse_actuelle(self):
+        """Efface la date de consultation et revient à l'analyse en temps réel."""
+        self.ensure_one()
+        self.with_context(_skip_date_maj=True).write({'date_consultation': False})
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'nc_management.plan_action_smi',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'nc_management.view_plan_smi_form_analyse').id,
+            'target': 'current',
+            'flags': {'create': False},
         }
 
     @api.model
@@ -2127,29 +2229,25 @@ class PlanActionSmi(models.Model):
         from dateutil.relativedelta import relativedelta
 
         today = _date.today()
-        first_of_current = today.replace(day=1)
-        first_of_last = first_of_current - relativedelta(months=1)
-        ref = 'SMI-%02d-%04d' % (first_of_last.month, first_of_last.year)
 
-        if self.search([('is_global', '=', True), ('name', '=', ref)], limit=1):
+        # Ne créer un nouveau plan que s'il n'y a aucun plan actif (non clôturé)
+        if self.search([('is_global', '=', True),
+                        ('submission_state', '!=', 'cloture')], limit=1):
             return True
 
         submitted = self.search([
             ('submission_state', '=', 'soumis'),
             ('is_global', '=', False),
-            ('mois_reception', '>=', first_of_last.strftime('%Y-%m-%d')),
-            ('mois_reception', '<',  first_of_current.strftime('%Y-%m-%d')),
+            ('global_plan_id', '=', False),
         ])
         if not submitted:
             return True
 
         global_plan = self.create({
-            'name': ref,
+            'name': 'New',
             'is_global': True,
-            'mois_reception': first_of_last.strftime('%Y-%m-%d'),
+            'mois_reception': today.strftime('%Y-%m-%d'),
             'submission_state': 'brouillon',
-            'description': 'Plan Global consolidé — %02d/%04d' % (
-                first_of_last.month, first_of_last.year),
         })
         submitted.write({
             'global_plan_id': global_plan.id,

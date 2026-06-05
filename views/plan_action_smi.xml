@@ -323,27 +323,21 @@
                 </div>
 
                 <div class="oe_title">
-                    <div style="display:flex;align-items:baseline;gap:24px;flex-wrap:wrap;">
-                        <h1 style="margin:0;">
-                            <field name="name_display" readonly="1"/>
-                        </h1>
-                        <h4 style="margin:0;color:#6c757d;font-weight:normal;font-size:14px;">
-                            Date de création :
-                            <field name="mois_reception" readonly="1" nolabel="1"/>
-                        </h4>
-                    </div>
+                    <h1 style="margin:0;">
+                        <field name="name_display" readonly="1"/>
+                    </h1>
                 </div>
 
                 <group string="Synthèse">
                     <group>
-                        <field name="date_maj"          string="Dernière mise à jour"
-                               readonly="1"/>
+                        <field name="mois_reception"    string="Date de création"/>
                         <field name="nb_plans_integres" string="Plans intégrés"/>
                         <field name="nb_realises"       string="Plans réalisés"/>
                         <field name="nb_en_cours"       string="Plans en cours"/>
                         <field name="nb_non_realises"   string="Plans non réalisés"/>
                     </group>
                     <group>
+                        <field name="date_maj"          string="Dernière mise à jour" readonly="1"/>
                         <field name="avancement_global" string="Taux d'avancement %"/>
                         <field name="taux_realisation"  string="Taux de réalisation %"/>
                         <field name="taux_efficacite"   string="Taux d'efficacité %"/>
@@ -575,6 +569,20 @@
     <field name="priority">18</field>
     <field name="arch" type="xml">
         <form string="Analyse Efficacité Globale" edit="false">
+            <header>
+                <!-- Champ technique requis par attrs -->
+                <field name="date_consultation" invisible="1"/>
+
+                <button name="action_open_analyser_wizard"
+                        string="Analyser"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('date_consultation', '!=', False)]}"/>
+                <button name="action_retour_analyse_actuelle"
+                        string="&#8592; Analyse actuelle"
+                        type="object"
+                        attrs="{'invisible': [('date_consultation', '=', False)]}"/>
+            </header>
             <sheet>
                 <div class="oe_title">
                     <h2>Analyse Efficacité Globale</h2>
@@ -583,16 +591,12 @@
                     </h4>
                 </div>
 
-                <group>
-                    <group>
-                        <field name="mois_reception"    string="Période"         readonly="1"/>
-                        <field name="date_maj"          string="Date de clôture" readonly="1"/>
-                    </group>
-                    <group>
-                        <field name="nb_plans_integres" string="Plans intégrés"  readonly="1"/>
-                        <field name="avancement_global" string="Avancement %"    readonly="1"/>
-                    </group>
-                </group>
+                <!-- Bandeau vue historique active -->
+                <div class="alert alert-warning"
+                     attrs="{'invisible': [('date_consultation', '=', False)]}">
+                    <strong>&#9888; Vue historique active.</strong>
+                    Cliquez sur <em>« ← Analyse actuelle »</em> pour revenir à l'analyse en temps réel.
+                </div>
 
                 <field name="analyse_html" widget="html" readonly="1" nolabel="1"/>
             </sheet>
@@ -600,16 +604,12 @@
     </field>
 </record>
 
-<!-- Analyse d'Efficacité — liste + formulaire (clic sur ligne ouvre l'analyse) -->
-<record model="ir.actions.act_window" id="action_plan_smi_analyse_efficacite">
-    <field name="name">Analyses d'Efficacité</field>
-    <field name="res_model">nc_management.plan_action_smi</field>
-    <field name="view_mode">tree,form</field>
-    <field name="domain">[('is_global', '=', True), ('submission_state', '=', 'cloture')]</field>
-    <field name="context">{'no_import': True}</field>
-    <field name="view_ids" eval="[(5, 0, 0),
-        (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_analyses')}),
-        (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form_analyse')})]"/>
+<!-- Analyse d'Efficacité — ouvre directement le formulaire du plan clôturé le plus récent -->
+<record model="ir.actions.server" id="action_plan_smi_analyse_efficacite">
+    <field name="name">Analyse d'Efficacité</field>
+    <field name="model_id" ref="model_nc_management_plan_action_smi"/>
+    <field name="state">code</field>
+    <field name="code">action = env['nc_management.plan_action_smi'].action_open_analyse_efficacite()</field>
 </record>
 
 <!-- ============================================================ -->

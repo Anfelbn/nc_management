@@ -52,10 +52,11 @@ class ConsolidateWizard(models.TransientModel):
         })
         return {
             'type': 'ir.actions.act_window',
+            'name': "Plan d'Action d'Amélioration SMI",
             'res_model': 'nc_management.plan_action_smi',
             'res_id': self.global_plan_id.id,
             'view_mode': 'form',
             'view_id': self.env.ref('nc_management.view_plan_smi_form_global').id,
             'target': 'current',
-            'context': {'form_view_initial_mode': 'edit'},
+            'context': {'default_is_global': True},
         }

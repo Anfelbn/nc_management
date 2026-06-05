@@ -24,5 +24,29 @@
     </field>
 </record>
 
+
+<record id="view_analyser_efficacite_wizard_form" model="ir.ui.view">
+    <field name="name">nc_management.analyser_efficacite_wizard.form</field>
+    <field name="model">nc_management.consulter_version_wizard</field>
+    <field name="arch" type="xml">
+        <form string="Analyser l'efficacité à une date">
+            <sheet>
+                <field name="plan_id"         invisible="1"/>
+                <field name="return_view_ref" invisible="1"/>
+                <group>
+                    <field name="date_consultation" string="Date à analyser"/>
+                </group>
+            </sheet>
+            <footer>
+                <button name="action_consulter"
+                        string="Analyser"
+                        type="object"
+                        class="oe_highlight"/>
+                <button string="Annuler" class="oe_link" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
 </data>
 </odoo>

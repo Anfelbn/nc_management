@@ -35,6 +35,9 @@
                         string="Consolider"
                         type="object"
                         class="oe_highlight"/>
+                <button name="action_open_new_plan"
+                        string="Ajouter un plan"
+                        type="object"/>
                 <button string="Annuler" class="oe_link" special="cancel"/>
             </footer>
         </form>

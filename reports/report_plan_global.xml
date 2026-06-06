@@ -10,7 +10,7 @@
         name="nc_management.report_analyse_efficacite_template"
         file="nc_management.report_analyse_efficacite_template"
         attachment_use="False"
-        menu="True"
+        menu="False"
     />
 
     <record id="action_server_print_analyse_efficacite" model="ir.actions.server">

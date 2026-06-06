@@ -9,7 +9,7 @@
     <field name="name">nc_management.smi_improvement_plan.tree</field>
     <field name="model">nc_management.smi_improvement_plan</field>
     <field name="arch" type="xml">
-        <tree string="Plans d'Action d'Amélioration SMI" import="false"
+        <tree string="Plans d'Action d'Amélioration SMI" import="false" delete="false"
               decoration-info="state == 'brouillon'"
               decoration-success="state == 'soumis'">
             <field name="name"            string="Référence"/>
@@ -34,7 +34,7 @@
     <field name="name">nc_management.smi_improvement_plan.form</field>
     <field name="model">nc_management.smi_improvement_plan</field>
     <field name="arch" type="xml">
-        <form string="Plan d'Action d'Amélioration SMI">
+        <form string="Plan d'Action d'Amélioration SMI" create="false">
             <header>
                 <button name="action_consolider"
                         string="Consolider"
@@ -59,9 +59,6 @@
                         type="object"
                         class="btn-warning"
                         attrs="{'invisible': [('date_consultation', '=', False)]}"/>
-                <field name="state" widget="statusbar"
-                       statusbar_visible="brouillon,soumis"
-                       readonly="1"/>
             </header>
             <sheet>
                 <field name="date_consultation" invisible="1"/>
@@ -88,7 +85,8 @@
                 <!-- Synthèse — même layout que la RMQSE -->
                 <group string="Synthèse">
                     <group>
-                        <field name="create_date"      string="Date de création" readonly="1"/>
+                        <field name="date_ouverture"   string="Date de création"
+                               attrs="{'readonly': [('state', '!=', 'brouillon')]}"/>
                         <field name="nb_plans"         string="Plans intégrés"/>
                         <field name="nb_realises"      string="Plans réalisés"/>
                         <field name="nb_en_cours"      string="Plans en cours"/>
@@ -120,7 +118,8 @@
                                   decoration-warning="etat_avancement == 'en_cours'"
                                   decoration-danger="is_late == True">
                                 <field name="nature"           string="Nature"/>
-                                <field name="name"             string="Référence" readonly="1"/>
+                                <field name="name"             invisible="1"/>
+                                <field name="reference"        string="Référence"/>
                                 <field name="responsable_id"   string="Responsable"
                                        options="{'no_create': True}"/>
                                 <field name="date_realisation" string="Date de réalisation"/>
@@ -194,6 +193,37 @@
                 'view_id': ref('view_smi_improvement_plan_form')})]"/>
     <field name="search_view_id"
            ref="view_smi_improvement_plan_search"/>
+</record>
+
+<!-- ============================================================ -->
+<!--  ACTIONS LIÉES AU MODÈLE (Action ▼ dans le control panel)    -->
+<!-- ============================================================ -->
+
+<record id="action_server_print_improvement_plan" model="ir.actions.server">
+    <field name="name">Imprimer</field>
+    <field name="model_id" ref="model_nc_management_smi_improvement_plan"/>
+    <field name="binding_model_id" ref="model_nc_management_smi_improvement_plan"/>
+    <field name="state">code</field>
+    <field name="code">
+if records:
+    action = {
+        'type': 'ir.actions.report.xml',
+        'report_name': 'nc_management.report_smi_improvement_plan_template',
+        'report_type': 'qweb-pdf',
+        'context': env.context,
+    }
+    </field>
+</record>
+
+<record id="action_server_delete_improvement_plan" model="ir.actions.server">
+    <field name="name">Supprimer</field>
+    <field name="model_id" ref="model_nc_management_smi_improvement_plan"/>
+    <field name="binding_model_id" ref="model_nc_management_smi_improvement_plan"/>
+    <field name="state">code</field>
+    <field name="code">
+if records:
+    records.action_supprimer_plan()
+    </field>
 </record>
 
 <!-- ============================================================ -->

@@ -270,7 +270,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">16</field>
     <field name="arch" type="xml">
-        <form string="Plan d'Action d'Amélioration SMI">
+        <form string="Plan d'Action d'Amélioration SMI" create="false">
             <header>
                 <button name="action_consolider_tous"
                         string="Consolider"
@@ -317,7 +317,8 @@
 
                 <group string="Synthèse">
                     <group>
-                        <field name="mois_reception"    string="Date de création" readonly="1"/>
+                        <field name="mois_reception"    string="Date de création"
+                               attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"/>
                         <field name="nb_plans_integres" string="Plans intégrés"/>
                         <field name="nb_realises"       string="Plans réalisés"/>
                         <field name="nb_en_cours"       string="Plans en cours"/>
@@ -339,7 +340,6 @@
                 <!-- Liste en temps réel : masquée en vue historique -->
                 <notebook attrs="{'invisible': [('date_consultation', '!=', False)]}">
                     <page string="Plans intégrés">
-
                         <field name="child_plan_ids" readonly="1" nolabel="1">
                             <tree string="Plans intégrés" import="false"
                                   class="smi_plan_tree"
@@ -657,6 +657,18 @@
     action="action_plan_smi_analyse_efficacite"
     groups="nc_management.group_responsable_qualite"
     sequence="3"/>
+
+<!-- Action "Supprimer" liée au modèle plan_action_smi (Action ▼ global plan) -->
+<record id="action_server_delete_global_plan" model="ir.actions.server">
+    <field name="name">Supprimer</field>
+    <field name="model_id" ref="model_nc_management_plan_action_smi"/>
+    <field name="binding_model_id" ref="model_nc_management_plan_action_smi"/>
+    <field name="state">code</field>
+    <field name="code">
+if records:
+    records.action_supprimer_plan()
+    </field>
+</record>
 
 </data>
 </odoo>

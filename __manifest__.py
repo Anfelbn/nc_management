@@ -33,6 +33,7 @@
         'reports/report_fac.xml',
         'reports/report_revision.xml',
         'reports/report_plan_global.xml',
+        'reports/report_smi_improvement_plan.xml',
         'reports/report_template_preview.xml',
         'views/assets.xml',
         'views/views.xml',

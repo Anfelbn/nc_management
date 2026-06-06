@@ -10,7 +10,7 @@
             <sheet>
                 <field name="improvement_plan_id" invisible="1"/>
                 <group>
-                    <field name="date_consultation" string="Date à consulter"/>
+                    <field name="date_consultation" string="Date à consulter" required="1"/>
                 </group>
             </sheet>
             <footer>

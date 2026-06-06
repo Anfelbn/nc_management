@@ -61,6 +61,10 @@ class SmiImprovementPlan(models.Model):
     taux_efficacite = fields.Integer(
         string="Taux d'efficacité (%)", compute='_compute_stats', store=True)
 
+    # ── Date de création (automatique, non modifiable) ───────────
+    date_ouverture = fields.Date(
+        string='Date de création')
+
     # ── Consultation historique ───────────────────────────────────
     date_consultation = fields.Date(
         string="Voir l'état à la date")
@@ -128,11 +132,30 @@ class SmiImprovementPlan(models.Model):
             efficaces = sum(1 for p in plans if p.efficacite == 'oui')
             rec.taux_efficacite = int(efficaces / nb * 100) if nb else 0
 
+    @api.multi
+    def copy(self, default=None):
+        raise UserError("La duplication d'un plan d'amélioration n'est pas autorisée.")
+
+    @api.multi
+    def action_print_plan(self):
+        self.ensure_one()
+        return self.env.ref(
+            'nc_management.action_report_smi_improvement_plan'
+        ).report_action(self)
+
+    @api.multi
+    def action_supprimer_plan(self):
+        self.ensure_one()
+        if self.state != 'brouillon':
+            raise UserError("Impossible de supprimer un plan déjà soumis.")
+        self.unlink()
+        return {'type': 'ir.actions.act_window_close'}
+
     @api.model
     def create(self, vals):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code(
-                'nc_management.smi_improvement_plan') or 'New'
+                'nc_management.paa_user_improvement_plan') or 'New'
         return super(SmiImprovementPlan, self).create(vals)
 
     @api.depends('date_consultation', 'plan_ids')
@@ -264,15 +287,36 @@ class SmiImprovementPlan(models.Model):
         }
 
     @api.multi
+    def action_open_new_plan_form(self):
+        self.ensure_one()
+        view_id = self.env.ref('nc_management.view_plan_smi_form').id
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Nouveau plan d'action",
+            'res_model': 'nc_management.plan_action_smi',
+            'view_mode': 'form',
+            'views': [[view_id, 'form']],
+            'target': 'new',
+            'context': {
+                'default_improvement_plan_id': self.id,
+            },
+        }
+
+    @api.multi
     def action_retour_actuel(self):
         self.ensure_one()
         self.write({'date_consultation': False})
-        return {
+        inner_action = {
             'type': 'ir.actions.act_window',
             'res_model': self._name,
             'res_id': self.id,
             'views': [[False, 'form']],
             'target': 'current',
+        }
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'nc_management.clear_and_navigate',
+            'params': {'inner_action': inner_action},
         }
 
     @api.multi
@@ -315,6 +359,9 @@ class SmiImprovementPlan(models.Model):
         if not self.plan_ids:
             raise UserError(
                 "Ajoutez au moins un plan d'action avant de soumettre.")
+        if not self.date_ouverture:
+            raise UserError(
+                "La Date de création est obligatoire avant d'envoyer.")
         if not self.direction_id:
             raise UserError(
                 "La Direction est obligatoire avant de soumettre.")
@@ -335,7 +382,7 @@ class SmiImprovementPlan(models.Model):
         self.write({'global_plan_id': global_plan.id})
 
         # Auto-consolider les plans dans le plan RMQSE (is_global=True) en cours
-        rmqse_plan = self.env['nc_management.plan_action_smi'].search([
+        rmqse_plan = self.env['nc_management.plan_action_smi'].sudo().search([
             ('is_global', '=', True),
             ('submission_state', '!=', 'cloture'),
         ], order='create_date desc', limit=1)
@@ -411,7 +458,7 @@ class SmiImprovementPlan(models.Model):
         plan = self.search([('create_uid', '=', self.env.uid)], limit=1)
         if not plan:
             plan = self.create({})
-        return {
+        inner_action = {
             'type': 'ir.actions.act_window',
             'res_model': self._name,
             'res_id': plan.id,
@@ -419,6 +466,11 @@ class SmiImprovementPlan(models.Model):
             'view_mode': 'form',
             'target': 'current',
             'flags': {'initial_mode': 'edit'},
+        }
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'nc_management.clear_and_navigate',
+            'params': {'inner_action': inner_action},
         }
 
     @api.onchange('direction_id')

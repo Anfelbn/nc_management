@@ -2054,6 +2054,9 @@ class PlanActionSmi(models.Model):
         plans = self.env['nc_management.plan_action_smi'].search([
             ('is_global', '=', False),
             ('global_plan_id', '=', False),
+            '|',
+            ('create_uid', '=', self.env.uid),
+            ('sent_to_rmqse', '=', True),
         ])
         wizard = self.env['nc_management.consolidate_wizard'].create({
             'global_plan_id': self.id,

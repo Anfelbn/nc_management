@@ -6,7 +6,8 @@ class ConsulterVersionWizard(models.TransientModel):
     _description = 'Consulter une version passée du plan'
 
     plan_id = fields.Many2one(
-        'nc_management.plan_action_smi', readonly=True, required=True)
+        'nc_management.plan_action_smi', readonly=True, required=True,
+        ondelete='cascade')
     date_consultation = fields.Date(
         string='Date à consulter', required=True)
     return_view_ref = fields.Char(

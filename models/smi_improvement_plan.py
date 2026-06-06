@@ -133,6 +133,17 @@ class SmiImprovementPlan(models.Model):
             rec.taux_efficacite = int(efficaces / nb * 100) if nb else 0
 
     @api.multi
+    def unlink(self):
+        is_rmqse = self.env.user.has_group('nc_management.group_responsable_qualite')
+        for rec in self:
+            if not is_rmqse:
+                if rec.create_uid.id != self.env.uid:
+                    raise UserError("Vous ne pouvez supprimer que vos propres plans.")
+                if rec.state != 'brouillon':
+                    raise UserError("Impossible de supprimer un plan déjà soumis.")
+        return super(SmiImprovementPlan, self).unlink()
+
+    @api.multi
     def copy(self, default=None):
         raise UserError("La duplication d'un plan d'amélioration n'est pas autorisée.")
 

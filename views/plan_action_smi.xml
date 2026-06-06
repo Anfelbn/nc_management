@@ -270,7 +270,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">16</field>
     <field name="arch" type="xml">
-        <form string="Plan d'Action d'Amélioration SMI" create="false">
+        <form string="Plan d'Action d'Amélioration SMI">
             <header>
                 <button name="action_consolider_tous"
                         string="Consolider"
@@ -657,18 +657,6 @@
     action="action_plan_smi_analyse_efficacite"
     groups="nc_management.group_responsable_qualite"
     sequence="3"/>
-
-<!-- Action "Supprimer" liée au modèle plan_action_smi (Action ▼ global plan) -->
-<record id="action_server_delete_global_plan" model="ir.actions.server">
-    <field name="name">Supprimer</field>
-    <field name="model_id" ref="model_nc_management_plan_action_smi"/>
-    <field name="binding_model_id" ref="model_nc_management_plan_action_smi"/>
-    <field name="state">code</field>
-    <field name="code">
-if records:
-    records.action_supprimer_plan()
-    </field>
-</record>
 
 </data>
 </odoo>

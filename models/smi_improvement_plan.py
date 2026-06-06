@@ -50,12 +50,26 @@ class SmiImprovementPlan(models.Model):
         string='En cours', compute='_compute_stats', store=True)
     nb_realises = fields.Integer(
         string='Réalisés', compute='_compute_stats', store=True)
+    nb_non_realises = fields.Integer(
+        string='Non réalisés', compute='_compute_stats', store=True)
     nb_clotures = fields.Integer(
         string='Clôturés', compute='_compute_stats', store=True)
     taux_avancement = fields.Integer(
         string='Avancement global (%)', compute='_compute_stats', store=True)
+    taux_realisation = fields.Integer(
+        string='Taux de réalisation (%)', compute='_compute_stats', store=True)
     taux_efficacite = fields.Integer(
         string="Taux d'efficacité (%)", compute='_compute_stats', store=True)
+
+    # ── Consultation historique ───────────────────────────────────
+    date_consultation = fields.Date(
+        string="Voir l'état à la date")
+
+    historique_html = fields.Html(
+        string='État historique',
+        compute='_compute_historique_html',
+        sanitize=False,
+        store=False)
 
     # ── Cycle de vie ──────────────────────────────────────────────
     state = fields.Selection([
@@ -99,14 +113,18 @@ class SmiImprovementPlan(models.Model):
             plans = rec.plan_ids
             nb = len(plans)
             rec.nb_plans = nb
-            rec.nb_en_cours = sum(
-                1 for p in plans if p.state in ('en_cours', 'draft'))
             rec.nb_realises = sum(
-                1 for p in plans if p.state == 'realise')
+                1 for p in plans if p.avancement >= 100)
+            rec.nb_en_cours = sum(
+                1 for p in plans if 0 < p.avancement < 100)
+            rec.nb_non_realises = sum(
+                1 for p in plans if p.avancement == 0)
             rec.nb_clotures = sum(
                 1 for p in plans if p.state in ('cloture', 'done'))
             rec.taux_avancement = int(
                 sum(p.avancement for p in plans) / nb) if nb else 0
+            rec.taux_realisation = int(
+                rec.nb_realises / nb * 100) if nb else 0
             efficaces = sum(1 for p in plans if p.efficacite == 'oui')
             rec.taux_efficacite = int(efficaces / nb * 100) if nb else 0
 
@@ -116,6 +134,146 @@ class SmiImprovementPlan(models.Model):
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'nc_management.smi_improvement_plan') or 'New'
         return super(SmiImprovementPlan, self).create(vals)
+
+    @api.depends('date_consultation', 'plan_ids')
+    def _compute_historique_html(self):
+        from datetime import datetime as _dt
+
+        th  = ('padding:8px 12px;text-align:left;white-space:nowrap;'
+               'border-bottom:2px solid #dee2e6;color:white;')
+        td  = 'padding:7px 12px;border-bottom:1px solid #eee;'
+        tdc = td + 'text-align:center;'
+        EFF_LABELS = {
+            'oui': 'OUI', 'non': 'NON',
+            False: '-', None: '-', '': '-',
+        }
+
+        for rec in self:
+            if not rec.date_consultation:
+                rec.historique_html = ''
+                continue
+
+            date_limit = fields.Datetime.to_string(
+                _dt.combine(
+                    fields.Date.from_string(str(rec.date_consultation)),
+                    _dt.max.time()))
+
+            def _val(res_id, field_name, default):
+                tracking = self.env['mail.tracking.value'].sudo().search([
+                    ('mail_message_id.res_id',  '=', res_id),
+                    ('mail_message_id.model',   '=', 'nc_management.plan_action_smi'),
+                    ('field',                   '=', field_name),
+                    ('mail_message_id.date',    '<=', date_limit),
+                ], order='id desc', limit=1)
+                if not tracking:
+                    return default
+                if field_name == 'avancement':
+                    return tracking.new_value_integer
+                return tracking.new_value_char or default
+
+            plans = rec.env['nc_management.plan_action_smi'].browse()
+            for p in rec.plan_ids:
+                if p.create_date and p.create_date <= date_limit:
+                    plans |= p
+
+            if not plans:
+                rec.historique_html = (
+                    '<p style="color:#888;padding:16px;">'
+                    "Aucun plan n'était intégré à cette date.</p>")
+                continue
+
+            plan_model = self.env['nc_management.plan_action_smi']
+            nature_sel = plan_model._fields['nature'].selection
+            nature_labels = dict(
+                nature_sel if not callable(nature_sel)
+                else nature_sel(plan_model))
+
+            rows = ''
+            for i, plan in enumerate(plans):
+                hist_av  = _val(plan.id, 'avancement', plan.avancement)
+                hist_eff = _val(plan.id, 'efficacite', plan.efficacite or '')
+                av_int = hist_av if hist_av is not None else 0
+                if av_int >= 100:
+                    state_lbl, sc = 'Réalisé',     '#1fa255'
+                elif av_int > 0:
+                    state_lbl, sc = 'En cours',    '#cc8800'
+                else:
+                    state_lbl, sc = 'Non réalisé', '#d44535'
+                eff_lbl = EFF_LABELS.get(hist_eff, '-')
+                bg = '#fff' if i % 2 == 0 else '#f8f9fa'
+                rows += (
+                    '<tr style="background:{bg};">'
+                    '<td style="{td}">{nature}</td>'
+                    '<td style="{td}"><b>{ref}</b></td>'
+                    '<td style="{td}">{responsable}</td>'
+                    '<td style="{tdc}">{av}%</td>'
+                    '<td style="{tdc}"><span style="color:{sc};font-weight:bold;">'
+                    '{state}</span></td>'
+                    '<td style="{tdc}">{eff}</td>'
+                    '</tr>'
+                ).format(
+                    bg=bg, td=td, tdc=tdc,
+                    nature=nature_labels.get(plan.nature, plan.nature or '-'),
+                    ref=plan.name,
+                    responsable=plan.responsable_id.name if plan.responsable_id else '-',
+                    av=av_int,
+                    state=state_lbl, sc=sc, eff=eff_lbl,
+                )
+
+            consul_str = fields.Date.from_string(
+                str(rec.date_consultation)).strftime('%d/%m/%Y')
+            thead = (
+                '<thead><tr style="background:#1a2e5a;">'
+                '<th style="{th}">Nature</th>'
+                '<th style="{th}">Référence</th>'
+                '<th style="{th}">Responsable</th>'
+                '<th style="{th}">Avancement %</th>'
+                '<th style="{th}">État</th>'
+                '<th style="{th}">Efficacité</th>'
+                '</tr></thead>'
+            ).format(th=th)
+
+            rec.historique_html = (
+                '<div style="font-family:Arial,sans-serif;">'
+                '<div style="background:#fff3cd;border:1px solid #ffc107;'
+                'border-radius:4px;padding:12px 16px;margin-bottom:12px;">'
+                '<b>&#9888; Vue historique au {date}</b> — '
+                "Voici l'état du plan à cette date.</div>"
+                '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+                '{thead}<tbody>{rows}</tbody></table>'
+                '</div>'
+            ).format(date=consul_str, thead=thead, rows=rows)
+
+    @api.multi
+    def action_open_consulter_version_wizard(self):
+        self.ensure_one()
+        wizard = self.env[
+            'nc_management.consulter_version_improvement_wizard'].create({
+                'improvement_plan_id': self.id,
+            })
+        view_id = self.env.ref(
+            'nc_management.view_consulter_version_improvement_wizard_form').id
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Consulter une version passée",
+            'res_model': 'nc_management.consulter_version_improvement_wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'views': [[view_id, 'form']],
+            'target': 'new',
+        }
+
+    @api.multi
+    def action_retour_actuel(self):
+        self.ensure_one()
+        self.write({'date_consultation': False})
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': self._name,
+            'res_id': self.id,
+            'views': [[False, 'form']],
+            'target': 'current',
+        }
 
     @api.multi
     def action_consolider(self):
@@ -175,6 +333,26 @@ class SmiImprovementPlan(models.Model):
                 'name': "Plan d'Action Global SMI",
             })
         self.write({'global_plan_id': global_plan.id})
+
+        # Auto-consolider les plans dans le plan RMQSE (is_global=True) en cours
+        rmqse_plan = self.env['nc_management.plan_action_smi'].search([
+            ('is_global', '=', True),
+            ('submission_state', '!=', 'cloture'),
+        ], order='create_date desc', limit=1)
+        if not rmqse_plan:
+            rmqse_plan = self.env['nc_management.plan_action_smi'].sudo().create({
+                'is_global': True,
+                'submission_state': 'brouillon',
+                'mois_reception': fields.Date.today(),
+            })
+        if self.plan_ids:
+            self.plan_ids.with_context(_skip_date_maj=True).write({
+                'global_plan_id': rmqse_plan.id,
+                'submission_state': 'integre',
+            })
+            rmqse_plan.with_context(_skip_date_maj=True).write({
+                'date_maj': fields.Datetime.now(),
+            })
 
         # Notifier la Responsable Qualité par mail interne
         rmqse_group = self.env.ref(

@@ -160,7 +160,7 @@ class SmiImprovementPlan(models.Model):
         if self.state != 'brouillon':
             raise UserError("Impossible de supprimer un plan déjà soumis.")
         self.unlink()
-        return {'type': 'ir.actions.act_window_close'}
+        return self.env['nc_management.smi_improvement_plan'].action_open_my_plan()
 
     @api.model
     def create(self, vals):
@@ -317,18 +317,7 @@ class SmiImprovementPlan(models.Model):
     def action_retour_actuel(self):
         self.ensure_one()
         self.write({'date_consultation': False})
-        inner_action = {
-            'type': 'ir.actions.act_window',
-            'res_model': self._name,
-            'res_id': self.id,
-            'views': [[False, 'form']],
-            'target': 'current',
-        }
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'nc_management.clear_and_navigate',
-            'params': {'inner_action': inner_action},
-        }
+        return self.env['nc_management.smi_improvement_plan'].action_open_my_plan()
 
     @api.multi
     def action_consolider(self):
@@ -465,7 +454,7 @@ class SmiImprovementPlan(models.Model):
 
     @api.model
     def action_open_my_plan(self):
-        """Ouvre (ou crée) l'unique plan d'amélioration du NC utilisateur connecté."""
+        """Ouvre (ou crée) le plan d'amélioration du NC utilisateur connecté."""
         plan = self.search([('create_uid', '=', self.env.uid)], limit=1)
         if not plan:
             plan = self.create({})
@@ -475,6 +464,7 @@ class SmiImprovementPlan(models.Model):
             'res_id': plan.id,
             'views': [[False, 'form']],
             'view_mode': 'form',
+            'domain': [('create_uid', '=', self.env.uid)],
             'target': 'current',
             'flags': {'initial_mode': 'edit'},
         }

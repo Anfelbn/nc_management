@@ -8,29 +8,37 @@ class ConsulterVersionImprovementWizard(models.TransientModel):
     _description = "Consulter une version passée du plan d'amélioration"
 
     improvement_plan_id = fields.Many2one(
-        'nc_management.smi_improvement_plan', readonly=True, required=True)
+        'nc_management.smi_improvement_plan', readonly=True, required=True,
+        ondelete='cascade')
     date_consultation = fields.Date(
         string='Date à consulter')
 
     @api.multi
     def action_consulter(self):
         self.ensure_one()
-        plan = self.improvement_plan_id
-        date_sel = fields.Date.from_string(str(self.date_consultation))
-        raw = plan.date_ouverture or str(plan.create_date)[:10]
-        date_creation = fields.Date.from_string(str(raw))
-        if date_sel < date_creation:
+        date_str = str(self.date_consultation)
+
+        # Trouver le plan de l'utilisateur existant à cette date
+        historical_plan = self.env['nc_management.smi_improvement_plan'].search([
+            ('create_uid', '=', self.env.uid),
+            ('date_ouverture', '<=', date_str),
+        ], order='date_ouverture desc', limit=1)
+
+        if not historical_plan:
+            d = fields.Date.from_string(date_str).strftime('%d/%m/%Y')
             raise UserError(
-                "Ce plan n'existait pas le %s.\n"
-                "Il a été créé le %s." % (
-                    date_sel.strftime('%d/%m/%Y'),
-                    date_creation.strftime('%d/%m/%Y'),
-                ))
-        plan.write({'date_consultation': self.date_consultation})
+                "Aucun plan d'amélioration n'existait le %s." % d)
+
+        # Effacer date_consultation sur le plan courant si différent
+        if self.improvement_plan_id and self.improvement_plan_id.id != historical_plan.id:
+            self.improvement_plan_id.write({'date_consultation': False})
+
+        historical_plan.write({'date_consultation': self.date_consultation})
+
         inner_action = {
             'type': 'ir.actions.act_window',
             'res_model': 'nc_management.smi_improvement_plan',
-            'res_id': self.improvement_plan_id.id,
+            'res_id': historical_plan.id,
             'views': [[False, 'form']],
             'target': 'current',
         }

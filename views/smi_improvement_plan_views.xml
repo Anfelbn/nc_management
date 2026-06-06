@@ -34,7 +34,7 @@
     <field name="name">nc_management.smi_improvement_plan.form</field>
     <field name="model">nc_management.smi_improvement_plan</field>
     <field name="arch" type="xml">
-        <form string="Plan d'Action d'Amélioration SMI" create="false">
+        <form string="Plan d'Action d'Amélioration SMI" delete="false">
             <header>
                 <button name="action_consolider"
                         string="Consolider"
@@ -95,6 +95,7 @@
                     <group>
                         <field name="date_soumission"  string="Date d'envoi" readonly="1"
                                attrs="{'invisible': [('state', '=', 'brouillon')]}"/>
+                        <field name="write_date"       string="Dernière mise à jour" readonly="1"/>
                         <field name="taux_avancement"  string="Taux d'avancement %"/>
                         <field name="taux_realisation" string="Taux de réalisation %"/>
                         <field name="taux_efficacite"  string="Taux d'efficacité %"/>
@@ -112,7 +113,7 @@
                         <field name="plan_ids"
                                attrs="{'readonly': [('state', '!=', 'brouillon')]}"
                                context="{'default_improvement_plan_id': active_id}">
-                            <tree string="Plans intégrés" import="false"
+                            <tree string="Plans intégrés" import="false" create="false"
                                   class="smi_plan_tree"
                                   decoration-success="etat_avancement == 'realise'"
                                   decoration-warning="etat_avancement == 'en_cours'"
@@ -222,7 +223,7 @@ if records:
     <field name="state">code</field>
     <field name="code">
 if records:
-    records.action_supprimer_plan()
+    action = records[:1].action_supprimer_plan()
     </field>
 </record>
 

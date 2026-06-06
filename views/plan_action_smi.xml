@@ -340,7 +340,9 @@
                 <!-- Liste en temps réel : masquée en vue historique -->
                 <notebook attrs="{'invisible': [('date_consultation', '!=', False)]}">
                     <page string="Plans intégrés">
-                        <field name="child_plan_ids" readonly="1" nolabel="1">
+                        <field name="child_plan_ids" nolabel="1"
+                               attrs="{'readonly': [('submission_state', '=', 'cloture')]}"
+                               context="{'default_global_plan_id': active_id}">
                             <tree string="Plans intégrés" import="false"
                                   class="smi_plan_tree"
                                   decoration-success="etat_avancement == 'realise'"
@@ -495,7 +497,7 @@
     <field name="res_model">nc_management.plan_action_smi</field>
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_global', '=', False)]</field>
-    <field name="context">{'search_default_mes_plans': 1, 'no_import': True}</field>
+    <field name="context">{'search_default_mes_plans': 1, 'no_import': True, 'no_export': True}</field>
     <field name="view_ids" eval="[(5, 0, 0),
         (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_mes_plans')}),
         (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form')})]"/>

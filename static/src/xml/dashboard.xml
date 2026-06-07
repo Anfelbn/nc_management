@@ -25,13 +25,20 @@
 <div>
   <div class="g2">
 
-    <!-- Fiches reçues : FNC regroupées avec leurs FAC dans un seul conteneur -->
-    <div class="nc-card" style="max-height:400px;overflow-y:auto">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div class="nc-card-title" style="margin-bottom:0">Fiches reçues</div>
-        <div class="received-sub" style="font-size:11px;color:#64748b"></div>
+    <!-- Fiches reçues : la carte est positionnée en absolu dans un wrapper de hauteur nulle,
+         de sorte qu'elle ne dicte jamais la hauteur de la ligne — celle-ci est entièrement
+         déterminée par la carte Calendrier (référence), et la carte épouse exactement
+         son niveau via inset:0 -->
+    <div style="position:relative;">
+      <div class="nc-card" style="position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0;">
+          <div class="nc-card-title" style="margin-bottom:0">Fiches reçues</div>
+          <div class="received-sub" style="font-size:11px;color:#64748b"></div>
+        </div>
+        <div style="overflow-y:auto;flex:1;min-height:0;padding-right:2px;">
+          <div class="received-list"></div>
+        </div>
       </div>
-      <div class="received-list"></div>
     </div>
 
     <!-- Calendrier indépendant + sélecteur 2-clics -->
@@ -516,10 +523,17 @@
   <div>
     <div class="g2">
 
-      <!-- Fiches reçues -->
-      <div class="nc-card" style="max-height:400px;overflow-y:auto">
-        <div class="nc-card-title">Fiches reçues</div>
-        <div class="received-list"></div>
+      <!-- Fiches reçues : la carte est positionnée en absolu dans un wrapper de hauteur nulle,
+           de sorte qu'elle ne dicte jamais la hauteur de la ligne — celle-ci est entièrement
+           déterminée par la carte Calendrier (référence), et la carte épouse exactement
+           son niveau via inset:0 -->
+      <div style="position:relative;">
+        <div class="nc-card" style="position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;">
+          <div class="nc-card-title" style="flex-shrink:0;">Fiches reçues</div>
+          <div style="overflow-y:auto;flex:1;min-height:0;padding-right:2px;">
+            <div class="received-list"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Calendrier -->

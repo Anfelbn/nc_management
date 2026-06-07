@@ -53,7 +53,9 @@ class SendFncWizard(models.TransientModel):
             new_state = 'in_progress'
             msg = 'FNC transmise par <b>%s</b> à <b>%s</b>.' % (
                 self.env.user.name, recipient.name)
-            extra_vals = {'assigned_to_id': recipient.id}
+            # Le responsable de l'action (assigned_to_id) reste celui qui traite
+            # la FNC : on ne change que le destinataire courant du routage.
+            extra_vals = {'current_handler_uid': recipient.user_id.id if recipient.user_id else False}
 
         elif fnc.state == 'validated':
             note_part = '<br/>Message : %s' % self.note if self.note else ''
@@ -70,20 +72,21 @@ class SendFncWizard(models.TransientModel):
         else:
             raise UserError("Cette FNC ne peut pas être envoyée dans son état actuel.")
 
-        vals = {'state': new_state, 'date_envoi': fields.Date.today(), 'sent_by_id': self.env.uid}
+        vals = {'state': new_state, 'date_envoi': fields.Date.context_today(self), 'sent_by_id': self.env.uid}
         vals.update(extra_vals)
-        fnc.write(vals)
+        fnc.sudo().write(vals)
 
         note_part = '<br/>Message : %s' % self.note if self.note else ''
-        fnc.message_post(body=msg + note_part)
+        fnc_sudo = fnc.sudo()
+        fnc_sudo.message_post(body=msg + note_part)
 
         partner_ids = [recipient.user_id.partner_id.id] if recipient.user_id else []
         is_qm = bool(recipient.user_id and recipient.user_id.has_group(
             'nc_management.group_responsable_qualite'))
 
         if partner_ids:
-            fnc.message_post(
-                body='Vous avez reçu la fiche <b>%s</b> — action requise.' % fnc.name,
+            fnc_sudo.message_post(
+                body='Vous avez reçu la fiche <b>%s</b> — action requise.' % fnc_sudo.name,
                 partner_ids=partner_ids,
                 subtype='mail.mt_comment',
                 message_type='comment')
@@ -91,8 +94,10 @@ class SendFncWizard(models.TransientModel):
         for fac in fnc.sudo().fac_ids:
             if is_qm:
                 # QM reçoit la FAC liée → date_envoi = aujourd'hui pour apparaître dans le dashboard QM
+                # responsable_id (créateur direct / resp d'action FNC) ne doit jamais être écrasé :
+                # seul le destinataire courant change.
                 fac.sudo().write({
-                    'responsable_id': recipient.user_id.id if recipient.user_id else False,
+                    'current_handler_uid': recipient.user_id.id if recipient.user_id else False,
                     'date_envoi': fields.Date.today(),
                     'sent_by_id': self.env.uid,
                 })
@@ -106,12 +111,8 @@ class SendFncWizard(models.TransientModel):
                         partner_ids=partner_ids,
                         subtype='mail.mt_comment',
                         message_type='comment')
-            else:
-                # NC user ne reçoit pas la FAC via le routing FNC → effacer date_envoi
-                # pour qu'elle n'apparaisse pas dans la section "Fiches reçues" du NC user
-                fac.sudo().write({
-                    'responsable_id': recipient.user_id.id if recipient.user_id else False,
-                    'date_envoi': False,
-                })
+            # Destinataire NC user (pas RMQSE) : il ne reçoit que la FNC, pas la FAC liée.
+            # On ne touche donc à rien sur la FAC (ni current_handler_uid, ni date_envoi)
+            # pour qu'elle n'apparaisse pas dans sa liste de "Fiches reçues".
 
         return {'type': 'ir.actions.act_window_close'}

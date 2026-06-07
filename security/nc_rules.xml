@@ -6,7 +6,7 @@
         <field name="name">FNC user scope</field>
         <field name="model_id" ref="model_nc_management_nonconformity"/>
         <field name="domain_force">
-            ['|', '|', '|', ('create_uid', '=', user.id), ('submitted_by_id', '=', user.id), ('assigned_to_id.user_id', '=', user.id), ('current_handler_uid', '=', user.id)]
+            ['|', '|', '|', '|', ('create_uid', '=', user.id), ('submitted_by_id', '=', user.id), ('assigned_to_id.user_id', '=', user.id), ('current_handler_uid', '=', user.id), ('message_partner_ids', 'in', [user.partner_id.id])]
         </field>
         <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
     </record>
@@ -21,7 +21,7 @@
     <record id="rule_corrective_action_user_scope" model="ir.rule">
         <field name="name">FAC user scope</field>
         <field name="model_id" ref="model_nc_management_corrective_action"/>
-        <field name="domain_force">['|', '|', ('create_uid', '=', user.id), ('responsable_id', '=', user.id), ('fnc_id.assigned_to_id.user_id', '=', user.id)]</field>
+        <field name="domain_force">['|', '|', '|', '|', '|', ('create_uid', '=', user.id), ('responsable_id', '=', user.id), ('current_handler_uid', '=', user.id), ('fnc_id.assigned_to_id.user_id', '=', user.id), ('fnc_id.create_uid', '=', user.id), ('sent_by_id', '=', user.id)]</field>
         <field name="groups" eval="[(4, ref('nc_management.group_nc_utilisateur'))]"/>
     </record>
 

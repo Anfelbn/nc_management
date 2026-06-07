@@ -89,6 +89,8 @@ odoo.define('nc_management.dashboard', function(require){
                 plan_recus_total: 0,
                 plan_recus_brouillon: 0,
                 plan_recus_realise: 0,
+                mes_fac_en_cours: [],
+                fac_recues_en_cours: [],
             };
         },
 
@@ -787,6 +789,21 @@ odoo.define('nc_management.dashboard', function(require){
         init: function(){
             this._super.apply(this, arguments);
             this.stats = this._empty();
+            this._firstAttach = true;
+        },
+
+        on_attach_callback: function(){
+            if (this._super) { this._super.apply(this, arguments); }
+            if(this._firstAttach){
+                this._firstAttach = false;
+                return;
+            }
+            var now = new Date();
+            this._reload(
+                this.stats.period || '1m',
+                this.stats.calendar_year || now.getFullYear(),
+                this.stats.calendar_month || (now.getMonth() + 1)
+            );
         },
 
         _empty: function(){
@@ -800,7 +817,8 @@ odoo.define('nc_management.dashboard', function(require){
                 plan_total: 0, plan_brouillon: 0, plan_done: 0,
                 monthly_labels: [], monthly_fnc: [], monthly_fac: [],
                 calendar_events: {}, calendar_year: 0, calendar_month: 0,
-                alerts: [], received_by_date: {},
+                user_fnc_retard_list: [], user_fac_en_cours_list: [], user_fac_validees_list: [],
+                received_by_date: {},
             };
         },
 
@@ -811,7 +829,10 @@ odoo.define('nc_management.dashboard', function(require){
                 model:  'nc_management.dashboard',
                 method: 'get_user_stats',
                 args:   [],
-            }).then(function(stats){ self.stats = $.extend(self._empty(), stats || {}); });
+            }).then(function(stats){
+                self.stats = $.extend(self._empty(), stats || {});
+                self._filterSeenFacVal();
+            });
             return $.when(superDef, statsDef);
         },
 
@@ -832,8 +853,17 @@ odoo.define('nc_management.dashboard', function(require){
                 kwargs: {cal_year: yr, cal_month: mo},
             }).then(function(stats){
                 self.stats = $.extend(self._empty(), stats || {});
+                self._filterSeenFacVal();
                 self.renderElement();
                 self._bind();
+            });
+        },
+
+        _filterSeenFacVal: function(){
+            var seen = JSON.parse(localStorage.getItem('nc_fac_val_seen') || '[]');
+            if (!seen.length) { return; }
+            this.stats.user_fac_validees_list = (this.stats.user_fac_validees_list || []).filter(function(f){
+                return seen.indexOf(f.id) === -1;
             });
         },
 
@@ -856,6 +886,11 @@ odoo.define('nc_management.dashboard', function(require){
             this.$el.on('click', '.btn-open', function(){
                 var model = $(this).data('model');
                 var id    = parseInt($(this).data('id'), 10);
+                if ($(this).hasClass('btn-fac-val-ack')) {
+                    var seen = JSON.parse(localStorage.getItem('nc_fac_val_seen') || '[]');
+                    if (seen.indexOf(id) === -1) { seen.push(id); }
+                    localStorage.setItem('nc_fac_val_seen', JSON.stringify(seen));
+                }
                 self.do_action({
                     type: 'ir.actions.act_window',
                     res_model: model,

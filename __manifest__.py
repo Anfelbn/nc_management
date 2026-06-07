@@ -10,6 +10,7 @@
         'security/quality_groups.xml',
         'security/ir.model.access.csv',
         'security/quality_rules.xml',
+        'security/nc_rules.xml',
         'data/sequences.xml',
         'data/nc_types.xml',
         'data/revisions.xml',

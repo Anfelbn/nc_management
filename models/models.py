@@ -201,7 +201,7 @@ class Nonconformity(models.Model):
             fac = rec.sudo().fac_ids[:1]
             rec.fac_number_display = fac.name if fac else False
 
-    @api.depends('fac_ids', 'fac_ids.responsable_id')
+    @api.depends('fac_ids', 'fac_ids.responsable_id', 'fac_ids.current_handler_uid')
     def _compute_can_access_fac(self):
         user = self.env.user
         is_rmqse = user.has_group('nc_management.group_responsable_qualite')
@@ -210,7 +210,10 @@ class Nonconformity(models.Model):
                 rec.can_access_fac = True
             else:
                 fac = rec.sudo().fac_ids[:1]
-                rec.can_access_fac = bool(fac and fac.responsable_id.id == user.id)
+                rec.can_access_fac = bool(fac and (
+                    fac.responsable_id.id == user.id
+                    or fac.current_handler_uid.id == user.id
+                ))
 
     # ── Validation obligatoire à la sauvegarde ────────────────
     # Déclenche sur ces champs uniquement ; le numéro FNC est géré
@@ -759,6 +762,8 @@ class CorrectiveAction(models.Model):
     visa_cloture   = fields.Char(string='Visa clôture')
     date_envoi     = fields.Date(string="Date d'envoi", readonly=True)
     sent_by_id     = fields.Many2one('res.users', string='Envoyé par', readonly=True)
+    current_handler_uid = fields.Many2one(
+        'res.users', string='Destinataire courant', copy=False)
 
     # ── Statut ────────────────────────────────────────────────
     state = fields.Selection([
@@ -2562,8 +2567,8 @@ class NcDashboard(models.Model):
         fnc_audit_interne = fnc.search_count(combined_fnc_domain + [('type_audit_interne','=',True)])
         fnc_audit_externe = fnc.search_count(combined_fnc_domain + [('type_audit_externe','=',True)])
 
-        # FNC en retard > 1 jour (TEST — remettre à 7 après validation)
-        limit7 = str(today - timedelta(days=1))
+        limit7 = str(today - timedelta(days=7))
+        limit1 = str(today - timedelta(days=1))
         fnc_retard_recs = fnc.search_read([
             ('state', '=', 'in_progress'),
             ('date', '<=', limit7),
@@ -3005,6 +3010,41 @@ class NcDashboard(models.Model):
             })
         result['fnc_retard_list'] = fnc_retard_list
 
+        # ── Alertes FAC reçues & mes FAC ────────────────────────────────────
+        def _fac_alert(fac_rec, date_ref):
+            delta = (today - fields.Date.from_string(str(date_ref))).days if date_ref else 0
+            return {
+                'id': fac_rec.id,
+                'name': fac_rec.name,
+                'department': fac_rec.direction_id.name if fac_rec.direction_id else '',
+                'days': delta,
+                'fnc_name': fac_rec.fnc_id.name if fac_rec.fnc_id else '',
+            }
+
+        # Ses FAC à valider : créées par RMQSE, en cours depuis > 1 jour (date de début <= limit7)
+        mes_fac_en_cours_list = [
+            _fac_alert(r, r.date)
+            for r in fac.search([
+                ('state', '=', 'in_progress'),
+                ('create_uid', '=', self.env.uid),
+                ('date', '<=', limit7),
+            ], order='date asc', limit=10)
+        ]
+
+        # FAC reçues à valider : envoyées il y a > 1 jour, encore en cours
+        fac_recues_en_cours_list = [
+            _fac_alert(r, r.date_envoi)
+            for r in fac.search([
+                ('state', '=', 'in_progress'),
+                ('date_envoi', '!=', False),
+                ('date_envoi', '<=', limit1),
+                ('create_uid', '!=', self.env.uid),
+            ], order='date_envoi asc', limit=10)
+        ]
+
+        result['mes_fac_en_cours']     = mes_fac_en_cours_list
+        result['fac_recues_en_cours']  = fac_recues_en_cours_list
+
         def _date_label(value):
             if not value:
                 return ''
@@ -3118,7 +3158,7 @@ class NcDashboard(models.Model):
         return result
 
     @api.model
-    def get_user_stats(self, period=None):
+    def get_user_stats(self, period=None, cal_year=None, cal_month=None):
         from datetime import date, timedelta
         from dateutil.relativedelta import relativedelta
 
@@ -3213,7 +3253,7 @@ class NcDashboard(models.Model):
                 calendar_events[k] = {'fnc': False, 'fac': False}
             calendar_events[k]['fnc'] = True
         for fac_rec in fac_model.search([
-            ('responsable_id', '=', uid),
+            ('current_handler_uid', '=', uid),
             ('date_envoi', '!=', False),
         ]):
             k = str(fac_rec.date_envoi)[:10]
@@ -3221,52 +3261,54 @@ class NcDashboard(models.Model):
                 calendar_events[k] = {'fnc': False, 'fac': False}
             calendar_events[k]['fac'] = True
 
-        limit7 = str(today - timedelta(days=1))
-        alerts = []
+        limit7 = str(today - timedelta(days=7))
 
-        for rec in fnc_model.search(user_fnc_domain_all + [('state', '=', 'submitted')], limit=10):
-            days_wait = (today - fields.Date.from_string(str(rec.date))).days if rec.date else 0
-            alerts.append({
-                'id': rec.id,
-                'model': 'nc_management.nonconformity',
-                'name': rec.name or '',
-                'label': 'En attente RMQSE',
-                'days': days_wait,
-                'badge': 'orange' if days_wait <= 7 else 'red',
-                'kind': 'FNC',
-            })
+        def _u_fnc_item(rec):
+            delta = (today - fields.Date.from_string(str(rec.date_in_progress))).days \
+                if rec.date_in_progress else 0
+            return {'id': rec.id, 'name': rec.name or '',
+                    'department': rec.direction_id.name if rec.direction_id else '',
+                    'days': delta}
 
-        for rec in fnc_model.search(user_fnc_domain_all + [
-            ('state', '=', 'in_progress'),
-            ('date_in_progress', '!=', False),
-            ('date_in_progress', '<=', limit7),
-        ], limit=10):
-            days_open = (today - fields.Date.from_string(str(rec.date_in_progress))).days
-            alerts.append({
-                'id': rec.id,
-                'model': 'nc_management.nonconformity',
-                'name': rec.name or '',
-                'label': 'En cours %dj' % days_open,
-                'days': days_open,
-                'badge': 'red',
-                'kind': 'FNC',
-            })
+        def _u_fac_item(fac_rec, date_ref):
+            delta = (today - fields.Date.from_string(str(date_ref))).days if date_ref else 0
+            return {'id': fac_rec.id, 'name': fac_rec.name or '',
+                    'department': fac_rec.direction_id.name if fac_rec.direction_id else '',
+                    'days': delta,
+                    'fnc_name': fac_rec.fnc_id.name if fac_rec.fnc_id else ''}
 
-        for fac_rec in fac_model.search(user_fac_domain_all + [
-            ('state', 'in', ['submitted', 'in_progress']),
-            ('date', '!=', False),
-            ('date', '<=', limit7),
-        ], limit=10):
-            days_open = (today - fields.Date.from_string(str(fac_rec.date))).days
-            alerts.append({
-                'id': fac_rec.id,
-                'model': 'nc_management.corrective_action',
-                'name': fac_rec.name or '',
-                'label': 'FAC retard %dj' % days_open,
-                'days': days_open,
-                'badge': 'red',
-                'kind': 'FAC',
-            })
+        # 1. Ses FNC à valider : en cours > 1 jour
+        user_fnc_retard_list = [
+            _u_fnc_item(r)
+            for r in fnc_model.search(user_fnc_domain_all + [
+                ('state', '=', 'in_progress'),
+                ('date_in_progress', '!=', False),
+                ('date_in_progress', '<=', limit7),
+            ], order='date_in_progress asc', limit=10)
+        ]
+
+        # 2. Ses FAC à valider : en cours > 1 jour (ses FAC via user_fac_domain_all)
+        user_fac_en_cours_list = [
+            _u_fac_item(r, r.date)
+            for r in fac_model.search(user_fac_domain_all + [
+                ('state', '=', 'in_progress'),
+                ('date', '!=', False),
+                ('date', '<=', limit7),
+            ], order='date asc', limit=10)
+        ]
+
+        # 3. Ses FAC envoyées validées : sudo pour contourner la perte d'accès après changement de responsable_id
+        user_fac_validees_list = [
+            _u_fac_item(r, r.date_validated)
+            for r in fac_model.sudo().search(['|', '|', '|',
+                ('fnc_id', 'in', user_fnc_ids_all),
+                ('responsable_id', '=', uid),
+                ('create_uid', '=', uid),
+                ('sent_by_id', '=', uid),
+                ('state', '=', 'validated'),
+                ('date_envoi', '!=', False),
+            ], order='date_validated asc', limit=10)
+        ]
 
         def _initials(name):
             if not name:
@@ -3281,11 +3323,14 @@ class NcDashboard(models.Model):
                 received_by_date[day_key] = []
             received_by_date[day_key].append(item)
 
+        user_partner_id = self.env.user.partner_id.id
         for fnc_rec in fnc_model.sudo().search([
-            '|',
+            '|', '|',
             ('assigned_to_id.user_id', '=', uid),
             ('current_handler_uid', '=', uid),
+            ('message_partner_ids', 'in', [user_partner_id]),
             ('date_envoi', '!=', False),
+            ('create_uid', '!=', uid),
         ], order='date_envoi desc, id desc'):
             k = str(fnc_rec.date_envoi)[:10]
             sender_name = (fnc_rec.sent_by_id.name if fnc_rec.sent_by_id
@@ -3303,7 +3348,7 @@ class NcDashboard(models.Model):
             })
 
         for fac_rec in fac_model.search([
-            ('responsable_id', '=', uid),
+            ('current_handler_uid', '=', uid),
             ('date_envoi', '!=', False),
         ], order='date_envoi desc, id desc'):
             k = str(fac_rec.date_envoi)[:10]
@@ -3347,7 +3392,9 @@ class NcDashboard(models.Model):
             'calendar_events': calendar_events,
             'calendar_year':   today.year,
             'calendar_month':  today.month,
-            'alerts':          alerts,
+            'user_fnc_retard_list':   user_fnc_retard_list,
+            'user_fac_en_cours_list': user_fac_en_cours_list,
+            'user_fac_validees_list': user_fac_validees_list,
             'received_by_date': received_by_date,
         }
 

@@ -34,34 +34,39 @@ class SendFacWizard(models.TransientModel):
         is_qm = bool(recipient.user_id and recipient.user_id.has_group(
             'nc_management.group_responsable_qualite'))
 
-        fac.write({
-            'date_envoi':     fields.Date.today(),
-            'responsable_id': recipient.user_id.id if recipient.user_id else False,
-            'sent_by_id':     self.env.uid,
+        sender_name = self.env.user.name
+
+        # responsable_id reste le créateur direct / le resp d'action de la FNC liée
+        # (ne doit jamais être écrasé par le routage) : seul le destinataire courant change.
+        fac_sudo = fac.sudo()
+        fac_sudo.write({
+            'date_envoi':          fields.Date.context_today(self),
+            'current_handler_uid': recipient.user_id.id if recipient.user_id else False,
+            'sent_by_id':          self.env.uid,
         })
 
         # Notification sur la FAC
-        fac.message_post(
+        fac_sudo.message_post(
             body='FAC envoyée par <b>%s</b> à <b>%s</b>.%s' % (
-                self.env.user.name, recipient.name, note_part))
+                sender_name, recipient.name, note_part))
         if partner_ids:
-            fac.message_post(
-                body='Vous avez reçu la fiche <b>%s</b> — action requise.' % fac.name,
+            fac_sudo.message_post(
+                body='Vous avez reçu la fiche <b>%s</b> — action requise.' % fac_sudo.name,
                 partner_ids=partner_ids,
                 subtype='mail.mt_comment',
                 message_type='comment')
 
         # Si destinataire est QM → inclure aussi la FNC liée dans son dashboard
-        if is_qm and fac.fnc_id:
-            fnc = fac.fnc_id
+        if is_qm and fac_sudo.fnc_id:
+            fnc = fac_sudo.fnc_id
             fnc.write({'date_envoi': fields.Date.today()})
             fnc.message_post(
                 body='FNC liée — FAC <b>%s</b> envoyée à <b>%s</b> par <b>%s</b>.%s' % (
-                    fac.name, recipient.name, self.env.user.name, note_part))
+                    fac_sudo.name, recipient.name, sender_name, note_part))
             if partner_ids:
                 fnc.message_post(
                     body='Vous avez reçu la fiche <b>%s</b> (FNC liée à la FAC <b>%s</b>) — action requise.' % (
-                        fnc.name, fac.name),
+                        fnc.name, fac_sudo.name),
                     partner_ids=partner_ids,
                     subtype='mail.mt_comment',
                     message_type='comment')

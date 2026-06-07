@@ -276,8 +276,8 @@
 </div>
 
 <div>
-  <div class="g2">
-    <div class="nc-card">
+  <div class="g2" style="grid-template-rows:260px;align-items:stretch;">
+    <div class="nc-card" style="overflow:hidden;box-sizing:border-box;">
       <div class="nc-card-title">Diagramme global FNC &amp; FAC</div>
       <canvas id="globalChart" style="height:170px"></canvas>
       <div style="display:flex;gap:12px;margin-top:8px;justify-content:center">
@@ -286,63 +286,81 @@
       </div>
     </div>
 
-    <div class="nc-card">
-      <div class="nc-card-title">Alertes &amp; Notifications</div>
+    <div class="nc-card" style="display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;">
+      <div class="nc-card-title" style="flex-shrink:0;">Alertes &amp; Notifications</div>
+      <div style="overflow-y:auto;flex:1;min-height:0;padding-right:2px;">
 
-      <t t-foreach="widget.stats.fac_a_cloturer" t-as="fac">
-        <t t-if="fac.days > 7">
-          <div class="nc-alert">
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:600;color:#991b1b"><t t-esc="fac.name"/> — À clôturer</div>
-              <div style="font-size:11px;color:#b91c1c;margin-top:2px"><t t-esc="fac.department"/> · Retard <t t-esc="fac.days"/> jours</div>
-            </div>
-            <span class="badge red">Urgent</span>
-            <div class="btn-sm primary btn-open" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac.id">Ouvrir</div>
-          </div>
-        </t>
-        <t t-if="fac.days > 3 and fac.days &lt;= 7">
-          <div class="nc-alert orange">
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fac.name"/> — À clôturer</div>
-              <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fac.department"/> · Dans <t t-esc="fac.days"/> jours</div>
-            </div>
-            <span class="badge orange">Bientôt</span>
-            <div class="btn-sm btn-open" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac.id">Ouvrir</div>
-          </div>
-        </t>
-      </t>
-
-      <t t-foreach="widget.stats.fnc_retard_list" t-as="fnc">
-        <div class="nc-alert orange">
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — À valider</div>
-            <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours en cours</div>
-          </div>
-          <div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" t-att-data-id="fnc.id">Ouvrir</div>
-        </div>
-      </t>
-
-      <t t-if="widget.stats.fac_non_recues &amp;&amp; widget.stats.fac_non_recues.length">
-        <div style="margin-top:10px;padding-top:8px;border-top:1px solid #ede9fe">
-          <div style="font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">FAC non reçues — validées par d'autres, à clôturer</div>
-          <t t-foreach="widget.stats.fac_non_recues" t-as="fac_nr">
-            <div class="nc-alert" style="border-left:3px solid #7c3aed;border-color:#ede9fe;background:#faf5ff;margin-bottom:7px">
+      <!-- 1. Mes FNC à valider -->
+      <details style="margin-bottom:5px">
+        <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff7ed;border:1px solid #ffedd5;border-left:3px solid #FF9800;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#9a3412;user-select:none">
+          <span>&#9656; Mes FNC — À valider</span>
+          <span style="background:#FF9800;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.fnc_retard_list || []).length"/></span>
+        </summary>
+        <div style="padding:4px 0 0 6px">
+          <t t-if="!widget.stats.fnc_retard_list || !widget.stats.fnc_retard_list.length">
+            <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
+          </t>
+          <t t-foreach="widget.stats.fnc_retard_list" t-as="fnc">
+            <div class="nc-alert orange" style="margin-bottom:5px">
               <div style="flex:1">
-                <div style="font-size:12px;font-weight:600;color:#5b21b6"><t t-esc="fac_nr.name"/> — À clôturer</div>
-                <div style="font-size:11px;color:#6d28d9;margin-top:2px">
-                  <t t-if="fac_nr.fnc_name">FNC : <t t-esc="fac_nr.fnc_name"/> · </t><t t-esc="fac_nr.department"/> · Retard <t t-esc="fac_nr.days"/>j
-                </div>
-                <t t-if="fac_nr.owner">
-                  <div style="font-size:10px;color:#94a3b8;margin-top:1px">Utilisateur : <t t-esc="fac_nr.owner"/></div>
-                </t>
+                <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — À valider</div>
+                <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours en cours</div>
               </div>
-              <span class="badge purple">Urgent</span>
-              <div class="btn-sm primary" style="background:#7c3aed;border-color:#7c3aed" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac_nr.id" data-action="open-fac-nr">Ouvrir FAC</div>
-              <div class="btn-sm btn-reply" t-att-data-model="'nc_management.corrective_action'" t-att-data-id="fac_nr.id">Relancer</div>
+              <div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" t-att-data-id="fnc.id">Ouvrir</div>
             </div>
           </t>
         </div>
-      </t>
+      </details>
+
+      <!-- 2. Mes FAC à valider -->
+      <details style="margin-bottom:5px">
+        <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f0fdf4;border:1px solid #d1fae5;border-left:3px solid #10B981;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#065f46;user-select:none">
+          <span>&#9656; Mes FAC — À valider</span>
+          <span style="background:#10B981;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.mes_fac_en_cours || []).length"/></span>
+        </summary>
+        <div style="padding:4px 0 0 6px">
+          <t t-if="!widget.stats.mes_fac_en_cours || !widget.stats.mes_fac_en_cours.length">
+            <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
+          </t>
+          <t t-foreach="widget.stats.mes_fac_en_cours" t-as="fac">
+            <div class="nc-alert orange" style="margin-bottom:5px">
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fac.name"/> — À valider</div>
+                <div style="font-size:11px;color:#c2410c;margin-top:2px">
+                  <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · En cours depuis <t t-esc="fac.days"/>j
+                </div>
+              </div>
+              <div class="btn-sm primary btn-open" data-model="nc_management.corrective_action" t-att-data-id="fac.id">Ouvrir</div>
+            </div>
+          </t>
+        </div>
+      </details>
+
+      <!-- 3. FAC reçues à valider -->
+      <details style="margin-bottom:5px">
+        <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#eff6ff;border:1px solid #dbeafe;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#1d4ed8;user-select:none">
+          <span>&#9656; FAC reçues — À valider</span>
+          <span style="background:#3b82f6;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.fac_recues_en_cours || []).length"/></span>
+        </summary>
+        <div style="padding:4px 0 0 6px">
+          <t t-if="!widget.stats.fac_recues_en_cours || !widget.stats.fac_recues_en_cours.length">
+            <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
+          </t>
+          <t t-foreach="widget.stats.fac_recues_en_cours" t-as="fac">
+            <div class="nc-alert orange" style="margin-bottom:5px">
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fac.name"/> — À valider</div>
+                <div style="font-size:11px;color:#c2410c;margin-top:2px">
+                  <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · Envoyée depuis <t t-esc="fac.days"/>j
+                </div>
+              </div>
+              <div class="btn-sm primary btn-open" data-model="nc_management.corrective_action" t-att-data-id="fac.id">Ouvrir</div>
+            </div>
+          </t>
+        </div>
+      </details>
+
+      </div><!-- fin scroll alertes -->
     </div>
   </div>
 </div>
@@ -603,38 +621,93 @@
 
   <!-- Alertes -->
   <div class="nc-section-hdr globale">
-    <span>Alertes</span>
+    <span>Alertes &amp; Notifications</span>
     <div class="nc-section-hdr-sep"></div>
-    <span><t t-esc="widget.stats.alerts.length"/> alerte(s)</span>
   </div>
 
-  <t t-if="!widget.stats.alerts.length">
-    <div class="nc-empty">Aucune alerte active — tout est à jour.</div>
-  </t>
-  <t t-foreach="widget.stats.alerts" t-as="alert">
-    <t t-if="alert.badge === 'red'">
-      <div class="nc-alert">
-        <div style="flex:1">
-          <div style="font-size:12px;font-weight:600;color:#991b1b">
-            <span class="badge red" style="margin-right:6px"><t t-esc="alert.kind"/></span><t t-esc="alert.name"/>
-          </div>
-          <div style="font-size:11px;color:#b91c1c;margin-top:2px"><t t-esc="alert.label"/></div>
+  <div>
+    <div class="g2" style="grid-template-rows:260px;align-items:stretch;">
+
+      <!-- Alertes accordéon -->
+      <div class="nc-card" style="display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;grid-column:1/-1;">
+        <div class="nc-card-title" style="flex-shrink:0;">Alertes &amp; Notifications</div>
+        <div style="overflow-y:auto;flex:1;min-height:0;padding-right:2px;">
+
+          <!-- 1. Mes FNC à valider -->
+          <details style="margin-bottom:5px">
+            <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff7ed;border:1px solid #ffedd5;border-left:3px solid #FF9800;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#9a3412;user-select:none">
+              <span>&#9656; Mes FNC — À valider</span>
+              <span style="background:#FF9800;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.user_fnc_retard_list || []).length"/></span>
+            </summary>
+            <div style="padding:4px 0 0 6px">
+              <t t-if="!widget.stats.user_fnc_retard_list || !widget.stats.user_fnc_retard_list.length">
+                <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
+              </t>
+              <t t-foreach="widget.stats.user_fnc_retard_list" t-as="fnc">
+                <div class="nc-alert orange" style="margin-bottom:5px">
+                  <div style="flex:1">
+                    <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — À valider</div>
+                    <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours en cours</div>
+                  </div>
+                  <div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" t-att-data-id="fnc.id">Ouvrir</div>
+                </div>
+              </t>
+            </div>
+          </details>
+
+          <!-- 2. Mes FAC à valider -->
+          <details style="margin-bottom:5px">
+            <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f0fdf4;border:1px solid #d1fae5;border-left:3px solid #10B981;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#065f46;user-select:none">
+              <span>&#9656; Mes FAC — À valider</span>
+              <span style="background:#10B981;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.user_fac_en_cours_list || []).length"/></span>
+            </summary>
+            <div style="padding:4px 0 0 6px">
+              <t t-if="!widget.stats.user_fac_en_cours_list || !widget.stats.user_fac_en_cours_list.length">
+                <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
+              </t>
+              <t t-foreach="widget.stats.user_fac_en_cours_list" t-as="fac">
+                <div class="nc-alert orange" style="margin-bottom:5px">
+                  <div style="flex:1">
+                    <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fac.name"/> — À valider</div>
+                    <div style="font-size:11px;color:#c2410c;margin-top:2px">
+                      <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · En cours depuis <t t-esc="fac.days"/>j
+                    </div>
+                  </div>
+                  <div class="btn-sm primary btn-open" data-model="nc_management.corrective_action" t-att-data-id="fac.id">Ouvrir</div>
+                </div>
+              </t>
+            </div>
+          </details>
+
+          <!-- 3. Mes FAC envoyées validées -->
+          <details style="margin-bottom:5px">
+            <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#eff6ff;border:1px solid #dbeafe;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#1d4ed8;user-select:none">
+              <span>&#9656; Mes FAC envoyées — Validées</span>
+              <span style="background:#3b82f6;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.user_fac_validees_list || []).length"/></span>
+            </summary>
+            <div style="padding:4px 0 0 6px">
+              <t t-if="!widget.stats.user_fac_validees_list || !widget.stats.user_fac_validees_list.length">
+                <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
+              </t>
+              <t t-foreach="widget.stats.user_fac_validees_list" t-as="fac">
+                <div class="nc-alert" style="margin-bottom:5px;border-left-color:#3b82f6;border-color:#dbeafe;background:#eff6ff;">
+                  <div style="flex:1">
+                    <div style="font-size:12px;font-weight:600;color:#1d4ed8"><t t-esc="fac.name"/> — Validée ✓</div>
+                    <div style="font-size:11px;color:#2563eb;margin-top:2px">
+                      <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · Validée depuis <t t-esc="fac.days"/>j
+                    </div>
+                  </div>
+                  <div class="btn-sm primary btn-open btn-fac-val-ack" data-model="nc_management.corrective_action" t-att-data-id="fac.id">Ouvrir</div>
+                </div>
+              </t>
+            </div>
+          </details>
+
         </div>
-        <div class="btn-sm primary btn-open" t-att-data-model="alert.model" t-att-data-id="alert.id">Ouvrir</div>
       </div>
-    </t>
-    <t t-if="alert.badge === 'orange'">
-      <div class="nc-alert orange">
-        <div style="flex:1">
-          <div style="font-size:12px;font-weight:600;color:#9a3412">
-            <span class="badge orange" style="margin-right:6px"><t t-esc="alert.kind"/></span><t t-esc="alert.name"/>
-          </div>
-          <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="alert.label"/></div>
-        </div>
-        <div class="btn-sm btn-open" t-att-data-model="alert.model" t-att-data-id="alert.id">Ouvrir</div>
-      </div>
-    </t>
-  </t>
+
+    </div>
+  </div>
 
 </div>
 </div>

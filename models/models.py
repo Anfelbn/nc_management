@@ -1746,7 +1746,43 @@ class PlanActionSmi(models.Model):
                 if m:
                     max_seq = max(max_seq, int(m.group(1)))
             vals['name'] = 'Plan%02d-%d' % (max_seq + 1, year)
-        return super(PlanActionSmi, self).create(vals)
+
+        # Si ce plan est ajouté à un Plan d'Amélioration déjà soumis,
+        # le relier automatiquement au plan global RMQSE en cours.
+        _notify_rmqse_plan = None
+        if vals.get('improvement_plan_id') and not vals.get('global_plan_id'):
+            improvement_plan = self.env[
+                'nc_management.smi_improvement_plan'].sudo().browse(
+                vals['improvement_plan_id'])
+            if improvement_plan.state == 'soumis':
+                rmqse_plan = self.sudo().search([
+                    ('is_global', '=', True),
+                    ('submission_state', '!=', 'cloture'),
+                ], order='create_date desc', limit=1)
+                if rmqse_plan:
+                    vals['global_plan_id'] = rmqse_plan.id
+                    vals.setdefault('submission_state', 'integre')
+                    _notify_rmqse_plan = rmqse_plan
+
+        record = super(PlanActionSmi, self).create(vals)
+
+        # Notifier le plan RMQSE du nouvel ajout
+        if _notify_rmqse_plan:
+            from datetime import datetime as _dt_notify
+            imp = record.sudo().improvement_plan_id
+            direction = imp.direction_id.name if imp.direction_id else '-'
+            now_str = _dt_notify.now().strftime('%d/%m/%Y à %H:%M')
+            _notify_rmqse_plan.sudo().message_post(
+                body=(
+                    '<p>Nouveau plan d\'action ajouté après soumission — '
+                    'Direction <b>%s</b> : <b>%s</b><br/>'
+                    '<em>Ajouté par %s le %s</em></p>'
+                ) % (direction, record.name, self.env.user.name, now_str),
+                message_type='notification',
+                subtype='mail.mt_comment',
+            )
+
+        return record
 
     @api.multi
     def action_generate_plan_number(self):

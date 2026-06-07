@@ -323,9 +323,6 @@ class SmiImprovementPlan(models.Model):
     def action_consolider(self):
         """Ouvre le wizard de consolidation pour intégrer des plans individuels."""
         self.ensure_one()
-        if self.state != 'brouillon':
-            raise UserError(
-                "Impossible de consolider un plan déjà soumis.")
 
         plans_dispo = self.env['nc_management.plan_action_smi'].search([
             ('create_uid',          '=', self.env.uid),
@@ -373,7 +370,7 @@ class SmiImprovementPlan(models.Model):
         })
 
         # Rattacher au plan global unique (créer si inexistant)
-        global_plan = self.env['nc_management.smi_global_plan'].search(
+        global_plan = self.env['nc_management.smi_global_plan'].sudo().search(
             [], limit=1)
         if not global_plan:
             global_plan = self.env['nc_management.smi_global_plan'].sudo().create({
@@ -427,7 +424,7 @@ class SmiImprovementPlan(models.Model):
 
         # Tracer l'événement dans le chatter du plan global
         if global_plan:
-            global_plan.message_post(
+            global_plan.sudo().message_post(
                 body=(
                     "<p>Nouveau Plan d'Amélioration reçu : "
                     "<strong>%s</strong><br/>"

@@ -111,7 +111,7 @@
                 <notebook attrs="{'invisible': [('date_consultation', '!=', False)]}">
                     <page string="Plans intégrés">
                         <field name="plan_ids"
-                               attrs="{'readonly': [('state', '!=', 'brouillon')]}"
+                               attrs="{'readonly': [('date_consultation', '!=', False)]}"
                                context="{'default_improvement_plan_id': active_id}">
                             <tree string="Plans intégrés" import="false" create="false"
                                   class="smi_plan_tree"

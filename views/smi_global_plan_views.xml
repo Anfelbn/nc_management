@@ -209,10 +209,10 @@
                                 <field name="date_prevue"    string="Date prévue"/>
                                 <field name="avancement"     string="Avancement %"
                                        widget="progressbar"/>
+                                <field name="state"          string="État"/>
                                 <field name="efficacite"
                                        attrs="{'invisible': [('avancement', '&lt;', 100)],
                                                'readonly':  [('state', '=', 'cloture')]}"/>
-                                <field name="state"          string="État"/>
                                 <field name="is_late"        invisible="1"/>
                             </tree>
                         </field>

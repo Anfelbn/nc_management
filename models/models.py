@@ -1688,6 +1688,13 @@ class PlanActionSmi(models.Model):
                 rec.state != 'done'
             )
 
+    @api.multi
+    def copy(self, default=None):
+        self.ensure_one()
+        if self.is_global:
+            raise UserError("La duplication du Plan d'Amélioration SMI n'est pas autorisée.")
+        return super(PlanActionSmi, self).copy(default=default)
+
     @api.model
     def create(self, vals):
         is_global = vals.get('is_global') or self._context.get('default_is_global')
@@ -1718,25 +1725,22 @@ class PlanActionSmi(models.Model):
                 vals.get('direct_global_plan_id')):
             if 'state' not in vals:
                 vals['state'] = 'en_cours'
-        # Numérotation SMI/PLAN/YYYY/NNNN pour les plans du nouveau système
+        # Numérotation SMI/PLAN/YYYY/NNNN uniquement pour les plans directs RMQSE
         if (vals.get('name', 'New') == 'New' and
-                (vals.get('improvement_plan_id') or
-                 vals.get('direct_global_plan_id'))):
+                vals.get('direct_global_plan_id') and
+                not vals.get('improvement_plan_id')):
             seq = self.env['ir.sequence'].next_by_code(
                 'nc_management.smi_action_plan')
             if seq:
                 vals['name'] = seq
-        # Auto-numérotation Plan01-2026 pour les plans individuels (Mes Plans)
-        if (vals.get('name', 'New') == 'New' and
-                not is_global and
-                not vals.get('improvement_plan_id') and
+        # Auto-numérotation Plan01-2026 pour tous les plans individuels
+        if (vals.get('name', 'New') == 'New' and not is_global and
                 not vals.get('direct_global_plan_id')):
             import re as _re_plan
             from datetime import date as _date_plan
             year = _date_plan.today().year
             existing = self.search([
                 ('is_global', '=', False),
-                ('improvement_plan_id', '=', False),
                 ('direct_global_plan_id', '=', False),
                 ('name', 'like', 'Plan%-' + str(year)),
             ])
@@ -1747,7 +1751,43 @@ class PlanActionSmi(models.Model):
                 if m:
                     max_seq = max(max_seq, int(m.group(1)))
             vals['name'] = 'Plan%02d-%d' % (max_seq + 1, year)
-        return super(PlanActionSmi, self).create(vals)
+
+        # Si ce plan est ajouté à un Plan d'Amélioration déjà soumis,
+        # le relier automatiquement au plan global RMQSE en cours.
+        _notify_rmqse_plan = None
+        if vals.get('improvement_plan_id') and not vals.get('global_plan_id'):
+            improvement_plan = self.env[
+                'nc_management.smi_improvement_plan'].sudo().browse(
+                vals['improvement_plan_id'])
+            if improvement_plan.state == 'soumis':
+                rmqse_plan = self.sudo().search([
+                    ('is_global', '=', True),
+                    ('submission_state', '!=', 'cloture'),
+                ], order='create_date desc', limit=1)
+                if rmqse_plan:
+                    vals['global_plan_id'] = rmqse_plan.id
+                    vals.setdefault('submission_state', 'integre')
+                    _notify_rmqse_plan = rmqse_plan
+
+        record = super(PlanActionSmi, self).create(vals)
+
+        # Notifier le plan RMQSE du nouvel ajout
+        if _notify_rmqse_plan:
+            from datetime import datetime as _dt_notify
+            imp = record.sudo().improvement_plan_id
+            direction = imp.direction_id.name if imp.direction_id else '-'
+            now_str = _dt_notify.now().strftime('%d/%m/%Y à %H:%M')
+            _notify_rmqse_plan.sudo().message_post(
+                body=(
+                    '<p>Nouveau plan d\'action ajouté après soumission — '
+                    'Direction <b>%s</b> : <b>%s</b><br/>'
+                    '<em>Ajouté par %s le %s</em></p>'
+                ) % (direction, record.name, self.env.user.name, now_str),
+                message_type='notification',
+                subtype='mail.mt_comment',
+            )
+
+        return record
 
     @api.multi
     def action_generate_plan_number(self):
@@ -2055,6 +2095,9 @@ class PlanActionSmi(models.Model):
         plans = self.env['nc_management.plan_action_smi'].search([
             ('is_global', '=', False),
             ('global_plan_id', '=', False),
+            '|',
+            ('create_uid', '=', self.env.uid),
+            ('sent_to_rmqse', '=', True),
         ])
         wizard = self.env['nc_management.consolidate_wizard'].create({
             'global_plan_id': self.id,
@@ -2101,6 +2144,35 @@ class PlanActionSmi(models.Model):
         }
 
     @api.multi
+    def action_print_global(self):
+        self.ensure_one()
+        return self.env.ref(
+            'nc_management.action_report_analyse_efficacite'
+        ).report_action(self)
+
+    @api.multi
+    def action_supprimer_plan(self):
+        self.ensure_one()
+        self.unlink()
+        return {'type': 'ir.actions.act_window_close'}
+
+    @api.multi
+    def action_open_new_child_plan_form(self):
+        self.ensure_one()
+        view_id = self.env.ref('nc_management.view_plan_smi_form').id
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Nouveau plan d'action",
+            'res_model': 'nc_management.plan_action_smi',
+            'view_mode': 'form',
+            'views': [[view_id, 'form']],
+            'target': 'new',
+            'context': {
+                'default_global_plan_id': self.id,
+            },
+        }
+
+    @api.multi
     def action_cloturer_plan(self):
         """Clôture le plan actuel et crée automatiquement le suivant
         en y intégrant tous les plans créés/reçus après la date_maj courante."""
@@ -2131,7 +2203,6 @@ class PlanActionSmi(models.Model):
             'name': 'New',
             'is_global': True,
             'submission_state': 'brouillon',
-            'mois_reception': fields.Date.today(),
             'description': "Plan d'Action d'Amélioration SMI",
         })
 
@@ -2181,7 +2252,6 @@ class PlanActionSmi(models.Model):
             plan = self.create({
                 'is_global': True,
                 'submission_state': 'brouillon',
-                'mois_reception': fields.Date.today(),
             })
         view_id = self.env.ref('nc_management.view_plan_smi_form_global').id
         return {

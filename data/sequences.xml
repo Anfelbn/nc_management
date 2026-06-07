@@ -40,12 +40,24 @@
         <field name="use_date_range">True</field>
     </record>
 
-    <!-- Séquence Niveau 2 : Plans d'Amélioration par direction -->
+    <!-- Séquence Niveau 2 : Plans d'Amélioration par direction (RMQSE) -->
     <record id="seq_smi_improvement_plan" model="ir.sequence">
         <field name="name">SMI Plan d'Amélioration (niveau 2)</field>
         <field name="code">nc_management.smi_improvement_plan</field>
         <field name="prefix">SMI/PAA/%(year)s/</field>
         <field name="padding">3</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="use_date_range">True</field>
+    </record>
+
+    <!-- Séquence Plans d'Amélioration NC Utilisateur : PAA01-2026 -->
+    <record id="seq_paa_user_improvement_plan" model="ir.sequence">
+        <field name="name">PAA Plan d'Amélioration NC Utilisateur</field>
+        <field name="code">nc_management.paa_user_improvement_plan</field>
+        <field name="prefix">PAA</field>
+        <field name="suffix">-%(year)s</field>
+        <field name="padding">2</field>
         <field name="number_next">1</field>
         <field name="number_increment">1</field>
         <field name="use_date_range">True</field>

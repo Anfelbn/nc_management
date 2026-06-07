@@ -88,9 +88,34 @@ class ConsolidateImprovementWizard(models.TransientModel):
                 "Aucun plan sélectionné. "
                 "Cochez au moins un plan à intégrer.")
 
-        selected_plans.write({
-            'improvement_plan_id': self.improvement_plan_id.id,
-        })
+        write_vals = {'improvement_plan_id': self.improvement_plan_id.id}
+
+        # Si le Plan d'Amélioration est déjà soumis, relier automatiquement
+        # les plans sélectionnés au plan global RMQSE en cours.
+        if self.improvement_plan_id.state == 'soumis':
+            rmqse_plan = self.env['nc_management.plan_action_smi'].sudo().search([
+                ('is_global', '=', True),
+                ('submission_state', '!=', 'cloture'),
+            ], order='create_date desc', limit=1)
+            if rmqse_plan:
+                write_vals['global_plan_id'] = rmqse_plan.id
+                write_vals['submission_state'] = 'integre'
+                from datetime import datetime as _dt_wiz
+                direction = (
+                    self.improvement_plan_id.direction_id.name
+                    if self.improvement_plan_id.direction_id else '-')
+                now_str = _dt_wiz.now().strftime('%d/%m/%Y à %H:%M')
+                names = ', '.join(selected_plans.mapped('name'))
+                rmqse_plan.sudo().message_post(
+                    body=(
+                        '<p>Plans ajoutés après soumission — Direction <b>%s</b> : '
+                        '<b>%s</b><br/><em>Ajoutés par %s le %s</em></p>'
+                    ) % (direction, names, self.env.user.name, now_str),
+                    message_type='notification',
+                    subtype='mail.mt_comment',
+                )
+
+        selected_plans.write(write_vals)
 
         return {
             'type':      'ir.actions.act_window',
@@ -99,4 +124,20 @@ class ConsolidateImprovementWizard(models.TransientModel):
             'view_mode': 'form',
             'target':    'current',
             'context':   {'form_view_initial_mode': 'edit'},
+        }
+
+    @api.multi
+    def action_open_new_plan(self):
+        self.ensure_one()
+        view_id = self.env.ref('nc_management.view_plan_smi_form').id
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Nouveau plan d'action",
+            'res_model': 'nc_management.plan_action_smi',
+            'view_mode': 'form',
+            'views': [[view_id, 'form']],
+            'target': 'new',
+            'context': {
+                'default_improvement_plan_id': self.improvement_plan_id.id,
+            },
         }

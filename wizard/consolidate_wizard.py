@@ -63,3 +63,19 @@ class ConsolidateWizard(models.TransientModel):
             'target': 'current',
             'context': {'default_is_global': True},
         }
+
+    @api.multi
+    def action_open_new_plan(self):
+        self.ensure_one()
+        view_id = self.env.ref('nc_management.view_plan_smi_form').id
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Nouveau plan d'action",
+            'res_model': 'nc_management.plan_action_smi',
+            'view_mode': 'form',
+            'views': [[view_id, 'form']],
+            'target': 'new',
+            'context': {
+                'default_global_plan_id': self.global_plan_id.id,
+            },
+        }

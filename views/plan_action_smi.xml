@@ -349,7 +349,8 @@
                                   decoration-warning="etat_avancement == 'en_cours'"
                                   decoration-danger="is_late == True">
                                 <field name="nature"           string="Nature"/>
-                                <field name="name"             string="Référence"/>
+                                <field name="name"             invisible="1"/>
+                                <field name="reference"        string="Référence"/>
                                 <field name="direction_id"     string="Direction"/>
                                 <field name="responsable_id"   string="Responsable"/>
                                 <field name="date_realisation" string="Date de réalisation"/>

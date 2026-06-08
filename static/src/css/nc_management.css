@@ -414,3 +414,19 @@ textarea.o_input:focus {
 .o_button_import {
     display: none !important;
 }
+
+/* ── Titres de section dans les formulaires FNC/FAC ─────── */
+.o_horizontal_separator {
+    color: #1a2e5a !important;
+}
+
+/* ── Liens many2one (noms employés, directions…) ────────── */
+.o_form_view .o_form_uri {
+    color: #1a2e5a !important;
+}
+.o_form_view .o_form_uri:hover {
+    color: #2575b8 !important;
+    text-decoration: underline;
+}
+
+

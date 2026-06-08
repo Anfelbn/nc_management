@@ -16,6 +16,8 @@
                     src="/nc_management/static/src/js/smi_plan_filter.js"/>
             <script type="text/javascript"
                     src="/nc_management/static/src/js/list_no_export.js"/>
+            <script type="text/javascript"
+                    src="/nc_management/static/src/js/disable_import.js"/>
         </xpath>
     </template>
 </odoo>

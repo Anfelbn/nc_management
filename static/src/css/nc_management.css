@@ -410,3 +410,7 @@ textarea.o_input:focus {
     border-color: #2563eb;
     background: #eff6ff;
 }
+
+.o_button_import {
+    display: none !important;
+}

@@ -370,6 +370,8 @@ class Nonconformity(models.Model):
 
     @api.onchange('superieur_id', 'date_validation', 'signature')
     def _onchange_autofill_signature(self):
+        if self.state != 'in_progress':
+            return
         employee = self.env['hr.employee'].sudo().search(
             [('user_id', '=', self.env.uid)], limit=1)
         if not employee:

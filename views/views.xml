@@ -131,10 +131,10 @@
 
                 <!-- ── Section 1 — Description (Step 1) ──────── -->
                 <group string="1- Description de la non-conformité">
-                    <field name="description" nolabel="1"
+                    <field name="description" nolabel="1" colspan="2"
                            placeholder="Décrivez la non-conformité..."
                            attrs="{'readonly': [('state','not in',['draft','submitted'])]}"/>
-                    <group>
+                    <group col="6" colspan="2">
                         <field name="signale_par_id"
                                options="{'no_create': True, 'no_create_edit': True}"
                                attrs="{'readonly': [('state','not in',['draft','submitted'])]}"/>
@@ -146,78 +146,73 @@
                 </group>
 
                 <!-- ── Traitement (Step 2) ───────────────────── -->
-                <group string="Traitement">
-                    <group>
-                        <field name="trait_reprise"
-                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
-                        <field name="trait_declassement"
-                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
-                        <field name="trait_retour_fourn"
-                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
-                    </group>
-                    <group>
-                        <field name="trait_recyclage"
-                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
-                        <field name="trait_reparation"
-                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
-                        <field name="trait_autre"
-                               attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
-                        <field name="trait_autre_preciser"
-                               attrs="{'invisible': [('trait_autre','=',False)],
-                                       'required':  [('trait_autre','=',True)],
-                                       'readonly':  [('state','not in',['submitted','in_progress'])]}"/>
-                    </group>
+                <group string="Traitement" col="6">
+                    <field name="trait_reprise"
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
+                    <field name="trait_declassement"
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
+                    <field name="trait_retour_fourn"
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
+                    <field name="trait_recyclage"
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
+                    <field name="trait_reparation"
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
+                    <field name="trait_autre"
+                           attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
+                    <field name="trait_autre_preciser"
+                           attrs="{'invisible': [('trait_autre','=',False)],
+                                   'required':  [('trait_autre','=',True)],
+                                   'readonly':  [('state','not in',['submitted','in_progress'])]}"/>
                 </group>
 
                 <!-- ── Section 2 — Action immédiate (Step 2) ─── -->
                 <group string="2- Action immédiate">
-                    <field name="action_immediate" nolabel="1"
+                    <field name="action_immediate" nolabel="1" colspan="2"
                            placeholder="Décrivez l'action immédiate..."
                            attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
-                    <group>
-                        <field name="realise_par_id"
+                    <group col="4" colspan="2">
+                        <field name="realise_par_id" colspan="2"
                                options="{'no_create': True, 'no_create_edit': True}"
                                attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
-                        <field name="date_realisation"
+                        <field name="date_realisation" colspan="2"
                                attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                     </group>
                 </group>
 
                 <!-- ── Section 3 — Analyse des causes (Step 2) ─ -->
                 <group string="3- Analyse des causes">
-                    <field name="analyse_causes" nolabel="1"
+                    <field name="analyse_causes" nolabel="1" colspan="2"
                            placeholder="Analysez les causes..."
                            attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
-                    <field name="impact"
+                    <div class="o_form_label" colspan="2" style="font-weight: bold;">Impact : coût, incidence, risque</div>
+                    <field name="impact" nolabel="1" colspan="2"
                            placeholder="Impact : coût, incidence, risque..."
                            attrs="{'readonly': [('state','not in',['submitted','in_progress'])]}"/>
                 </group>
 
                 <!-- ── Liaison FAC / Responsable ───────────────  -->
                 <group string="Fiche d'Action Corrective">
-                    <field name="assigned_to_id"
-                           options="{'no_create': True, 'no_create_edit': True}"
-                           attrs="{'readonly': [('state','not in',['submitted'])]}"/>
                     <field name="can_access_fac" invisible="1"/>
-                    <field name="fac_reference" readonly="1"
-                           attrs="{'invisible': [('can_access_fac','=',False)]}"/>
-                    <field name="fac_number_display" readonly="1"
-                           attrs="{'invisible': [('can_access_fac','=',True)]}"/>
+                    <group col="4" colspan="2">
+                        <field name="assigned_to_id" colspan="2"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               attrs="{'readonly': [('state','not in',['submitted'])]}"/>
+                        <field name="fac_reference" string="N° Fiche d'action" colspan="2" readonly="1"
+                               attrs="{'invisible': [('can_access_fac','=',False)]}"/>
+                        <field name="fac_number_display" string="N° Fiche d'action" colspan="2" readonly="1"
+                               attrs="{'invisible': [('can_access_fac','=',True)]}"/>
+                    </group>
                 </group>
 
                 <!-- ── Validation hiérarchique ──────────────────  -->
-                <group string="Validation hiérarchique">
-                    <group>
-                        <field name="superieur_id"
-                               options="{'no_create': True, 'no_create_edit': True}"
-                               attrs="{'readonly': [('state','not in',['in_progress','validated'])]}"/>
-                        <field name="date_validation"
-                               attrs="{'readonly': [('state','not in',['in_progress','validated'])]}"/>
-                    </group>
-                    <group>
-                        <field name="signature"
-                               attrs="{'readonly': [('state','not in',['in_progress'])]}"/>
-                    </group>
+                <group string="Validation hiérarchique" col="6">
+                    <field name="superieur_id"
+                           options="{'no_create': True, 'no_create_edit': True}"
+                           attrs="{'readonly': [('state','not in',['in_progress','validated'])]}"/>
+                    <field name="date_validation"
+                           attrs="{'readonly': [('state','not in',['in_progress','validated'])]}"/>
+                    <field name="signature"
+                           attrs="{'readonly': [('state','not in',['in_progress'])]}"/>
                 </group>
 
             </sheet>

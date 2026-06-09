@@ -57,29 +57,24 @@ msgid "Actions Correctives"
 msgstr "Actions Correctives"
 
 #. module: nc_management
-#: model:ir.ui.menu,name:nc_management.menu_revision
-msgid "Révision des documents"
-msgstr "Révision des documents"
-
-#. module: nc_management
 #: model:ir.ui.menu,name:nc_management.menu_config
 msgid "Révision Documents"
 msgstr "Révision Documents"
 
 #. module: nc_management
 #: model:ir.ui.menu,name:nc_management.menu_plan_smi_root
-msgid "Plan Action SMI"
-msgstr "Plan Action SMI"
+msgid "Plan d'Action d'Amélioration SMI"
+msgstr "Plan d'Action d'Amélioration SMI"
+
+#. module: nc_management
+#: model:ir.ui.menu,name:nc_management.menu_mes_plans_nc_user
+msgid "Action d'Amélioration"
+msgstr "Action d'Amélioration"
 
 #. module: nc_management
 #: model:ir.ui.menu,name:nc_management.menu_mes_plans_smi
-msgid "Mes Plans"
-msgstr "Mes Plans"
-
-#. module: nc_management
-#: model:ir.ui.menu,name:nc_management.menu_plans_recus_smi
-msgid "Plans Reçus"
-msgstr "Plans Reçus"
+msgid "Action d'Amélioration"
+msgstr "Action d'Amélioration"
 
 #. module: nc_management
 #: model:ir.ui.menu,name:nc_management.menu_plan_global_smi

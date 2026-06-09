@@ -558,7 +558,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">18</field>
     <field name="arch" type="xml">
-        <form string="Analyse Efficacité Globale" edit="false">
+        <form string="Analyse Efficacité Globale" edit="false" create="false">
             <header>
                 <!-- Champ technique requis par attrs -->
                 <field name="date_consultation" invisible="1"/>

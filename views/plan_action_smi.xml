@@ -619,7 +619,7 @@
      - NC Utilisateur : dropdown avec 2 sous-menus (Mes Plans / Plan d'Amélioration)
      - RMQSE          : dropdown avec 3 sous-menus (Mes Plans / Plan Amélioration / Analyse) -->
 <menuitem
-    name="Plan D'Action D'Amélioration SMI"
+    name="Plan d'action d'amélioration SMI"
     id="nc_management.menu_plan_smi_root"
     parent="nc_management.menu_root"
     groups="nc_management.group_nc_utilisateur,nc_management.group_responsable_qualite"
@@ -627,7 +627,7 @@
 
 <!-- Mes Plans NC Utilisateur : plans individuels (niveau 1) filtrés -->
 <menuitem
-    name="Action D'Amélioration"
+    name="Action d'amélioration"
     id="nc_management.menu_mes_plans_nc_user"
     parent="nc_management.menu_plan_smi_root"
     action="action_mes_plans_smi"
@@ -636,7 +636,7 @@
 
 <!-- Mes Plans RMQSE (sequence 1) -->
 <menuitem
-    name="Action D'Amélioration"
+    name="Action d'amélioration"
     id="nc_management.menu_mes_plans_smi"
     parent="nc_management.menu_plan_smi_root"
     action="action_mes_plans_smi"

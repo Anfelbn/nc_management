@@ -351,6 +351,31 @@ textarea.o_input:focus {
     white-space: nowrap !important;
 }
 
+/* ── Style des lignes — FNC & FAC ── */
+/* Séparateur entre lignes */
+.nc_list_tree tbody tr.o_data_row {
+    border-bottom: 1px solid #e2eaf4 !important;
+    transition: background-color .12s ease !important;
+}
+/* Lignes impaires : blanc pur */
+.nc_list_tree tbody tr.o_data_row:nth-child(odd) {
+    background-color: #ffffff !important;
+}
+/* Lignes paires : bleu très pâle */
+.nc_list_tree tbody tr.o_data_row:nth-child(even) {
+    background-color: #f0f4fa !important;
+}
+/* Hover : bleu pâle avec trait latéral bleu nuit */
+.nc_list_tree tbody tr.o_data_row:hover {
+    background-color: #dce8f8 !important;
+    box-shadow: inset 3px 0 0 #1a2e5a !important;
+}
+/* Ligne sélectionnée (édition) */
+.nc_list_tree tbody tr.o_data_row.o_selected_row {
+    background-color: #d0e2f5 !important;
+    box-shadow: inset 3px 0 0 #1a2e5a !important;
+}
+
 /* ── Colonnes filtrables : curseur pointer au survol ── */
 .smi_plan_tree thead th.smi-filterable-th,
 .smi_hist_tree thead th.smi-filterable-th,

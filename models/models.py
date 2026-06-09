@@ -2169,6 +2169,13 @@ class PlanActionSmi(models.Model):
         ).report_action(self)
 
     @api.multi
+    def action_print_plan_smi_pdf(self):
+        self.ensure_one()
+        return self.env.ref(
+            'nc_management.action_report_plan_action_smi_pdf'
+        ).report_action(self)
+
+    @api.multi
     def action_supprimer_plan(self):
         self.ensure_one()
         self.unlink()

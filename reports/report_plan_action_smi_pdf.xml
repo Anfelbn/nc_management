@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+<data>
+
+    <!-- ============================================================ -->
+    <!--  FORMAT PAPIER — A4 Paysage                                   -->
+    <!-- ============================================================ -->
+    <record id="paperformat_plan_smi_landscape" model="report.paperformat">
+        <field name="name">Plan SMI - A4 Paysage</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">6</field>
+        <field name="margin_bottom">8</field>
+        <field name="margin_left">6</field>
+        <field name="margin_right">6</field>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!--  ACTION REPORT — Plan d'Action d'Amélioration SMI            -->
+    <!-- ============================================================ -->
+    <report
+        id="action_report_plan_action_smi_pdf"
+        model="nc_management.plan_action_smi"
+        string="Plan d'Action SMI"
+        report_type="qweb-pdf"
+        name="nc_management.report_plan_action_smi_pdf_template"
+        file="nc_management.report_plan_action_smi_pdf_template"
+        attachment_use="False"
+        menu="False"
+    />
+
+    <record id="action_report_plan_action_smi_pdf" model="ir.actions.report">
+        <field name="paperformat_id" ref="paperformat_plan_smi_landscape"/>
+    </record>
+
+    <!-- ============================================================ -->
+    <!--  TEMPLATE QWeb — Plan d'Action d'Amélioration SMI            -->
+    <!-- ============================================================ -->
+    <template id="report_plan_action_smi_pdf_template">
+        <t t-call="web.html_container">
+          <t t-call="web.basic_layout">
+            <t t-foreach="docs" t-as="plan">
+                <t t-set="NATURE_LABELS" t-value="{
+                    'nc_produit':               'NC Produit',
+                    'reclamation_pi':           'Réclamation Client / PI',
+                    'environnement':            'Environnement',
+                    'sst':                      'SST',
+                    'audit_externe':            'Audit Externe',
+                    'audit_interne':            'Audit Interne',
+                    'swot':                     'SWOT',
+                    'risque':                   'Risque',
+                    'objectif_non_atteint':     'Objectif non atteint',
+                    'decision_revue_direction': 'Décision revue direction',
+                    'amelioration':             'Amélioration',
+                    'nc_reglementaire':         'NC réglementaire',
+                }"/>
+
+                <!-- Lignes du tableau -->
+                <t t-if="plan.is_global" t-set="rows" t-value="plan.child_plan_ids"/>
+                <t t-else=""           t-set="rows" t-value="plan"/>
+
+                <div class="page paa-page">
+
+                    <!-- ===== STYLES ===== -->
+                    <style>
+                        @page {
+                            size: A4 landscape;
+                            margin: 6mm 6mm 8mm 6mm;
+                        }
+                        * { box-sizing: border-box; }
+                        body, .page {
+                            font-family: Arial, sans-serif;
+                            font-size: 7.5px;
+                            color: #000;
+                            margin: 0;
+                            padding: 0;
+                        }
+                        .paa-page {
+                            width: 100%;
+                        }
+
+                        /* ── EN-TÊTE ── */
+                        .paa-header {
+                            width: 100%;
+                            border-collapse: collapse;
+                            border: 1.5px solid #000;
+                            margin-bottom: 3px;
+                            font-size: 8px;
+                        }
+                        .paa-header td {
+                            border: 1.5px solid #000;
+                            padding: 3px 5px;
+                            vertical-align: middle;
+                        }
+                        .cell-logo {
+                            width: 13%;
+                            text-align: center;
+                        }
+                        .cell-company {
+                            width: 60%;
+                            text-align: center;
+                        }
+                        .cell-ref {
+                            width: 27%;
+                            font-size: 7.5px;
+                        }
+                        .company-ar {
+                            font-size: 11px;
+                            font-weight: bold;
+                            direction: rtl;
+                        }
+                        .company-fr {
+                            font-size: 9px;
+                            font-weight: bold;
+                            margin-top: 2px;
+                        }
+                        .company-en {
+                            font-size: 8px;
+                            color: #333;
+                        }
+                        .cell-title {
+                            background-color: #b2dfdb;
+                            text-align: center;
+                            font-weight: bold;
+                            font-size: 9px;
+                            padding: 4px 5px;
+                        }
+                        .title-fr { font-size: 10px; font-weight: bold; }
+                        .title-en { font-size: 8.5px; font-style: italic; }
+
+                        /* ── INFOS GÉNÉRALES ── */
+                        .paa-info {
+                            width: 100%;
+                            border-collapse: collapse;
+                            border: 1px solid #000;
+                            margin-bottom: 3px;
+                            font-size: 7.5px;
+                        }
+                        .paa-info td {
+                            border: 1px solid #000;
+                            padding: 2px 5px;
+                            vertical-align: middle;
+                        }
+                        .info-label { font-weight: bold; color: #333; width: 12%; }
+
+                        /* ── TABLEAU PRINCIPAL ── */
+                        .paa-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            border: 1.5px solid #000;
+                            font-size: 6.8px;
+                            table-layout: fixed;
+                        }
+                        .paa-table th {
+                            background-color: #00796b;
+                            color: #fff;
+                            border: 1px solid #004d40;
+                            padding: 3px 2px;
+                            text-align: center;
+                            vertical-align: middle;
+                            font-size: 6.5px;
+                            font-weight: bold;
+                            line-height: 1.2;
+                            word-wrap: break-word;
+                        }
+                        .paa-table td {
+                            border: 1px solid #9e9e9e;
+                            padding: 3px 2px;
+                            vertical-align: top;
+                            word-wrap: break-word;
+                            line-height: 1.3;
+                            min-height: 20px;
+                        }
+                        .paa-table tr:nth-child(even) td {
+                            background-color: #f5f5f5;
+                        }
+                        .paa-table td.center { text-align: center; vertical-align: middle; }
+                        .eff-oui {
+                            background-color: #43a047;
+                            color: #fff;
+                            font-weight: bold;
+                            padding: 1px 3px;
+                            border-radius: 2px;
+                            display: inline-block;
+                        }
+                        .eff-non {
+                            background-color: #e53935;
+                            color: #fff;
+                            font-weight: bold;
+                            padding: 1px 3px;
+                            border-radius: 2px;
+                            display: inline-block;
+                        }
+                        .av-bar-wrap {
+                            width: 100%;
+                            background: #e0e0e0;
+                            border-radius: 2px;
+                            height: 7px;
+                            margin-bottom: 1px;
+                        }
+                        .av-bar {
+                            height: 7px;
+                            border-radius: 2px;
+                            background: #00796b;
+                        }
+                        .av-pct { text-align: center; font-weight: bold; font-size: 7px; }
+
+                        /* ── PIED DE PAGE ── */
+                        .paa-footer {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 5px;
+                            font-size: 7.5px;
+                        }
+                        .paa-footer td { padding: 2px 4px; vertical-align: middle; }
+                        .taux-label { font-weight: bold; width: 8%; }
+                        .taux-bar-wrap {
+                            width: 92%;
+                            background: #e0e0e0;
+                            border-radius: 3px;
+                            height: 9px;
+                        }
+                        .taux-bar {
+                            height: 9px;
+                            border-radius: 3px;
+                            background: #ffc107;
+                        }
+                        .taux-val { font-weight: bold; color: #333; width: 6%; text-align: right; }
+                        .sign-table {
+                            width: 40%;
+                            border-collapse: collapse;
+                            border: 1px solid #000;
+                            margin: 5px auto 0 auto;
+                            font-size: 7.5px;
+                        }
+                        .sign-table td {
+                            border: 1px solid #000;
+                            padding: 3px 6px;
+                            height: 25px;
+                            vertical-align: top;
+                        }
+                        .gen-note {
+                            font-size: 6.5px;
+                            color: #777;
+                            text-align: center;
+                            margin-top: 4px;
+                        }
+                    </style>
+
+                    <!-- ===== EN-TÊTE OFFICIEL ===== -->
+                    <table class="paa-header">
+                        <tr>
+                            <!-- Logo -->
+                            <td class="cell-logo" rowspan="2">
+                                <t t-if="env.user.company_id.logo">
+                                    <img t-att-src="'data:image/png;base64,' + env.user.company_id.logo.decode('utf-8')"
+                                         style="max-width:90px; max-height:55px;"/>
+                                </t>
+                                <t t-else="">
+                                    <span style="font-size:9px; font-weight:bold; color:#00796b;">GICA</span>
+                                </t>
+                            </td>
+                            <!-- Noms société -->
+                            <td class="cell-company" rowspan="2">
+                                <div class="company-ar">شـركـة الإسمـنـت عـيـن الكـبيـرة</div>
+                                <div class="company-fr">SOCIETE DES CIMENTS DE AIN EL KEBIRA</div>
+                                <div class="company-en">CEMENT COMPANY OF AIN EL KEBIRA</div>
+                            </td>
+                            <!-- Référence -->
+                            <td class="cell-ref">
+                                Référence : <strong>PACA-SMI 019/700</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="cell-ref">Révision N° : <strong>02</strong></td>
+                        </tr>
+                        <tr>
+                            <!-- Titre plan -->
+                            <td class="cell-title" colspan="2">
+                                <div class="title-fr">Plan d'action d'amélioration SMI</div>
+                                <div class="title-en">IMS improvement action plan</div>
+                            </td>
+                            <td class="cell-ref">Date de révision : <strong>11/01/2024</strong></td>
+                        </tr>
+                    </table>
+
+                    <!-- ===== INFOS GÉNÉRALES ===== -->
+                    <table class="paa-info">
+                        <tr>
+                            <td class="info-label">Processus / Direction :</td>
+                            <td style="width:38%;">
+                                <t t-if="plan.is_global">
+                                    — (Plan consolidé toutes directions)
+                                </t>
+                                <t t-else="">
+                                    <t t-esc="plan.direction_id.name or ''"/>
+                                    <t t-if="plan.department_id">
+                                        — <t t-esc="plan.department_id.name"/>
+                                    </t>
+                                    <t t-if="plan.service_id">
+                                        / <t t-esc="plan.service_id.name"/>
+                                    </t>
+                                </t>
+                            </td>
+                            <td class="info-label" style="width:12%;">Date de mise à jour :</td>
+                            <td style="width:20%;">
+                                <t t-if="plan.date_maj">
+                                    <t t-esc="datetime.datetime.strptime(plan.date_maj[:10], '%Y-%m-%d').strftime('%d/%m/%Y')"/>
+                                </t>
+                                <t t-elif="plan.mois_reception">
+                                    <t t-esc="datetime.datetime.strptime(plan.mois_reception, '%Y-%m-%d').strftime('%d/%m/%Y')"/>
+                                </t>
+                            </td>
+                            <td class="info-label" style="width:8%;">Référence :</td>
+                            <td><t t-esc="plan.name"/></td>
+                        </tr>
+                    </table>
+
+                    <!-- ===== TABLEAU PRINCIPAL ===== -->
+                    <table class="paa-table">
+                        <colgroup>
+                            <col style="width:4%;"/>   <!-- Nature -->
+                            <col style="width:4%;"/>   <!-- Référence -->
+                            <col style="width:11%;"/>  <!-- Description -->
+                            <col style="width:9%;"/>   <!-- Causes -->
+                            <col style="width:11%;"/>  <!-- Action -->
+                            <col style="width:6%;"/>   <!-- Responsable -->
+                            <col style="width:7%;"/>   <!-- Moyens -->
+                            <col style="width:4%;"/>   <!-- Durée estimée -->
+                            <col style="width:5%;"/>   <!-- Date prévue -->
+                            <col style="width:5%;"/>   <!-- Date lancement -->
+                            <col style="width:5%;"/>   <!-- Date réalisation -->
+                            <col style="width:5%;"/>   <!-- Avancement -->
+                            <col style="width:4%;"/>   <!-- Durée réelle -->
+                            <col style="width:11%;"/>  <!-- Critère efficacité -->
+                            <col style="width:4%;"/>   <!-- Efficacité -->
+                            <col style="width:5%;"/>   <!-- Remarque -->
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Nature</th>
+                                <th>Référence</th>
+                                <th>Brève description de la non-conformité, remarque et/ou point sensible / Objectif d'amélioration</th>
+                                <th>Causes</th>
+                                <th>Action</th>
+                                <th>Responsable</th>
+                                <th>Moyens Nécessaires (Matériels, financiers, humains)</th>
+                                <th>Durée estimé</th>
+                                <th>Date Prévue</th>
+                                <th>Date de lancement (pour les projets, les achats)</th>
+                                <th>Date de réalisation</th>
+                                <th>Etat d'avancement (% de réalisation de l'action)</th>
+                                <th>Durée réelle</th>
+                                <th>Critère d'efficacité de l'action (l'objectif et les critères de réussite de l'action mesurable)</th>
+                                <th>Efficacité</th>
+                                <th>Remarque</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="rows" t-as="row">
+                                <tr>
+                                    <!-- Nature -->
+                                    <td class="center" style="font-size:6px;">
+                                        <t t-esc="NATURE_LABELS.get(row.nature, row.nature or '')"/>
+                                    </td>
+                                    <!-- Référence -->
+                                    <td class="center">
+                                        <t t-esc="row.reference or row.name or ''"/>
+                                    </td>
+                                    <!-- Description -->
+                                    <td><t t-esc="row.description or ''"/></td>
+                                    <!-- Causes -->
+                                    <td><t t-esc="row.causes or ''"/></td>
+                                    <!-- Action -->
+                                    <td><t t-esc="row.action or ''"/></td>
+                                    <!-- Responsable -->
+                                    <td class="center">
+                                        <t t-if="row.responsable_ids">
+                                            <t t-foreach="row.responsable_ids" t-as="resp">
+                                                <div><t t-esc="resp.name"/></div>
+                                            </t>
+                                        </t>
+                                        <t t-elif="row.responsable_id">
+                                            <t t-esc="row.responsable_id.name"/>
+                                        </t>
+                                    </td>
+                                    <!-- Moyens -->
+                                    <td><t t-esc="row.moyens or ''"/></td>
+                                    <!-- Durée estimée -->
+                                    <td class="center"><t t-esc="row.duree_estimee or ''"/></td>
+                                    <!-- Date prévue -->
+                                    <td class="center">
+                                        <t t-if="row.date_prevue">
+                                            <t t-esc="datetime.datetime.strptime(row.date_prevue, '%Y-%m-%d').strftime('%d/%m/%y')"/>
+                                        </t>
+                                    </td>
+                                    <!-- Date lancement -->
+                                    <td class="center">
+                                        <t t-if="row.date_lancement">
+                                            <t t-esc="datetime.datetime.strptime(row.date_lancement, '%Y-%m-%d').strftime('%d/%m/%y')"/>
+                                        </t>
+                                    </td>
+                                    <!-- Date réalisation -->
+                                    <td class="center">
+                                        <t t-if="row.date_realisation">
+                                            <t t-esc="datetime.datetime.strptime(row.date_realisation, '%Y-%m-%d').strftime('%d/%m/%y')"/>
+                                        </t>
+                                    </td>
+                                    <!-- Avancement -->
+                                    <td class="center">
+                                        <t t-set="av" t-value="row.avancement or 0"/>
+                                        <div class="av-bar-wrap">
+                                            <div class="av-bar"
+                                                 t-att-style="'width:' + str(av) + '%;background:' + ('#43a047' if av >= 100 else ('#ffa000' if av > 0 else '#e53935')) + ';'">
+                                            </div>
+                                        </div>
+                                        <div class="av-pct"><t t-esc="av"/>%</div>
+                                    </td>
+                                    <!-- Durée réelle -->
+                                    <td class="center"><t t-esc="row.duree_reelle or ''"/></td>
+                                    <!-- Critère efficacité -->
+                                    <td><t t-esc="row.critere_efficacite or ''"/></td>
+                                    <!-- Efficacité -->
+                                    <td class="center">
+                                        <t t-if="row.efficacite == 'oui'">
+                                            <span class="eff-oui">OUI</span>
+                                        </t>
+                                        <t t-elif="row.efficacite == 'non'">
+                                            <span class="eff-non">NON</span>
+                                        </t>
+                                    </td>
+                                    <!-- Remarque -->
+                                    <td><t t-esc="row.remarque or ''"/></td>
+                                </tr>
+                            </t>
+                            <!-- Lignes vides si peu de données (au moins 5 lignes) -->
+                            <t t-set="nb_rows" t-value="len(rows)"/>
+                            <t t-set="empty_count" t-value="5 - nb_rows if nb_rows &lt; 5 else 0"/>
+                            <t t-foreach="range(empty_count)" t-as="i">
+                                <tr style="height:18px;">
+                                    <td></td><td></td><td></td><td></td>
+                                    <td></td><td></td><td></td><td></td>
+                                    <td></td><td></td><td></td><td></td>
+                                    <td></td><td></td><td></td><td></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- ===== PIED DE PAGE ===== -->
+                    <t t-if="plan.is_global">
+                        <t t-set="taux_global" t-value="plan.avancement_global or 0"/>
+                    </t>
+                    <t t-else="">
+                        <t t-set="taux_global" t-value="plan.avancement or 0"/>
+                    </t>
+
+                    <table class="paa-footer">
+                        <tr>
+                            <td class="taux-label">TAUX</td>
+                            <td>
+                                <div class="taux-bar-wrap">
+                                    <div class="taux-bar"
+                                         t-att-style="'width:' + str(taux_global) + '%;'">
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="taux-val">
+                                <strong><t t-esc="taux_global"/>%</strong>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Bloc signature -->
+                    <table class="sign-table">
+                        <tr>
+                            <td style="width:35%; font-weight:bold;">Élaboré par :</td>
+                            <td style="width:65%;"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold;">Fonction :</td>
+                            <td style="height:20px;"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold;">Visa :</td>
+                            <td style="height:20px;"></td>
+                        </tr>
+                    </table>
+
+                    <div class="gen-note">
+                        Généré le
+                        <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y à %H:%M')"/>
+                        — SCAEK / NC Management
+                    </div>
+
+                </div>
+            </t>
+          </t>
+        </t>
+    </template>
+
+</data>
+</odoo>

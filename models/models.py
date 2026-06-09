@@ -1364,13 +1364,29 @@ class PlanActionSmi(models.Model):
                     return tracking.new_value_integer
                 return tracking.new_value_char or default
 
-            # Inclure uniquement les plans qui étaient déjà intégrés à cette date.
-            # submission_state est tracké : le dernier enregistrement ≤ date_limit
-            # donne l'état réel à cette date. Si aucun enregistrement → le plan
-            # n'avait pas encore changé d'état depuis sa création (brouillon).
+            # Inclure les plans intégrés à cette date :
+            # on vérifie via le tracking si submission_state = 'integre'
+            # était actif à date_limit. Si aucun tracking trouvé mais que
+            # le plan est actuellement intégré, on l'inclut quand même
+            # (cas où l'intégration n'a pas généré de tracking).
             plans = rec.env['nc_management.plan_action_smi'].browse()
             for p in rec.child_plan_ids:
-                if p.create_date and p.create_date <= date_limit:
+                integre_tracking = rec.env['mail.tracking.value'].sudo().search([
+                    ('mail_message_id.res_id', '=', p.id),
+                    ('mail_message_id.model', '=', 'nc_management.plan_action_smi'),
+                    ('field', '=', 'submission_state'),
+                    ('new_value_char', '=', 'integre'),
+                    ('mail_message_id.date', '<=', date_limit),
+                ], order='id desc', limit=1)
+                if integre_tracking:
+                    plans |= p
+                elif not rec.env['mail.tracking.value'].sudo().search([
+                    ('mail_message_id.res_id', '=', p.id),
+                    ('mail_message_id.model', '=', 'nc_management.plan_action_smi'),
+                    ('field', '=', 'submission_state'),
+                    ('mail_message_id.date', '<=', date_limit),
+                ], order='id desc', limit=1):
+                    # Aucun tracking du tout → intégré depuis la création
                     plans |= p
 
             if not plans:
@@ -1416,7 +1432,7 @@ class PlanActionSmi(models.Model):
                     nature=nature_labels.get(plan.nature, plan.nature or '-'),
                     ref=plan.name,
                     direction=plan.direction_id.name if plan.direction_id else '-',
-                    responsable=plan.responsable_id.name if plan.responsable_id else '-',
+                    responsable=', '.join(plan.responsable_ids.mapped('name')) if plan.responsable_ids else (plan.responsable_id.name if plan.responsable_id else '-'),
                     av=hist_av if hist_av is not None else 0,
                     state=state_lbl, sc=sc, eff=eff_lbl,
                 )

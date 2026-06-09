@@ -352,7 +352,7 @@
                                 <field name="name"             invisible="1"/>
                                 <field name="reference"        string="Référence"/>
                                 <field name="direction_id"     string="Direction"/>
-                                <field name="responsable_id"   string="Responsable"/>
+                                <field name="responsable_ids"  string="Responsable" widget="many2many_tags"/>
                                 <field name="date_realisation" string="Date de réalisation"/>
                                 <field name="avancement"       string="Avancement %"/>
                                 <field name="efficacite"       string="Efficacité"/>

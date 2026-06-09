@@ -109,7 +109,7 @@ msgstr "Révision des documents"
 #. module: nc_management
 #: model:ir.actions.act_window,name:nc_management.action_mes_plans_smi
 msgid "Mes Plans SMI"
-msgstr "Mes Plans SMI"
+msgstr "Action d'amélioration"
 
 #. module: nc_management
 #: model:ir.actions.act_window,name:nc_management.action_plans_recus_smi

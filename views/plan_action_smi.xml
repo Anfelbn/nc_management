@@ -10,7 +10,7 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">10</field>
     <field name="arch" type="xml">
-        <tree string="Mes Plans" import="false" class="smi_plan_tree"
+        <tree string="Action d'amélioration" import="false" class="smi_plan_tree"
               decoration-danger="is_late == True">
             <field name="name"            string="N° Plan"/>
             <field name="nature"          string="Nature"/>
@@ -315,7 +315,7 @@
                     </h1>
                 </div>
 
-                <group string="Synthèse">
+                <group>
                     <group>
                         <field name="mois_reception"    string="Date de création"
                                attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"/>
@@ -494,7 +494,7 @@
 
 <!-- Mes Plans (NC Utilisateur + Responsable Qualité) -->
 <record model="ir.actions.act_window" id="action_mes_plans_smi">
-    <field name="name">Mes Plans SMI</field>
+    <field name="name">Action d'amélioration</field>
     <field name="res_model">nc_management.plan_action_smi</field>
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_global', '=', False)]</field>

@@ -9,7 +9,8 @@
     <field name="name">nc_management.smi_improvement_plan.tree</field>
     <field name="model">nc_management.smi_improvement_plan</field>
     <field name="arch" type="xml">
-        <tree string="Plans d'Action d'Amélioration SMI" import="false" delete="false"
+        <tree string="Plans d'Action d'Amélioration SMI" class="nc_list_tree smi_improvement_tree"
+              import="false" create="false" delete="false"
               decoration-info="state == 'brouillon'"
               decoration-success="state == 'soumis'">
             <field name="name"            string="Référence"/>
@@ -23,6 +24,30 @@
             <field name="taux_efficacite" string="Efficacité %"/>
             <field name="state"           string="État"/>
             <field name="date_soumission" string="Date soumission"/>
+        </tree>
+    </field>
+</record>
+
+<!-- ============================================================ -->
+<!--  VUE LISTE — Plan d'Amélioration (NC Utilisateur)            -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_improvement_plan_tree_user">
+    <field name="name">nc_management.smi_improvement_plan.tree.user</field>
+    <field name="model">nc_management.smi_improvement_plan</field>
+    <field name="arch" type="xml">
+        <tree string="Plan d'Action d'Amélioration" class="nc_list_tree smi_improvement_user_tree"
+              import="false" create="false" delete="false"
+              decoration-info="state == 'brouillon'"
+              decoration-success="state == 'soumis'">
+            <field name="name"            string="Référence"/>
+            <field name="date_ouverture"  string="Date de création"/>
+            <field name="write_date"      string="Dernière màj"/>
+            <field name="nb_plans"        string="Nb Plans"/>
+            <field name="taux_avancement" string="Avancement Global %"/>
+            <field name="taux_realisation" string="Taux de réalisation %"/>
+            <field name="taux_efficacite" string="Taux d'efficacité %"/>
+            <field name="date_soumission" string="Date soumission"/>
+            <field name="state"           invisible="1"/>
         </tree>
     </field>
 </record>
@@ -171,13 +196,18 @@
 <!--  ACTIONS FENÊTRE                                              -->
 <!-- ============================================================ -->
 
-<!-- Action : Ouvrir/créer le plan unique du NC Utilisateur connecté -->
-<record model="ir.actions.server" id="action_smi_improvement_plan_user">
-    <field name="name">Plan d'Action d'Amélioration SMI</field>
-    <field name="model_id"
-           ref="nc_management.model_nc_management_smi_improvement_plan"/>
-    <field name="state">code</field>
-    <field name="code">action = model.action_open_my_plan()</field>
+<!-- Action : Liste des plans d'amélioration du NC Utilisateur connecté
+     (sélection d'un plan puis ouverture de sa fiche) -->
+<record model="ir.actions.act_window" id="action_smi_improvement_plan_user_list">
+    <field name="name">Plan d'Action d'Amélioration</field>
+    <field name="res_model">nc_management.smi_improvement_plan</field>
+    <field name="view_mode">tree,form</field>
+    <field name="domain">[('create_uid', '=', uid)]</field>
+    <field name="context">{'no_import': True, 'no_export': True}</field>
+    <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'tree', 'view_id': ref('view_smi_improvement_plan_tree_user')}),
+        (0, 0, {'view_mode': 'form', 'view_id': ref('view_smi_improvement_plan_form')})]"/>
+    <field name="search_view_id" ref="view_smi_improvement_plan_search"/>
 </record>
 
 <!-- Action : Tous les Plans d'Amélioration (RMQSE) -->
@@ -207,12 +237,7 @@
     <field name="state">code</field>
     <field name="code">
 if records:
-    action = {
-        'type': 'ir.actions.report.xml',
-        'report_name': 'nc_management.report_smi_improvement_plan_template',
-        'report_type': 'qweb-pdf',
-        'context': env.context,
-    }
+    action = env.ref('nc_management.action_report_smi_improvement_plan').report_action(records)
     </field>
 </record>
 
@@ -236,7 +261,7 @@ if records:
     name="Plan d'Action d'Amélioration"
     id="nc_management.menu_smi_improvement_plan_user"
     parent="nc_management.menu_plan_smi_root"
-    action="action_smi_improvement_plan_user"
+    action="action_smi_improvement_plan_user_list"
     groups="nc_management.group_nc_utilisateur"
     sequence="5"/>
 

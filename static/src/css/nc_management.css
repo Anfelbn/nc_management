@@ -380,7 +380,10 @@ textarea.o_input:focus {
 .smi_plan_tree thead th.smi-filterable-th,
 .smi_hist_tree thead th.smi-filterable-th,
 .fnc_list_tree thead th.smi-filterable-th,
-.fac_list_tree thead th.smi-filterable-th {
+.fac_list_tree thead th.smi-filterable-th,
+.smi_global_tree thead th.smi-filterable-th,
+.smi_improvement_tree thead th.smi-filterable-th,
+.smi_improvement_user_tree thead th.smi-filterable-th {
     cursor: pointer !important;
 }
 
@@ -388,7 +391,10 @@ textarea.o_input:focus {
 .smi_plan_tree thead th.smi-col-filtered,
 .smi_hist_tree thead th.smi-col-filtered,
 .fnc_list_tree thead th.smi-col-filtered,
-.fac_list_tree thead th.smi-col-filtered {
+.fac_list_tree thead th.smi-col-filtered,
+.smi_global_tree thead th.smi-col-filtered,
+.smi_improvement_tree thead th.smi-col-filtered,
+.smi_improvement_user_tree thead th.smi-col-filtered {
     text-decoration: underline !important;
     text-underline-offset: 3px !important;
 }

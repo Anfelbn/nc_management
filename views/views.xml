@@ -509,7 +509,7 @@
     <field name="name">nc_management.document_revision.tree</field>
     <field name="model">nc_management.document_revision</field>
     <field name="arch" type="xml">
-        <tree string="Historique des Révisions" import="false"
+        <tree string="Historique des Révisions" import="false" create="false"
               decoration-success="etat == 'valable'"
               decoration-muted="etat == 'obsolete'">
             <field name="doc_type"/>
@@ -526,7 +526,19 @@
     <field name="name">nc_management.document_revision.form</field>
     <field name="model">nc_management.document_revision</field>
     <field name="arch" type="xml">
-        <form string="Révision de Document">
+        <form string="Révision de Document" create="false">
+            <header>
+                <button name="%(nc_management.action_report_revision)d"
+                        string="Aperçu"
+                        type="action"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('doc_type','=','plan_smi')]}"/>
+                <button name="%(nc_management.action_report_plan_smi_revision)d"
+                        string="Aperçu"
+                        type="action"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('doc_type','!=','plan_smi')]}"/>
+            </header>
             <sheet>
                 <group>
                     <group>
@@ -547,11 +559,36 @@
     </field>
 </record>
 
+<record model="ir.ui.view" id="view_document_revision_search">
+    <field name="name">nc_management.document_revision.search</field>
+    <field name="model">nc_management.document_revision</field>
+    <field name="arch" type="xml">
+        <search string="Révisions">
+            <field name="reference"/>
+            <field name="doc_type"/>
+            <filter string="Valable" name="filter_valable" domain="[('etat','=','valable')]"/>
+            <group expand="1" string="Regrouper par">
+                <filter string="Type de document" name="group_doc_type" context="{'group_by': 'doc_type'}"/>
+                <filter string="État" name="group_etat" context="{'group_by': 'etat'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
 <record model="ir.actions.act_window" id="action_document_revision">
     <field name="name">Révision des documents</field>
     <field name="res_model">nc_management.document_revision</field>
     <field name="view_mode">tree,form</field>
+    <field name="search_view_id" ref="view_document_revision_search"/>
+    <field name="context">{'search_default_group_doc_type': 1}</field>
 </record>
+
+<menuitem name="Révision Documents"
+          id="menu_config"
+          parent="nc_management.menu_root"
+          action="action_document_revision"
+          sequence="100"
+          groups="nc_management.group_responsable_qualite"/>
 
 
 <!-- ============================================================ -->

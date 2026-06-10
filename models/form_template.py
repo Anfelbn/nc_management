@@ -100,43 +100,6 @@ class FormTemplate(models.Model):
         for rec in self:
             rec.section_count = len(rec.section_ids)
 
-    @api.multi
-    def action_activate(self):
-        self.ensure_one()
-        self.search([
-            ('doc_type', '=', self.doc_type),
-            ('id', '!=', self.id),
-            ('is_active', '=', True),
-        ]).write({'is_active': False})
-        self.write({'is_active': True})
-        return True
-
-    @api.multi
-    def action_new_revision(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Nouvelle révision de document',
-            'res_model': 'nc_management.new_revision_wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {'default_source_template_id': self.id},
-        }
-
-    @api.multi
-    def action_preview(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_url',
-            'url': '/report/html/nc_management.report_template_preview/%s' % self.id,
-            'target': 'new',
-        }
-
-    @api.model
-    def get_active_template(self, doc_type):
-        return self.search(
-            [('doc_type', '=', doc_type), ('is_active', '=', True)], limit=1)
-
 
 class FormSection(models.Model):
     _name = 'nc_management.form_section'

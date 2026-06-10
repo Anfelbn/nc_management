@@ -2979,33 +2979,25 @@ class NcDashboard(models.Model):
             if k not in calendar_events:
                 calendar_events[k] = {'fnc': False, 'fac': False, 'plan': False}
             calendar_events[k]['fac'] = True
-        plan_domain = [
-            ('sent_to_rmqse', '=', True),
-            ('is_global', '=', False),
-            ('sent_by', '!=', self.env.uid),
-            ('date_envoi', '>=', period_start.strftime('%Y-%m-%d')),
-            ('date_envoi', '<', period_end.strftime('%Y-%m-%d')),
+        paa = self.env['nc_management.smi_improvement_plan']
+        paa_domain = [
+            ('state', '=', 'soumis'),
+            ('create_uid', '!=', self.env.uid),
+            ('date_soumission', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date_soumission', '<', period_end.strftime('%Y-%m-%d')),
         ]
-        plan_this_period = plan.search(plan_domain)
-        result['plan_total']      = len(plan_this_period)
-        result['plan_en_attente'] = len(plan_this_period.filtered(lambda p: p.submission_state == 'soumis'))
-        result['plan_integres']   = len(plan_this_period.filtered(lambda p: p.submission_state == 'integre'))
-
-        period_filter_mes   = [('create_date', '>=', period_start.strftime('%Y-%m-%d')),
-                                ('create_date', '<',  period_end.strftime('%Y-%m-%d'))]
-        period_filter_recus = [('date_envoi',   '>=', period_start.strftime('%Y-%m-%d')),
-                                ('date_envoi',   '<',  period_end.strftime('%Y-%m-%d'))]
-        mes_domain   = [('create_uid', '=', self.env.uid), ('is_global', '=', False)] + period_filter_mes
-        recus_domain = [('sent_to_rmqse', '=', True), ('is_global', '=', False),
-                        ('sent_by', '!=', self.env.uid)] + period_filter_recus
-        result['plan_mes_total']      = plan.search_count(mes_domain)
-        result['plan_mes_brouillon']  = plan.search_count(mes_domain   + [('state', '=', 'draft')])
-        result['plan_mes_realise']    = plan.search_count(mes_domain   + [('state', '=', 'done')])
-        result['plan_recus_total']    = plan.search_count(recus_domain)
-        result['plan_recus_brouillon']= plan.search_count(recus_domain + [('state', '=', 'draft')])
-        result['plan_recus_realise']  = plan.search_count(recus_domain + [('state', '=', 'done')])
-        for plan_rec in plan_this_period:
-            plan_date = plan_rec.date_envoi or plan_rec.mois_reception
+        paa_this_period = paa.search(paa_domain)
+        result['plan_total']       = len(paa_this_period)
+        result['plan_en_attente']  = len(paa_this_period)
+        result['plan_integres']    = len(paa_this_period.filtered(lambda p: p.global_plan_id))
+        result['plan_mes_total']      = 0
+        result['plan_mes_brouillon']  = 0
+        result['plan_mes_realise']    = 0
+        result['plan_recus_total']    = len(paa_this_period)
+        result['plan_recus_brouillon']= 0
+        result['plan_recus_realise']  = 0
+        for paa_rec in paa_this_period:
+            plan_date = paa_rec.date_soumission
             if not plan_date:
                 continue
             k = str(plan_date)[:10]
@@ -3207,28 +3199,43 @@ class NcDashboard(models.Model):
             if fac_key:
                 _append_received(fac_key, item)
 
-        for plan_rec in plan_this_period:
-            # date d'envoi = date réelle de réception par RMQSE
-            plan_date = plan_rec.date_envoi or plan_rec.mois_reception
-            responsible = plan_rec.responsable_id
-            plan_sender_name = (plan_rec.sent_by.name if plan_rec.sent_by
-                                else (plan_rec.direction_id.name if plan_rec.direction_id else ''))
+        for paa_rec in paa_this_period:
+            plan_date = paa_rec.date_soumission
+            submitter = paa_rec.submitted_by_id
+            plan_sender_name = (submitter.name if submitter
+                                else (paa_rec.direction_id.name if paa_rec.direction_id else ''))
+            org_parts = []
+            if paa_rec.direction_id:
+                org_parts.append(paa_rec.direction_id.name)
+            if paa_rec.department_id:
+                org_parts.append(paa_rec.department_id.name)
+            org_label = ', '.join(org_parts) if org_parts else ''
+            date_envoi_str = ''
+            if plan_date:
+                try:
+                    from datetime import datetime as _dt2
+                    dt_val = _dt2.strptime(str(plan_date)[:19], '%Y-%m-%d %H:%M:%S')
+                    date_envoi_str = dt_val.strftime('%Y-%m-%d %H:%M')
+                except Exception:
+                    date_envoi_str = str(plan_date)[:16]
             item = {
-                'id': plan_rec.id,
-                'name': plan_rec.name,
-                'type': dict(plan_rec._fields['nature'].selection).get(plan_rec.nature, 'Plan action'),
+                'id': paa_rec.id,
+                'name': paa_rec.name,
+                'type': "Plan d'Action d'Amélioration",
                 'kind': 'Plan',
                 'badge': 'purple',
-                'model': 'nc_management.plan_action_smi',
-                'department': plan_rec.direction_id.name if plan_rec.direction_id else '',
-                'responsible': responsible.name if responsible else '',
+                'model': 'nc_management.smi_improvement_plan',
+                'department': paa_rec.direction_id.name if paa_rec.direction_id else '',
+                'org_label': org_label,
+                'responsible': submitter.name if submitter else '',
                 'date': _date_label(plan_date),
-                'initials': _initials(responsible),
+                'date_envoi_str': date_envoi_str,
+                'initials': _name_initials(submitter.name if submitter else ''),
                 'sender_name': plan_sender_name,
                 'sender_initials': _name_initials(plan_sender_name),
-                'sent_by_name': plan_rec.sent_by.name if plan_rec.sent_by else '',
-                'date_prevue': _date_label(plan_rec.date_prevue),
-                'submission_state': plan_rec.submission_state or 'brouillon',
+                'sent_by_name': submitter.name if submitter else '',
+                'date_prevue': '',
+                'submission_state': 'soumis',
             }
             received_docs.append(item)
             if plan_date:
@@ -3674,6 +3681,18 @@ class NcDashboard(models.Model):
                 result['department'] = rec.department_id.name if rec.department_id else ''
                 result['send_datetime'] = _fmt_dt(rec.date_envoi) if rec.date_envoi else ''
                 result['message'] = rec.description or _wizard_note(model, record_id)
+
+            elif model == 'nc_management.smi_improvement_plan':
+                rec = self.env[model].sudo().browse(record_id)
+                if not rec.exists():
+                    return result
+                full = rec.submitted_by_id.name if rec.submitted_by_id else (rec.direction_id.name if rec.direction_id else '')
+                result['nom'], result['prenom'] = _split_name(full)
+                result['direction']  = rec.direction_id.name  if rec.direction_id  else ''
+                result['service']    = rec.service_id.name    if rec.service_id    else ''
+                result['department'] = rec.department_id.name if rec.department_id else ''
+                result['send_datetime'] = _fmt_dt(rec.date_soumission) if rec.date_soumission else ''
+                result['message'] = rec.description or ''
 
         except Exception:
             pass

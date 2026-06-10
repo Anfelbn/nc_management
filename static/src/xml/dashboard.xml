@@ -83,7 +83,7 @@
   <div class="g2" style="align-items:stretch">
     <div class="nc-card" style="display:flex;flex-direction:column">
       <div class="nc-card-title">Évolution FNC &amp; FAC — Créées par RMQSE</div>
-      <canvas id="evoChart" style="flex:1;min-height:130px"></canvas>
+      <canvas id="evoChart" style="flex:1;min-height:0"></canvas>
       <div style="display:flex;gap:12px;margin-top:6px;justify-content:flex-end">
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#C9443A"></div>FAC</div>
@@ -166,27 +166,6 @@
         </div>
       </div>
 
-      <!-- 5. MES PLANS SMI -->
-      <div class="nc-kpi">
-        <div class="nc-kpi-top" style="background:#7C3AED"></div>
-        <div class="nc-kpi-label">Mes plans</div>
-        <div class="nc-kpi-val" style="color:#5B21B6"><t t-esc="widget.stats.plan_mes_total"/></div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-          <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.plan_mes_brouillon"/></span>
-          <span class="badge" style="background:#d1fae5;color:#065f46">Réalisé <t t-esc="widget.stats.plan_mes_realise"/></span>
-        </div>
-      </div>
-
-      <!-- 6. PLANS SMI REÇUS -->
-      <div class="nc-kpi">
-        <div class="nc-kpi-top" style="background:#7C3AED"></div>
-        <div class="nc-kpi-label">Plans reçus</div>
-        <div class="nc-kpi-val" style="color:#5B21B6"><t t-esc="widget.stats.plan_recus_total"/></div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-          <span class="badge" style="background:#f1f5f9;color:#475569">Brouillon <t t-esc="widget.stats.plan_recus_brouillon"/></span>
-          <span class="badge" style="background:#d1fae5;color:#065f46">Réalisé <t t-esc="widget.stats.plan_recus_realise"/></span>
-        </div>
-      </div>
 
     </div>
   </div>

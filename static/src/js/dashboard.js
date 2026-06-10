@@ -226,9 +226,20 @@ odoo.define('nc_management.dashboard', function(require){
             this.$('.pb').removeClass('active');
             this.$('.pb[data-period="' + (this.stats.period || '1m') + '"]').addClass('active');
             setTimeout(function(){
+                self._syncEvoChartHeight();
                 self._drawEvoChart();
                 self._drawGlobalChart();
             }, 120);
+        },
+
+        // Aligne la hauteur de la carte "Évolution FNC & FAC" sur celle
+        // du bloc des 4 cartes (Audit Interne/Externe, Total FNC/FAC)
+        _syncEvoChartHeight: function(){
+            var $g4 = this.$('.g4');
+            var $card = this.$('#evoChart').closest('.nc-card');
+            if(!$g4.length || !$card.length) return;
+            var h = $g4[0].getBoundingClientRect().height;
+            if(h) $card.css('height', h + 'px');
         },
 
         _onDirectionClick: function(dirId, dirName, kind){
@@ -561,24 +572,21 @@ odoo.define('nc_management.dashboard', function(require){
                       + '</div></div></div>';
             });
 
-            // Plans SMI
+            // PAA reçus
             plans.forEach(function(item){
-                var echeanceLine = item.date_prevue
-                    ? '<div class="nc-notif-info" style="color:#94a3b8">Échéance : ' + _.escape(item.date_prevue) + '</div>'
-                    : '';
-
+                var tooltip = 'Nom : ' + (item.sender_name || 'Émetteur')
+                             + '\nOrg. : ' + (item.org_label || item.department || '-')
+                             + '\nEnvoyé le : ' + (item.date_envoi_str || item.date || '-');
                 html += '<div style="border:1px solid #e9d5ff;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#faf5ff">'
                       + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;">'
-                      + '<div class="nc-avatar avatar-purple avatar-clickable" data-model="nc_management.plan_action_smi" data-id="' + item.id + '" title="' + _.escape(item.sender_name || 'Émetteur') + '">' + _.escape(item.sender_initials || '?') + '</div>'
+                      + '<div class="nc-avatar avatar-purple avatar-clickable" data-model="nc_management.smi_improvement_plan" data-id="' + item.id + '" title="' + _.escape(tooltip) + '">' + _.escape(item.sender_initials || '?') + '</div>'
                       + '<div style="flex:1;min-width:0">'
                       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'
                       + '<div class="nc-notif-ref" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _.escape(item.name || '') + '</div>'
-                      + '<span class="badge purple">PLAN</span>'
+                      + '<span class="badge purple">PAA</span>'
                       + '</div>'
-                      + echeanceLine
-                      + '<div class="nc-notif-actions">'
-                      + '<div class="btn-sm primary btn-open" style="background:#7c3aed;border-color:#7c3aed" data-model="nc_management.plan_action_smi" data-id="' + item.id + '">Ouvrir Plan</div>'
-                      + '<div class="btn-sm btn-reply" data-model="nc_management.plan_action_smi" data-id="' + item.id + '" data-partner-id="">Répondre</div>'
+                      + '<div class="nc-notif-actions" style="margin-top:6px">'
+                      + '<div class="btn-sm primary btn-open" style="background:#7c3aed;border-color:#7c3aed" data-model="nc_management.smi_improvement_plan" data-id="' + item.id + '">Ouvrir PAA</div>'
                       + '</div>'
                       + '</div></div></div>';
             });

@@ -40,7 +40,8 @@ class NcType(models.Model):
         ('type_reclamation', 'Réclamation clients / PI'),
         ('type_sst', 'SST Accident'),
         ('type_environnement', 'Environnement'),
-        ('type_audit', 'Audit interne/Externe'),
+        ('type_audit_interne', 'Audit Interne'),
+        ('type_audit_externe', 'Audit Externe'),
         ('type_achat', 'Achat'),
         ('type_reception', 'Réception'),
         ('type_dysfonctionnement', 'Dysfonctionnement'),
@@ -2629,20 +2630,15 @@ class NcDashboard(models.Model):
             ('create_uid', '!=', self.env.uid),
         ]
 
-        # Domaine FNC créées par RMQSE (espace RMQSE — section Évolution)
+        # Domaine FNC créées par la RMQSE sur la période (toutes, y compris Audit Externe)
         own_fnc_domain = [
             ('date', '>=', period_start.strftime('%Y-%m-%d')),
             ('date', '<', period_end.strftime('%Y-%m-%d')),
             ('create_uid', '=', self.env.uid),
         ]
-        # Domaine combiné : RMQSE créé + audits internes/externes (pour Total FNC/FAC)
-        combined_fnc_domain = [
-            ('date', '>=', period_start.strftime('%Y-%m-%d')),
-            ('date', '<', period_end.strftime('%Y-%m-%d')),
-            '|', '|', ('create_uid', '=', self.env.uid),
-                      ('type_audit_interne', '=', True),
-                 ('type_audit_externe', '=', True),
-        ]
+        # Domaine FNC créées par RMQSE (Total FNC/FAC + Évolution) — y compris Audit Externe :
+        # les compteurs Total FNC/FAC comptabilisent aussi les FNC/FAC Audit Externe créées par la RMQSE
+        combined_fnc_domain = own_fnc_domain
         combined_fnc_ids = fnc.search(combined_fnc_domain).ids
         combined_fac_domain = [
             ('date', '>=', period_start.strftime('%Y-%m-%d')),
@@ -2650,7 +2646,7 @@ class NcDashboard(models.Model):
             ('fnc_id', 'in', combined_fnc_ids),
         ]
 
-        # ── FNC counters (RMQSE créé + audits) ──
+        # ── FNC counters (créées par RMQSE, y compris Audit Externe) ──
         total_fnc     = len(combined_fnc_ids)
         fnc_cours     = fnc.search_count(combined_fnc_domain + [('state','=','in_progress')])
         fnc_envoyes   = fnc.search_count(combined_fnc_domain + [('state','=','submitted')])
@@ -2658,9 +2654,10 @@ class NcDashboard(models.Model):
         fnc_validated = fnc.search_count(combined_fnc_domain + [('state','=','validated')])
         taux_cloture  = round(fnc_validated / total_fnc * 100, 1) if total_fnc else 0
         fnc_brouillon = fnc.search_count(combined_fnc_domain + [('state','=','draft')])
-        # Audit split interne / externe
-        fnc_audit_interne = fnc.search_count(combined_fnc_domain + [('type_audit_interne','=',True)])
-        fnc_audit_externe = fnc.search_count(combined_fnc_domain + [('type_audit_externe','=',True)])
+        # Audit interne : FNC reçues des autres directions, de type audit interne
+        # Audit externe : FNC créées par la RMQSE (boutons audit externe), de type audit externe
+        fnc_audit_interne = fnc.search_count(received_fnc_period_domain + [('type_audit_interne','=',True)])
+        fnc_audit_externe = fnc.search_count(own_fnc_domain + [('type_audit_externe','=',True)])
 
         limit7 = str(today - timedelta(days=7))
         limit1 = str(today - timedelta(days=1))
@@ -2721,7 +2718,12 @@ class NcDashboard(models.Model):
                 'reclamation': 0,
                 'sst': 0,
                 'environnement': 0,
-                'audit': 0,
+                'audit_interne': 0,
+                'audit_externe': 0,
+                'achat': 0,
+                'reception': 0,
+                'dysfonctionnement': 0,
+                'travaux': 0,
                 'autres': 0,
             }
             for rec in records:
@@ -2733,8 +2735,18 @@ class NcDashboard(models.Model):
                     counts['sst'] += 1
                 if rec.type_environnement:
                     counts['environnement'] += 1
-                if rec.type_audit:
-                    counts['audit'] += 1
+                if rec.type_audit_interne:
+                    counts['audit_interne'] += 1
+                if rec.type_audit_externe:
+                    counts['audit_externe'] += 1
+                if rec.type_achat:
+                    counts['achat'] += 1
+                if rec.type_reception:
+                    counts['reception'] += 1
+                if rec.type_dysfonctionnement:
+                    counts['dysfonctionnement'] += 1
+                if rec.type_travaux:
+                    counts['travaux'] += 1
                 if rec.type_autre:
                     counts['autres'] += 1
             total = sum(counts.values()) or 1
@@ -2769,7 +2781,7 @@ class NcDashboard(models.Model):
             d['pct_fnc'] = round(d['fnc_count'] / max_dir_fnc * 100)
             d['pct_fac'] = round(d['fac_count'] / max_dir_fac * 100)
 
-        # ── FAC counters (liées aux FNC RMQSE + audits) ──
+        # ── FAC counters (liées aux FNC créées par RMQSE) ──
         total_fac          = fac.search_count(combined_fac_domain)
         fac_open           = fac.search_count(combined_fac_domain + [('state','=','submitted')])
         fac_verif          = fac.search_count(combined_fac_domain + [('state','=','in_progress')])
@@ -2780,16 +2792,14 @@ class NcDashboard(models.Model):
         taux_eff           = round(fac_efficace / total_fac * 100, 1) if total_fac else 0
         taux_validation_fac = round(fac_verif  / total_fac * 100, 1) if total_fac else 0
         taux_cloture_fac   = round(fac_closed  / total_fac * 100, 1) if total_fac else 0
-        # FAC audit split — direct sur toutes FAC de la période liées à une FNC audit
-        fac_audit_interne = fac.search_count([
-            ('date', '>=', period_start.strftime('%Y-%m-%d')),
-            ('date', '<',  period_end.strftime('%Y-%m-%d')),
-            ('fnc_id.type_audit_interne', '=', True),
-        ])
+        # Audit interne : FAC reçues, liées à une FNC audit interne reçue
+        # Audit externe : FAC liées à une FNC audit externe créée par la RMQSE
+        fac_audit_interne = fac.search_count(fac_received_period_domain + [('fnc_id.type_audit_interne','=',True)])
         fac_audit_externe = fac.search_count([
             ('date', '>=', period_start.strftime('%Y-%m-%d')),
             ('date', '<',  period_end.strftime('%Y-%m-%d')),
             ('fnc_id.type_audit_externe', '=', True),
+            ('fnc_id.create_uid', '=', self.env.uid),
         ])
         audit_interne_total = fnc_audit_interne + fac_audit_interne
         audit_externe_total = fnc_audit_externe + fac_audit_externe
@@ -2832,7 +2842,7 @@ class NcDashboard(models.Model):
         # FAC à approuver reçues (en attente d'approbation QSE)
         fac_recues_count = fac.search_count(fac_received_period_domain + [('state','=','in_progress')])
 
-        # ── Evolution mensuelle — FNC/FAC créées par RMQSE (depuis mois actuel) ──
+        # ── Evolution mensuelle — FNC/FAC créées par RMQSE, hors Audit Externe (depuis mois actuel) ──
         monthly_fnc = []
         monthly_fac = []
         fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
@@ -2845,7 +2855,6 @@ class NcDashboard(models.Model):
                 ('date', '>=', str(m_start)),
                 ('date', '<', str(m_end)),
                 ('create_uid', '=', self.env.uid),
-                ('type_audit_interne', '=', False),
                 ('type_audit_externe', '=', False),
             ])
             m_fnc_ids = m_fnc_recs.ids
@@ -3520,13 +3529,22 @@ class NcDashboard(models.Model):
         ]
 
         def _pct(recs):
-            counts = {k: 0 for k in ['nc_produit','reclamation','sst','environnement','audit','autres']}
+            counts = {k: 0 for k in [
+                'nc_produit', 'reclamation', 'sst', 'environnement',
+                'audit_interne', 'audit_externe', 'achat', 'reception',
+                'dysfonctionnement', 'travaux', 'autres',
+            ]}
             for r in recs:
                 if r.type_nc_produit: counts['nc_produit'] += 1
                 if r.type_reclamation: counts['reclamation'] += 1
                 if r.type_sst: counts['sst'] += 1
                 if r.type_environnement: counts['environnement'] += 1
-                if r.type_audit: counts['audit'] += 1
+                if r.type_audit_interne: counts['audit_interne'] += 1
+                if r.type_audit_externe: counts['audit_externe'] += 1
+                if r.type_achat: counts['achat'] += 1
+                if r.type_reception: counts['reception'] += 1
+                if r.type_dysfonctionnement: counts['dysfonctionnement'] += 1
+                if r.type_travaux: counts['travaux'] += 1
                 if r.type_autre: counts['autres'] += 1
             total = sum(counts.values()) or 1
             return {k: int(round(v / total * 100)) for k, v in counts.items()}

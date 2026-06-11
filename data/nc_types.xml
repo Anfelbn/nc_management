@@ -26,5 +26,17 @@
             <field name="code">SST</field>
             <field name="category">type_sst</field>
         </record>
+
+        <!-- Audit -->
+        <record id="nc_type_audit_interne" model="nc_management.nc_type">
+            <field name="name">Audit Interne</field>
+            <field name="code">AI</field>
+            <field name="category">type_audit_interne</field>
+        </record>
+        <record id="nc_type_audit_externe" model="nc_management.nc_type">
+            <field name="name">Audit Externe</field>
+            <field name="code">AE</field>
+            <field name="category">type_audit_externe</field>
+        </record>
     </data>
 </odoo>

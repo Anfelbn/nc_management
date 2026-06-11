@@ -16,7 +16,8 @@ class NumberGeneratorWizard(models.TransientModel):
         ('type_reclamation', 'Réclamation clients / PI'),
         ('type_sst', 'SST Accident'),
         ('type_environnement', 'Environnement'),
-        ('type_audit', 'Audit interne/Externe'),
+        ('type_audit_interne', 'Audit Interne'),
+        ('type_audit_externe', 'Audit Externe'),
         ('type_achat', 'Achat'),
         ('type_reception', 'Réception'),
         ('type_dysfonctionnement', 'Dysfonctionnement'),
@@ -61,6 +62,8 @@ class NumberGeneratorWizard(models.TransientModel):
             'name': generated_name,
             self.category: True,
         }
+        if self.category in ('type_audit_interne', 'type_audit_externe'):
+            vals['type_audit'] = True
 
         if self.fnc_id:
             fnc = self.fnc_id

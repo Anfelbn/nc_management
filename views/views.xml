@@ -260,6 +260,13 @@
 
             <separator/>
 
+            <filter string="Audit Interne" name="audit_interne"
+                    domain="[('fnc_id.type_audit_interne','=',True)]"/>
+            <filter string="Audit Externe" name="audit_externe"
+                    domain="[('fnc_id.type_audit_externe','=',True)]"/>
+
+            <separator/>
+
             <filter string="Brouillon"  name="etat_brouillon"
                     domain="[('state','=','draft')]"/>
             <filter string="Soumises"   name="etat_soumise"
@@ -472,7 +479,7 @@
     <field name="res_model">nc_management.nonconformity</field>
     <field name="view_mode">tree,form</field>
     <field name="search_view_id" ref="view_nonconformity_search"/>
-    <field name="domain">[('type_audit_interne','=',False),('type_audit_externe','=',False),('type_audit','=',False)]</field>
+    <field name="domain">[('type_audit_externe','=',False)]</field>
     <field name="context">{'search_default_mes_fnc': 1, 'skip_fnc_validation': True}</field>
 </record>
 
@@ -481,7 +488,7 @@
     <field name="res_model">nc_management.corrective_action</field>
     <field name="view_mode">tree,form</field>
     <field name="search_view_id" ref="view_corrective_action_search"/>
-    <field name="domain">['|', ('fnc_id','=',False), '&amp;', '&amp;', ('fnc_id.type_audit_interne','=',False), ('fnc_id.type_audit_externe','=',False), ('fnc_id.type_audit','=',False)]</field>
+    <field name="domain">['|', ('fnc_id','=',False), ('fnc_id.type_audit_externe','=',False)]</field>
     <field name="context">{'search_default_mes_fac': 1}</field>
 </record>
 

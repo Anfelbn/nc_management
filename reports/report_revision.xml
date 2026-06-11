@@ -349,53 +349,33 @@
                 </tr>
             </table>
 
-            <!-- ===== TABLEAU PRINCIPAL (vierge) ===== -->
+            <!-- ===== TABLEAU PRINCIPAL (vierge, configurable via Gabarits) ===== -->
+            <t t-set="tpl" t-value="env['nc_management.form_template'].search(
+                [('doc_type','=','plan_smi'),('is_active','=',True)], limit=1)"/>
+            <t t-set="table_sec" t-value="tpl.section_ids.filtered(
+                lambda s: s.is_active and s.section_layout == 'blank_table')[:1]"/>
+            <t t-set="cols" t-value="table_sec.line_ids.filtered(lambda l: l.is_active).sorted(lambda l: l.sequence)
+                if table_sec else env['nc_management.form_line']"/>
+            <t t-set="nb_rows" t-value="(table_sec.table_rows or 20) if table_sec else 20"/>
             <table class="paa-table">
                 <colgroup>
-                    <col style="width:4%;"/>   <!-- Nature -->
-                    <col style="width:4%;"/>   <!-- Référence -->
-                    <col style="width:11%;"/>  <!-- Description -->
-                    <col style="width:9%;"/>   <!-- Causes -->
-                    <col style="width:11%;"/>  <!-- Action -->
-                    <col style="width:6%;"/>   <!-- Responsable -->
-                    <col style="width:7%;"/>   <!-- Moyens -->
-                    <col style="width:4%;"/>   <!-- Durée estimée -->
-                    <col style="width:5%;"/>   <!-- Date prévue -->
-                    <col style="width:5%;"/>   <!-- Date lancement -->
-                    <col style="width:5%;"/>   <!-- Date réalisation -->
-                    <col style="width:5%;"/>   <!-- Avancement -->
-                    <col style="width:4%;"/>   <!-- Durée réelle -->
-                    <col style="width:11%;"/>  <!-- Critère efficacité -->
-                    <col style="width:4%;"/>   <!-- Efficacité -->
-                    <col style="width:5%;"/>   <!-- Remarque -->
+                    <t t-foreach="cols" t-as="col">
+                        <col t-attf-style="width:#{col.col_width or 'auto'};"/>
+                    </t>
                 </colgroup>
                 <thead>
                     <tr>
-                        <th>Nature</th>
-                        <th>Référence</th>
-                        <th>Brève description de la non-conformité, remarque et/ou point sensible / Objectif d'amélioration</th>
-                        <th>Causes</th>
-                        <th>Action</th>
-                        <th>Responsable</th>
-                        <th>Moyens Nécessaires (Matériels, financiers, humains)</th>
-                        <th>Durée estimé</th>
-                        <th>Date Prévue</th>
-                        <th>Date de lancement (pour les projets, les achats)</th>
-                        <th>Date de réalisation</th>
-                        <th>Etat d'avancement (% de réalisation de l'action)</th>
-                        <th>Durée réelle</th>
-                        <th>Critère d'efficacité de l'action (l'objectif et les critères de réussite de l'action mesurable)</th>
-                        <th>Efficacité</th>
-                        <th>Remarque</th>
+                        <t t-foreach="cols" t-as="col">
+                            <th><t t-esc="col.custom_text or ''"/></th>
+                        </t>
                     </tr>
                 </thead>
                 <tbody>
-                    <t t-foreach="range(20)" t-as="i">
+                    <t t-foreach="range(nb_rows)" t-as="i">
                         <tr>
-                            <td></td><td></td><td></td><td></td>
-                            <td></td><td></td><td></td><td></td>
-                            <td></td><td></td><td></td><td></td>
-                            <td></td><td></td><td></td><td></td>
+                            <t t-foreach="cols" t-as="col">
+                                <td></td>
+                            </t>
                         </tr>
                     </t>
                 </tbody>

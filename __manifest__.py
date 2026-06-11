@@ -40,8 +40,10 @@
         'views/smi_improvement_plan_views.xml',
         'views/smi_global_plan_views.xml',
         'views/dashboard.xml',
+        'views/form_template_views.xml',
         'data/default_fnc_template.xml',
         'data/default_fac_template.xml',
+        'data/default_plan_smi_template.xml',
     ],
     'qweb': [
         'static/src/xml/dashboard.xml',

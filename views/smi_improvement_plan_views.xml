@@ -36,7 +36,7 @@
     <field name="model">nc_management.smi_improvement_plan</field>
     <field name="arch" type="xml">
         <tree string="Plan d'Action d'Amélioration" class="nc_list_tree smi_improvement_user_tree"
-              import="false" create="false" delete="false"
+              import="false" delete="false"
               decoration-info="state == 'brouillon'"
               decoration-success="state == 'soumis'">
             <field name="name"            string="Référence"/>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<!-- ============================================================ -->
+<!--  GABARITS DE FORMULAIRES PDF (FNC / FAC / Plan SMI)          -->
+<!-- ============================================================ -->
+
+<record model="ir.ui.view" id="view_form_template_tree">
+    <field name="name">nc_management.form_template.tree</field>
+    <field name="model">nc_management.form_template</field>
+    <field name="arch" type="xml">
+        <tree>
+            <field name="name"/>
+            <field name="doc_type"/>
+            <field name="section_count" string="Sections"/>
+            <field name="is_active" widget="boolean_toggle"/>
+        </tree>
+    </field>
+</record>
+
+<record model="ir.ui.view" id="view_form_template_form">
+    <field name="name">nc_management.form_template.form</field>
+    <field name="model">nc_management.form_template</field>
+    <field name="arch" type="xml">
+        <form>
+            <header>
+                <button name="action_activate" type="object"
+                        string="Activer ce gabarit" class="oe_highlight"
+                        attrs="{'invisible': [('is_active', '=', True)]}"/>
+                <field name="is_active" readonly="1"/>
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <label for="name"/>
+                    <h1><field name="name" placeholder="Ex. Gabarit FNC Rev 04"/></h1>
+                </div>
+                <group>
+                    <group>
+                        <field name="doc_type"/>
+                    </group>
+                    <group>
+                        <field name="revision_id"
+                               domain="[('doc_type', '=', doc_type)]"
+                               options="{'no_create': True, 'no_create_edit': True}"/>
+                    </group>
+                </group>
+                <notebook>
+                    <page string="Sections">
+                        <field name="section_ids">
+                            <tree editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="name"/>
+                                <field name="section_layout"/>
+                                <field name="show_title"/>
+                                <field name="is_active"/>
+                                <field name="line_count" string="Lignes"/>
+                            </tree>
+                            <form>
+                                <group>
+                                    <group>
+                                        <field name="name"/>
+                                        <field name="sequence"/>
+                                    </group>
+                                    <group>
+                                        <field name="section_layout"/>
+                                        <field name="show_title"/>
+                                        <field name="is_active"/>
+                                        <field name="table_rows"
+                                               attrs="{'invisible': [('section_layout', '!=', 'blank_table')]}"/>
+                                    </group>
+                                </group>
+                                <div class="alert alert-info" role="alert"
+                                     attrs="{'invisible': [('section_layout', '!=', 'action_lines')]}">
+                                    Cette disposition affiche directement le tableau des
+                                    actions décidées de la FAC (champ Actions décidées) :
+                                    les lignes ci-dessous ne sont pas utilisées.
+                                </div>
+                                <div class="alert alert-info" role="alert"
+                                     attrs="{'invisible': [('section_layout', '!=', 'blank_table')]}">
+                                    Cette disposition affiche un tableau vierge à imprimer (Plan
+                                    SMI) : chaque ligne ci-dessous correspond à une colonne du
+                                    tableau (type "Colonne de tableau"), avec son en-tête
+                                    (champ Texte) et sa largeur (ex. 5%).
+                                </div>
+                                <field name="line_ids"
+                                       attrs="{'invisible': [('section_layout', '=', 'action_lines')]}">
+                                    <tree>
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="is_active"/>
+                                        <field name="line_type"/>
+                                        <field name="ta_field"/>
+                                        <field name="ta_label"/>
+                                        <field name="col1_field"/>
+                                        <field name="col2_field"/>
+                                        <field name="col3_field"/>
+                                        <field name="cb_field"/>
+                                        <field name="cb_label"/>
+                                        <field name="custom_text"/>
+                                        <field name="col_width"/>
+                                    </tree>
+                                    <form>
+                                        <group>
+                                            <field name="sequence"/>
+                                            <field name="is_active"/>
+                                            <field name="line_type"/>
+                                        </group>
+                                        <group string="Zone de texte"
+                                               attrs="{'invisible': [('line_type', '!=', 'textarea')]}">
+                                            <field name="ta_field"/>
+                                            <field name="ta_label"/>
+                                            <field name="ta_height"/>
+                                        </group>
+                                        <group string="Rangée de champs (1 à 3 colonnes)"
+                                               attrs="{'invisible': [('line_type', '!=', 'row')]}">
+                                            <field name="col1_field"/>
+                                            <field name="col1_label"/>
+                                            <field name="col2_field"/>
+                                            <field name="col2_label"/>
+                                            <field name="col3_field"/>
+                                            <field name="col3_label"/>
+                                        </group>
+                                        <group string="Case à cocher"
+                                               attrs="{'invisible': [('line_type', '!=', 'checkbox')]}">
+                                            <field name="cb_field"/>
+                                            <field name="cb_label"/>
+                                            <field name="cb_column"/>
+                                            <field name="cb_extra_field"/>
+                                            <field name="cb_extra_label"/>
+                                        </group>
+                                        <group string="Texte fixe"
+                                               attrs="{'invisible': [('line_type', '!=', 'custom_text')]}">
+                                            <field name="custom_text"/>
+                                        </group>
+                                        <group string="Colonne de tableau (Plan SMI)"
+                                               attrs="{'invisible': [('line_type', '!=', 'table_column')]}">
+                                            <field name="custom_text" string="En-tête de colonne"/>
+                                            <field name="col_width"/>
+                                        </group>
+                                    </form>
+                                </field>
+                            </form>
+                        </field>
+                    </page>
+                </notebook>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<record model="ir.actions.act_window" id="action_form_template">
+    <field name="name">Gabarits</field>
+    <field name="res_model">nc_management.form_template</field>
+    <field name="view_mode">tree,form</field>
+    <field name="help" type="html">
+        <p class="oe_view_nocontent_create">
+            Créez un nouveau gabarit de mise en page pour les PDF FNC / FAC /
+            Plan d'Action d'Amélioration SMI.
+        </p>
+        <p>
+            Un seul gabarit peut être actif à la fois par type de document
+            (FNC / FAC / Plan SMI) : c'est celui-ci qui est utilisé pour
+            générer le PDF.
+        </p>
+    </field>
+</record>
+
+<menuitem name="Gabarits"
+          id="menu_form_template"
+          parent="nc_management.menu_config"
+          action="action_form_template"
+          sequence="10"
+          groups="nc_management.group_responsable_qualite"/>
+
+</data>
+</odoo>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="1">
+
+<!-- ═══════════════════════════════════════════════
+     GABARIT PLAN SMI — format initial (réplique exacte)
+     ═══════════════════════════════════════════════ -->
+<record id="form_template_plan_smi_default" model="nc_management.form_template">
+    <field name="name">Plan SMI — Révision 02 (format initial)</field>
+    <field name="doc_type">plan_smi</field>
+    <field name="is_active" eval="True"/>
+    <field name="revision_id" ref="rev_plan_smi_02"/>
+</record>
+
+<!-- ── Section : Tableau principal (vierge) ── -->
+<record id="sec_plan_smi_table" model="nc_management.form_section">
+    <field name="template_id" ref="form_template_plan_smi_default"/>
+    <field name="name">Tableau du plan d'action</field>
+    <field name="sequence">10</field>
+    <field name="is_active" eval="True"/>
+    <field name="show_title" eval="False"/>
+    <field name="section_layout">blank_table</field>
+    <field name="table_rows">20</field>
+</record>
+
+<record id="col_plan_smi_nature" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">10</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Nature</field>
+    <field name="col_width">4%</field>
+</record>
+<record id="col_plan_smi_reference" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">20</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Référence</field>
+    <field name="col_width">4%</field>
+</record>
+<record id="col_plan_smi_description" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">30</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Brève description de la non-conformité, remarque et/ou point sensible / Objectif d'amélioration</field>
+    <field name="col_width">11%</field>
+</record>
+<record id="col_plan_smi_causes" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">40</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Causes</field>
+    <field name="col_width">9%</field>
+</record>
+<record id="col_plan_smi_action" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">50</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Action</field>
+    <field name="col_width">11%</field>
+</record>
+<record id="col_plan_smi_responsable" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">60</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Responsable</field>
+    <field name="col_width">6%</field>
+</record>
+<record id="col_plan_smi_moyens" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">70</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Moyens Nécessaires (Matériels, financiers, humains)</field>
+    <field name="col_width">7%</field>
+</record>
+<record id="col_plan_smi_duree_estimee" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">80</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Durée estimé</field>
+    <field name="col_width">4%</field>
+</record>
+<record id="col_plan_smi_date_prevue" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">90</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Date Prévue</field>
+    <field name="col_width">5%</field>
+</record>
+<record id="col_plan_smi_date_lancement" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">100</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Date de lancement (pour les projets, les achats)</field>
+    <field name="col_width">5%</field>
+</record>
+<record id="col_plan_smi_date_realisation" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">110</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Date de réalisation</field>
+    <field name="col_width">5%</field>
+</record>
+<record id="col_plan_smi_avancement" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">120</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Etat d'avancement (% de réalisation de l'action)</field>
+    <field name="col_width">5%</field>
+</record>
+<record id="col_plan_smi_duree_reelle" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">130</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Durée réelle</field>
+    <field name="col_width">4%</field>
+</record>
+<record id="col_plan_smi_critere_efficacite" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">140</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Critère d'efficacité de l'action (l'objectif et les critères de réussite de l'action mesurable)</field>
+    <field name="col_width">11%</field>
+</record>
+<record id="col_plan_smi_efficacite" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">150</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Efficacité</field>
+    <field name="col_width">4%</field>
+</record>
+<record id="col_plan_smi_remarque" model="nc_management.form_line">
+    <field name="section_id" ref="sec_plan_smi_table"/>
+    <field name="sequence">160</field>
+    <field name="line_type">table_column</field>
+    <field name="custom_text">Remarque</field>
+    <field name="col_width">5%</field>
+</record>
+
+</data>
+</odoo>

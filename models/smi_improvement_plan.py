@@ -160,7 +160,22 @@ class SmiImprovementPlan(models.Model):
         if self.state != 'brouillon':
             raise UserError("Impossible de supprimer un plan déjà soumis.")
         self.unlink()
-        return self.env['nc_management.smi_improvement_plan'].action_open_my_plan()
+        tree_view_id = self.env.ref('nc_management.view_smi_improvement_plan_tree_user').id
+        form_view_id = self.env.ref('nc_management.view_smi_improvement_plan_form').id
+        inner_action = {
+            'type': 'ir.actions.act_window',
+            'name': "Plan d'Action d'Amélioration",
+            'res_model': self._name,
+            'view_mode': 'tree,form',
+            'views': [[tree_view_id, 'tree'], [form_view_id, 'form']],
+            'domain': [('create_uid', '=', self.env.uid)],
+            'target': 'current',
+        }
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'nc_management.clear_and_navigate',
+            'params': {'inner_action': inner_action},
+        }
 
     @api.model
     def create(self, vals):

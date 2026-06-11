@@ -50,6 +50,44 @@ odoo.define('nc_management.smi_plan_filter', function (require) {
             avCol: -1,
             effCol: -1,
         },
+        // Plans d'Action d'Amélioration SMI (globaux) — liste autonome :
+        //   checkbox(0) Référence(1) Date création(2) Dernière màj(3) Nb Plans(4)
+        //   Avancement Global %(5) Taux réalisation %(6) Taux efficacité %(7) État(8)
+        'smi_global_tree': {
+            filterCols: {
+                1: 'Référence', 2: 'Date création', 3: 'Dernière màj',
+                4: 'Nb Plans', 5: 'Avancement Global %',
+                6: 'Taux de réalisation %', 7: "Taux d'efficacité %", 8: 'État',
+            },
+            avCol: 5,
+            effCol: -1,
+        },
+        // Plans d'Amélioration — Toutes Directions (RMQSE) — liste autonome :
+        //   checkbox(0) Référence(1) Direction(2) Département(3) Plans(4)
+        //   En cours(5) Clôturés(6) Avancement %(7) Efficacité %(8) État(9) Date soumission(10)
+        'smi_improvement_tree': {
+            filterCols: {
+                1: 'Référence', 2: 'Direction', 3: 'Département',
+                4: 'Plans', 5: 'En cours', 6: 'Clôturés',
+                7: 'Avancement %', 8: 'Efficacité %',
+                9: 'État', 10: 'Date soumission',
+            },
+            avCol: 7,
+            effCol: -1,
+        },
+        // Plan d'Action d'Amélioration (NC Utilisateur) — liste autonome :
+        //   checkbox(0) Référence(1) Date création(2) Dernière màj(3) Nb Plans(4)
+        //   Avancement Global %(5) Taux réalisation %(6) Taux efficacité %(7) Date soumission(8)
+        'smi_improvement_user_tree': {
+            filterCols: {
+                1: 'Référence', 2: 'Date création', 3: 'Dernière màj',
+                4: 'Nb Plans', 5: 'Avancement Global %',
+                6: 'Taux de réalisation %', 7: "Taux d'efficacité %",
+                8: 'Date soumission',
+            },
+            avCol: 5,
+            effCol: -1,
+        },
     };
 
     // ── Initialisation via MutationObserver ──────────────────────────

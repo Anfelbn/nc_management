@@ -56,7 +56,8 @@
     <field name="model">nc_management.plan_action_smi</field>
     <field name="priority">16</field>
     <field name="arch" type="xml">
-        <tree string="Plans d'Action d'Amélioration SMI" import="false"
+        <tree string="Plans d'Action d'Amélioration SMI" class="nc_list_tree smi_global_tree"
+              import="false" create="false"
               decoration-muted="submission_state == 'cloture'">
             <field name="name"/>
             <field name="mois_reception"    string="Date création"/>
@@ -454,6 +455,45 @@
 </record>
 
 <!-- ============================================================ -->
+<!--  SEARCH — PLAN D'ACTION D'AMÉLIORATION SMI (plans globaux)   -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_plan_smi_search_global">
+    <field name="name">nc_management.plan_action_smi.search.global</field>
+    <field name="model">nc_management.plan_action_smi</field>
+    <field name="priority">16</field>
+    <field name="arch" type="xml">
+        <search string="Rechercher Plan d'Action d'Amélioration SMI">
+            <field name="name"          string="Référence"/>
+            <field name="direction_id"/>
+            <field name="responsable_id"/>
+            <field name="reference"     string="Référence"/>
+            <separator/>
+            <filter string="Mes Plans SMI"   name="mes_plans"
+                    domain="[('create_uid', '=', uid), ('is_global', '=', True)]"/>
+            <filter string="Plans SMI Reçus" name="plans_recus"
+                    domain="[('sent_to_rmqse', '=', True),
+                             ('is_global', '=', True),
+                             ('create_uid', '!=', uid)]"/>
+            <filter string="En retard"    name="en_retard"
+                    domain="[('date_prevue', '&lt;', context_today().strftime('%Y-%m-%d')),
+                             ('state', '!=', 'verified')]"/>
+            <group expand="0" string="Grouper par">
+                <filter string="Direction"   name="group_direction"
+                        context="{'group_by': 'direction_id'}"/>
+                <filter string="Département" name="group_department"
+                        context="{'group_by': 'department_id'}"/>
+                <filter string="Nature"      name="group_nature"
+                        context="{'group_by': 'nature'}"/>
+                <filter string="État"        name="group_state"
+                        context="{'group_by': 'submission_state'}"/>
+                <filter string="Responsable" name="group_responsable"
+                        context="{'group_by': 'responsable_id'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+<!-- ============================================================ -->
 <!--  GRAPH (camembert) + GRAPH (barres) + PIVOT                  -->
 <!-- ============================================================ -->
 <record model="ir.ui.view" id="view_plan_smi_graph_state">
@@ -522,12 +562,17 @@
 </record>
 
 <!-- Plan d'Action d'Amélioration (Responsable Qualité uniquement)
-     Server action : ouvre directement le plan en cours (non clôturé le plus récent) -->
-<record model="ir.actions.server" id="action_plan_global_smi">
+     Liste des plans globaux : sélection d'un plan puis ouverture de sa fiche -->
+<record model="ir.actions.act_window" id="action_plan_global_smi_list">
     <field name="name">Plan d'Action d'Amélioration SMI</field>
-    <field name="model_id" ref="model_nc_management_plan_action_smi"/>
-    <field name="state">code</field>
-    <field name="code">action = env['nc_management.plan_action_smi'].action_open_global_plan()</field>
+    <field name="res_model">nc_management.plan_action_smi</field>
+    <field name="view_mode">tree,form</field>
+    <field name="domain">[('is_global', '=', True)]</field>
+    <field name="context">{'no_import': True, 'no_export': True}</field>
+    <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_global')}),
+        (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form_global')})]"/>
+    <field name="search_view_id" ref="view_plan_smi_search_global"/>
 </record>
 
 <!-- ============================================================ -->
@@ -648,7 +693,7 @@
     name="Plan d'Action d'Amélioration SMI"
     id="nc_management.menu_plan_global_smi"
     parent="nc_management.menu_plan_smi_root"
-    action="action_plan_global_smi"
+    action="action_plan_global_smi_list"
     groups="nc_management.group_responsable_qualite"
     sequence="2"/>
 

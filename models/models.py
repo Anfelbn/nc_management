@@ -2389,6 +2389,7 @@ class DocumentRevision(models.Model):
     doc_type = fields.Selection([
         ('fnc', 'Fiche de Non-Conformité (FNC)'),
         ('fac', 'Fiche d\'Action Corrective (FAC)'),
+        ('plan_smi', 'Plan d\'Action d\'Amélioration SMI'),
     ], string='Type de Document', required=True)
     revision_number = fields.Integer(string='N° Révision', required=True)
     revision_date = fields.Date(string='Date de Révision', required=True, default=fields.Date.today)
@@ -2404,15 +2405,19 @@ class DocumentRevision(models.Model):
     @api.depends('revision_number', 'doc_type')
     def _compute_revision_number_link(self):
         for rec in self:
-            url = '/report/pdf/nc_management.report_revision_template/%s' % rec.id
+            if rec.doc_type == 'plan_smi':
+                url = '/report/pdf/nc_management.report_plan_smi_revision_content/%s' % rec.id
+            else:
+                url = '/report/pdf/nc_management.report_revision_template/%s' % rec.id
             rec.revision_number_link = '<a href="%s" target="_blank" style="font-weight:bold; color:#00A09D;">%s</a>' % (url, rec.revision_number)
 
     name = fields.Char(string='Révision', compute='_compute_name', store=True)
 
     @api.depends('doc_type', 'revision_number')
     def _compute_name(self):
+        type_labels = {'fnc': 'FNC', 'fac': 'FAC', 'plan_smi': 'PSMI'}
         for rec in self:
-            type_str = 'FNC' if rec.doc_type == 'fnc' else 'FAC'
+            type_str = type_labels.get(rec.doc_type, '')
             rec.name = "%s - Rev %02d" % (type_str, rec.revision_number)
 
     def _obsolete_others(self):

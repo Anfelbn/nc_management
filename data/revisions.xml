@@ -20,5 +20,15 @@
             <field name="description">Mise à jour du format de la fiche FAC</field>
             <field name="etat">valable</field>
         </record>
+
+        <!-- Révision Plan d'Action d'Amélioration SMI N° 2 -->
+        <record id="rev_plan_smi_02" model="nc_management.document_revision">
+            <field name="doc_type">plan_smi</field>
+            <field name="revision_number">2</field>
+            <field name="revision_date">2024-01-11</field>
+            <field name="reference">PACA-SMI 019/700</field>
+            <field name="description">Mise à jour du format du Plan d'Action d'Amélioration SMI</field>
+            <field name="etat">valable</field>
+        </record>
     </data>
 </odoo>

@@ -87,6 +87,7 @@ class FormTemplate(models.Model):
     doc_type = fields.Selection([
         ('fnc', 'Fiche Non-Conformité (FNC)'),
         ('fac', "Fiche d'Action Corrective (FAC)"),
+        ('plan_smi', "Plan d'Action d'Amélioration SMI"),
     ], string='Type de document', required=True)
     is_active = fields.Boolean(string='Gabarit actif', default=False)
     revision_id = fields.Many2one(
@@ -102,40 +103,15 @@ class FormTemplate(models.Model):
 
     @api.multi
     def action_activate(self):
-        self.ensure_one()
-        self.search([
-            ('doc_type', '=', self.doc_type),
-            ('id', '!=', self.id),
-            ('is_active', '=', True),
-        ]).write({'is_active': False})
-        self.write({'is_active': True})
-        return True
-
-    @api.multi
-    def action_new_revision(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Nouvelle révision de document',
-            'res_model': 'nc_management.new_revision_wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {'default_source_template_id': self.id},
-        }
-
-    @api.multi
-    def action_preview(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_url',
-            'url': '/report/html/nc_management.report_template_preview/%s' % self.id,
-            'target': 'new',
-        }
-
-    @api.model
-    def get_active_template(self, doc_type):
-        return self.search(
-            [('doc_type', '=', doc_type), ('is_active', '=', True)], limit=1)
+        """Active ce gabarit et désactive les autres gabarits du même type de document."""
+        for rec in self:
+            others = self.search([
+                ('doc_type', '=', rec.doc_type),
+                ('id', '!=', rec.id),
+                ('is_active', '=', True),
+            ])
+            others.write({'is_active': False})
+            rec.is_active = True
 
 
 class FormSection(models.Model):
@@ -153,7 +129,9 @@ class FormSection(models.Model):
         ('standard', 'Standard'),
         ('checkboxes_2col', 'Cases à cocher (2 colonnes)'),
         ('action_lines', 'Tableau actions (FAC)'),
+        ('blank_table', 'Tableau vierge (colonnes configurables)'),
     ], string='Disposition', default='standard', required=True)
+    table_rows = fields.Integer(string='Nombre de lignes vierges', default=20)
     line_ids = fields.One2many(
         'nc_management.form_line', 'section_id', string='Lignes')
     line_count = fields.Integer(compute='_compute_line_count', store=False)
@@ -174,11 +152,12 @@ class FormLine(models.Model):
     sequence = fields.Integer(string='Ordre', default=10)
     is_active = fields.Boolean(string='Actif', default=True)
     line_type = fields.Selection([
-        ('textarea',    'Zone de texte'),
-        ('row',         'Rangée de champs (1-3 col.)'),
-        ('checkbox',    'Case à cocher'),
-        ('custom_text', 'Texte fixe'),
-        ('separator',   'Séparateur'),
+        ('textarea',     'Zone de texte'),
+        ('row',          'Rangée de champs (1-3 col.)'),
+        ('checkbox',     'Case à cocher'),
+        ('custom_text',  'Texte fixe'),
+        ('separator',    'Séparateur'),
+        ('table_column', 'Colonne de tableau (Plan SMI)'),
     ], string='Type', required=True, default='row')
 
     # ── textarea ────────────────────────────────────────────────
@@ -208,6 +187,9 @@ class FormLine(models.Model):
 
     # ── texte fixe ──────────────────────────────────────────────
     custom_text = fields.Char(string='Texte')
+
+    # ── colonne de tableau (Plan SMI) ────────────────────────────
+    col_width = fields.Char(string='Largeur colonne (ex: 5%)')
 
     # ── render types stockés ────────────────────────────────────
     render_type_ta   = fields.Char(compute='_compute_render_types', store=True)

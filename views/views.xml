@@ -583,14 +583,6 @@
     <field name="context">{'search_default_group_doc_type': 1}</field>
 </record>
 
-<menuitem name="Révision Documents"
-          id="menu_config"
-          parent="nc_management.menu_root"
-          action="action_document_revision"
-          sequence="100"
-          groups="nc_management.group_responsable_qualite"/>
-
-
 <!-- ============================================================ -->
 <!--  VUE CONFIGURATION DÉPARTEMENTS (niveaux hiérarchiques)      -->
 <!-- ============================================================ -->

@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import UserError
 
 FIELD_RENDER_TYPES = {
     'name': 'char', 'direction_id': 'many2one', 'department_id': 'many2one',
@@ -100,6 +101,18 @@ class FormTemplate(models.Model):
     def _compute_counts(self):
         for rec in self:
             rec.section_count = len(rec.section_ids)
+
+    @api.multi
+    def action_apercu_gabarit(self):
+        """Ouvre l'aperçu PDF de la révision liée à ce gabarit."""
+        self.ensure_one()
+        if not self.revision_id:
+            raise UserError(
+                "Aucune révision de document n'est liée à ce gabarit.")
+        report = ('nc_management.action_report_plan_smi_revision'
+                  if self.doc_type == 'plan_smi'
+                  else 'nc_management.action_report_revision')
+        return self.env.ref(report).report_action(self.revision_id)
 
     @api.multi
     def action_activate(self):

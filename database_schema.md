@@ -565,7 +565,204 @@ Aucun nouveau champ — surcharge de `write()` pour répercuter le changement de
 
 ---
 
-## 6. Remarques de conception
+## 6. Modèles transitoires (Wizards)
+
+Le module définit **13 assistants** (`models.TransientModel`), chacun
+matérialisé par une table PostgreSQL au même titre qu'un modèle persistant
+(mais purgée périodiquement par le cron Odoo *"Transient Models cleanup"*).
+Ils servent de boîtes de dialogue "un coup" (envoi, génération de numéro,
+export Excel, consultation historique, consolidation).
+
+### 6.1 Envoi / routage
+
+#### `nc_management.send_fnc_wizard` — table `nc_management_send_fnc_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `fnc_id` | Many2one | `nonconformity`, readonly | FNC à transmettre |
+| `recipient_id` | Many2one | `hr.employee`, requis | Destinataire |
+| `note` | Text | — | Message d'accompagnement |
+
+Méthode `action_send()` : route la FNC selon son `state`
+(`draft`→`submitted`, `submitted`→`in_progress`, etc.) et synchronise la FAC
+liée si le destinataire est le RMQSE.
+
+#### `nc_management.send_fac_wizard` — table `nc_management_send_fac_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `fac_id` | Many2one | `corrective_action`, readonly | FAC à transmettre |
+| `recipient_id` | Many2one | `hr.employee`, requis | Destinataire |
+| `note` | Text | — | Message d'accompagnement |
+
+Méthode `action_send()` : si le destinataire est le RMQSE et que `fnc_id` est
+renseigné, synchronise également la FNC liée.
+
+#### `nc_management.send_plan_wizard` — table `nc_management_send_plan_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `plan_id` | Many2one | `plan_action_smi`, readonly | Plan à transmettre |
+| `recipient_id` | Many2one | `hr.employee`, requis | Destinataire |
+| `note` | Text | — | Message d'accompagnement |
+
+Méthode `action_send()` : passe `submission_state` à `soumis`.
+
+#### `nc_management.reply_wizard` — table `nc_management_reply_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `record_model` | Char | requis | Modèle cible générique (`nc_management.nonconformity`, `...corrective_action`, `...plan_action_smi`) |
+| `record_id` | Integer | requis | ID de l'enregistrement cible |
+| `recipient_id` | Many2one | `hr.employee`, requis | Destinataire de la réponse |
+| `note` | Text | — | Message |
+
+Méthode `action_reply()` : assistant générique de réponse, factorise la
+logique des 3 wizards `send_*` pour le cas "retour à l'expéditeur".
+
+### 6.2 Numérotation
+
+#### `nc_management.number_generator_wizard` — table `nc_management_number_generator_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `fnc_id` | Many2one | `nonconformity`, `ondelete=cascade` | FNC à numéroter |
+| `category` | Selection | 10 valeurs (`type_nc_produit`, …), requis | Catégorie de NC choisie |
+| `nc_type_id` | Many2one | `nc_type`, requis | Référentiel abréviation |
+
+Méthodes : `_onchange_category()` (filtre `nc_type_id` selon `category`),
+`_generate_name(abr)` → génère `"ABR-NNN YYYY"`, `action_confirm()` (crée la
+séquence `ir.sequence` `nc_management.fnc.<abr>` si absente, puis assigne
+`name` + le booléen `type_*` correspondant sur la FNC).
+
+#### `nc_management.plan_number_wizard` — table `nc_management_plan_number_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `plan_id` | Many2one | `plan_action_smi`, requis, `ondelete=cascade` | Plan à référencer |
+| `reference` | Char | requis | Référence saisie (ex. `PSMI-06-2026`) |
+
+Méthode `action_confirm()` : interdit si `plan_id.name != 'New'` (déjà
+numéroté), sinon assigne `reference` à `plan_id.name`.
+
+### 6.3 Export Excel
+
+#### `nc_management.export_plan_wizard` — table `nc_management_export_plan_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `excel_file` | Binary | readonly | Fichier généré |
+| `file_name` | Char | readonly | Nom du fichier |
+
+Méthode `action_export()` : génère (via `xlwt`) un classeur listant tous les
+`plan_action_smi` (16 colonnes).
+
+#### `nc_management.export_smi_analysis_wizard` — table `nc_management_export_smi_analysis_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `excel_file` | Binary | readonly | Fichier généré |
+| `file_name` | Char | readonly | Nom du fichier |
+
+Méthode `action_export()` : génère un classeur à 2 feuilles ("Efficacité
+Globale" + "Réalisation Processus") à partir de
+`nc_management.dashboard.get_plan_smi_stats()`.
+
+> ⚠️ Bug connu (vu côté vues) : la définition `wizard/export_smi_analysis_wizard.xml`
+> contient `<field name="target:">new</field>` (typo avec `:`), ce qui
+> empêche probablement l'ouverture en popup (`target='new'`) de fonctionner
+> correctement.
+
+### 6.4 Analyse d'efficacité (Plan SMI)
+
+#### `nc_management.plan_efficacite_wizard` — table `nc_management_plan_efficacite_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `plan_id` | Many2one | `plan_action_smi`, readonly | Plan (global ou de direction) analysé |
+| `line_ids` | One2many | `plan_efficacite_line.wizard_id` | Lignes statistiques par catégorie |
+| `chart_html` | Html | computed, non stocké | Graphique SVG en barres (12 catégories) |
+
+Méthodes : `default_get(fields_list)` (peuple `line_ids` en agrégeant les
+plans intégrés par `nature`), `_compute_chart_html()`.
+
+#### `nc_management.plan_efficacite_line` — table `nc_management_plan_efficacite_line`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `wizard_id` | Many2one | `plan_efficacite_wizard`, `ondelete=cascade` | — |
+| `categorie` | Char | — | Libellé de la `nature` |
+| `total` | Integer | — | Nombre de plans de cette catégorie |
+| `efficace` / `non_efficace` | Integer | — | Répartition `efficacite` |
+| `realise_100` / `realise_50plus` / `realise_50moins` | Integer | — | Répartition par tranche d'avancement |
+| `taux` | Float(5,1) | — | Taux d'efficacité (%) |
+
+### 6.5 Consolidation (intégration de plans dans un plan parent)
+
+#### `nc_management.consolidate_wizard` — table `nc_management_consolidate_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `global_plan_id` | Many2one | `plan_action_smi`, readonly, requis, `ondelete=cascade` | Plan global (ancien système, `is_global=True`) destinataire |
+| `line_ids` | One2many | `consolidate_wizard.line.wizard_id` | Plans candidats à intégrer |
+
+Méthodes : `action_consolidate()` (lie les plans sélectionnés via
+`global_plan_id` legacy), `action_open_new_plan()`.
+
+#### `nc_management.consolidate_wizard.line` — table `nc_management_consolidate_wizard_line`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `wizard_id` | Many2one | `consolidate_wizard`, `ondelete=cascade` | — |
+| `plan_id` | Many2one | `plan_action_smi`, readonly | Plan candidat |
+| `selected` | Boolean | défaut False | Coché = à intégrer |
+| `direction_id`, `department_id`, `nature`, `responsable_id`, `date_realisation`, `avancement`, `efficacite`, `etat_avancement`, `sent_to_rmqse` | related | readonly | Recopiés depuis `plan_id` pour affichage en liste |
+
+#### `nc_management.consolidate_improvement_wizard` — table `nc_management_consolidate_improvement_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `improvement_plan_id` | Many2one | `smi_improvement_plan`, readonly, requis, `ondelete=cascade` | Plan d'amélioration (niveau 2) destinataire |
+| `line_ids` | One2many | `consolidate_improvement_wizard.line.wizard_id` | Plans candidats (niveau 1) |
+
+Méthodes : `default_get(fields_list)`, `action_consolidate()` (assigne
+`improvement_plan_id` aux plans cochés), `action_open_new_plan()`.
+
+#### `nc_management.consolidate_improvement_wizard.line` — table `nc_management_consolidate_improvement_wizard_line`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `wizard_id` | Many2one | `consolidate_improvement_wizard`, `ondelete=cascade` | — |
+| `plan_id` | Many2one | `plan_action_smi`, readonly | Plan candidat |
+| `selected` | Boolean | défaut False | Coché = à intégrer |
+| `nature`, `description`, `responsable_id`, `date_prevue`, `avancement`, `state` | related | readonly | Recopiés depuis `plan_id` pour affichage en liste |
+
+### 6.6 Consultation historique ("voyage dans le temps")
+
+#### `nc_management.consulter_version_wizard` — table `nc_management_consulter_version_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `plan_id` | Many2one | `plan_action_smi`, readonly, requis, `ondelete=cascade` | Plan (global ou direct) consulté |
+| `date_consultation` | Date | requis | Date cible |
+| `return_view_ref` | Char | défaut `view_plan_smi_form_global` | Vue de retour après consultation |
+
+Méthode `action_consulter()` : reporte `date_consultation` sur `plan_id`, ce
+qui déclenche le calcul de `historique_html`/`analyse_html` via
+`mail.tracking.value`.
+
+#### `nc_management.consulter_version_improvement_wizard` — table `nc_management_consulter_version_improvement_wizard`
+
+| Champ | Type | Cible / Contrainte | Description |
+|---|---|---|---|
+| `improvement_plan_id` | Many2one | `smi_improvement_plan`, readonly, requis, `ondelete=cascade` | Plan de direction (niveau 2) consulté |
+| `date_consultation` | Date | requis | Date cible |
+
+Méthode `action_consulter()` : équivalent niveau 2 du wizard précédent.
+
+---
+
+## 7. Remarques de conception
 
 - **Doublon historique sur `plan_action_smi`** : `is_global` /
   `global_plan_id` / `child_plan_ids` (ancien système 1 niveau) coexistent
@@ -585,3 +782,28 @@ Aucun nouveau champ — surcharge de `write()` pour répercuter le changement de
   de `nonconformity` — une évolution possible serait de remplacer ces 12
   booléens par un Many2one vers `nc_type` (plus extensible, mais impact UI
   important sur les formulaires/gabarits existants).
+
+---
+
+## 8. Annexe — Tables orphelines / résidus en base (dette technique)
+
+L'inspection de la base réelle (`\dt` sur la base `MQE`) révèle des tables
+**présentes en base mais sans modèle Python correspondant dans le code
+actuel** (vérifié par `grep -rn` sur tout `models/*.py` — zéro résultat pour
+chacune d'entre elles). Elles constituent de la dette technique issue de
+l'historique du module et **ne doivent pas être modélisées** dans
+`class_diagram.puml` / `erd.puml` puisqu'elles ne correspondent à aucune
+classe vivante.
+
+| Table orpheline | Origine probable | Constat |
+|---|---|---|
+| `nc_management_plan_snapshot` | Ancien mécanisme d'historisation par "snapshot" de `plan_action_smi`, remplacé depuis par l'approche `mail.tracking.value` + `historique_html`/`date_consultation` | Aucune classe `PlanSnapshot` dans le code |
+| `nc_management_new_revision_wizard` | Ancien assistant de création de révision, remplacé par la gestion directe dans `nc_management.document_revision` (`create`/`write` auto-`obsolete`) | Aucune classe `NewRevisionWizard` dans le code |
+| `nc_consolidate_wizard_plan_rel` | Table de liaison M2M résiduelle d'une ancienne version de `consolidate_wizard` (avant son passage au modèle `.line` actuel avec `selected`) | Aucun champ `Many2many` correspondant dans `consolidate_wizard` actuel |
+| `smi_management_*` (~16 tables : `smi_management_plan_action`, `smi_management_improvement_plan`, `smi_management_global_plan`, et leurs wizards/relations associés) | Résidu du **renommage du module** `smi_management` → `nc_management` (les tables n'ont pas été supprimées/migrées lors du renommage) | Préfixe `smi_management_` absent de tout `_name` du code actuel |
+
+**Recommandation** : ces tables peuvent être supprimées via une migration
+(script `pre-init`/`post-init` ou commande SQL manuelle après sauvegarde),
+après confirmation qu'aucune donnée historique à conserver n'y réside —
+point à creuser dans la section "Analyse qualité" de
+`architecture_report.md`.

@@ -6,19 +6,17 @@ class ConsolidateWizardLine(models.TransientModel):
     _name = 'nc_management.consolidate_wizard.line'
     _description = 'Ligne de sélection — consolidation'
 
-    wizard_id     = fields.Many2one('nc_management.consolidate_wizard', ondelete='cascade')
-    plan_id       = fields.Many2one('nc_management.plan_action_smi', string='Référence', readonly=True)
-    selected      = fields.Boolean(string='Sélectionner', default=False)
+    wizard_id           = fields.Many2one('nc_management.consolidate_wizard', ondelete='cascade')
+    improvement_plan_id = fields.Many2one('nc_management.smi_improvement_plan', string='Référence', readonly=True)
+    selected            = fields.Boolean(string='Sélectionner', default=False)
 
-    direction_id   = fields.Many2one(related='plan_id.direction_id',    string='Direction',    readonly=True)
-    department_id  = fields.Many2one(related='plan_id.department_id',  string='Département',  readonly=True)
-    nature         = fields.Selection(related='plan_id.nature',         string='Nature',       readonly=True)
-    responsable_id = fields.Many2one(related='plan_id.responsable_id', string='Responsable',  readonly=True)
-    date_realisation = fields.Date(related='plan_id.date_realisation', string='Date de réalisation', readonly=True)
-    avancement     = fields.Integer(related='plan_id.avancement',       string='Avancement %', readonly=True)
-    efficacite     = fields.Selection(related='plan_id.efficacite',     string='Efficacité',   readonly=True)
-    etat_avancement= fields.Selection(related='plan_id.etat_avancement',string='État',         readonly=True)
-    sent_to_rmqse  = fields.Boolean(related='plan_id.sent_to_rmqse',   string='Plan reçu',    readonly=True)
+    direction_id     = fields.Many2one(related='improvement_plan_id.direction_id',     string='Direction',             readonly=True)
+    date_ouverture   = fields.Date(related='improvement_plan_id.date_ouverture',       string='Date création',         readonly=True)
+    nb_plans         = fields.Integer(related='improvement_plan_id.nb_plans',          string='Nb Plans',               readonly=True)
+    taux_avancement  = fields.Integer(related='improvement_plan_id.taux_avancement',   string='Avancement Global %',    readonly=True)
+    taux_realisation = fields.Integer(related='improvement_plan_id.taux_realisation',  string='Taux de réalisation %',  readonly=True)
+    taux_efficacite  = fields.Integer(related='improvement_plan_id.taux_efficacite',   string="Taux d'efficacité %",    readonly=True)
+    state            = fields.Selection(related='improvement_plan_id.state',           string='État',                   readonly=True)
 
 
 class ConsolidateWizard(models.TransientModel):
@@ -43,10 +41,10 @@ class ConsolidateWizard(models.TransientModel):
         self.ensure_one()
         if not self.global_plan_id:
             raise UserError("Le Plan d'Amélioration n'est pas défini. Veuillez réessayer.")
-        selected_plans = self.line_ids.filtered(lambda l: l.selected).mapped('plan_id')
-        if not selected_plans:
-            raise UserError("Aucun plan sélectionné. Cochez au moins un plan à consolider.")
-        selected_plans.with_context(_skip_date_maj=True).write({
+        selected_paas = self.line_ids.filtered(lambda l: l.selected).mapped('improvement_plan_id')
+        if not selected_paas:
+            raise UserError("Aucun plan sélectionné. Cochez au moins un Plan Reçu à consolider.")
+        selected_paas.mapped('plan_ids').with_context(_skip_date_maj=True).write({
             'global_plan_id': self.global_plan_id.id,
             'submission_state': 'integre',
         })

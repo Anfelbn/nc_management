@@ -1,0 +1,319 @@
+@startuml class_diagram_nc_management_final
+
+title Diagramme de classes — Gestion des Non-Conformités (FNC / FAC)
+
+skinparam classAttributeIconSize 0
+
+skinparam class {
+    BackgroundColor White
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+    FontSize 13
+    AttributeFontSize 12
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #5DADE2
+    FontSize 16
+    FontStyle bold
+}
+
+hide circle
+hide empty members
+
+package "Gestion des Non-Conformités (FNC / FAC)" {
+
+' =====================================================
+' CLASSE ABSTRAITE : attributs et fonction communs
+' =====================================================
+
+abstract class AbstractFiche <<Abstract>> #EAEDED {
+  + name
+  + date
+  + direction_id
+  + analyse_causes
+  + state
+  + current_handler_uid
+  + sent_by_id
+  + date_envoi
+}
+
+' =====================================================
+' CLASSES SPECIALISEES (meme niveau horizontal)
+' =====================================================
+
+together {
+
+class Nonconformity <<Model>> {
+
+  + description
+  + impact
+
+  + type_nc_produit
+  + type_autre_preciser
+
+  + signale_par_id
+  + date_signalement
+  + fonction_visa
+
+  + action_immediate
+  + realise_par_id
+  + date_realisation
+  + trait_reprise
+
+  + department_id
+  + service_id
+  + responsable_action_id
+
+  + superieur_id
+  + date_validation
+  + signature
+
+  --
+  + action_valider_fnc()
+  + action_open_send_wizard()
+  + action_open_number_wizard()
+}
+
+note left of Nonconformity
+  **type_nc_produit** : 1 de 12 champs Boolean
+  exclusifs (type de NC) :
+  type_audit, type_audit_interne, type_audit_externe,
+  type_reclamation, type_achat, type_sst, type_reception,
+  type_environnement, type_dysfonctionnement, type_travaux,
+  type_autre
+  + type_autre_preciser : Char
+  ---
+  **trait_reprise** : 1 de 6 champs Boolean
+  (traitement) :
+  trait_declassement, trait_retour_fourn, trait_recyclage,
+  trait_reparation, trait_autre
+  + trait_autre_preciser : Char
+end note
+
+class CorrectiveAction <<Model>> {
+
+  + fnc_id
+  + ref_document
+  + date_fnc
+  + responsable_id
+
+  + responsable_analyse_id
+  + date_analyse
+  + visa_analyse
+
+  + description_actions
+  + responsable_actions_id
+  + date_actions
+  + visa_actions
+
+  + actions_efficaces
+  + verification_efficacite
+  + extension_possible
+
+  + qse_nom_id
+  + qse_date
+  + qse_visa
+
+  + cloture_par_id
+  + date_cloture
+  + visa_cloture
+
+  --
+  + action_open_send_fac_wizard()
+}
+
+}
+
+' =====================================================
+' SOUS-CLASSE (obligatoirement en dessous)
+' =====================================================
+
+class ActionLine <<Model>> {
+
+  + fac_id
+  + action_description
+  + date_prevue
+  + date_realisation
+  + responsable_id
+  + direction_id
+}
+
+' =====================================================
+' REFERENTIEL & GENERATION DU NUMERO FNC
+' =====================================================
+
+class NcType <<Model>> {
+  + name
+  + code
+  + category
+}
+
+class NumberGeneratorWizard <<Wizard>> {
+  + fnc_id
+  + category
+  + nc_type_id
+
+  --
+  + action_confirm()
+}
+
+}
+
+' =====================================================
+' PACKAGE : PLANS D'ACTION SMI (3 NIVEAUX)
+' =====================================================
+
+package "Plans d'Action SMI (3 niveaux)" {
+
+class PlanActionSmi <<Model>> {
+
+  + name
+  + nature
+  + fnc_id
+  + reference
+
+  + direction_id
+  + department_id
+  + service_id
+
+  + description
+  + causes
+  + action
+
+  + responsable_id
+  + responsable_ids
+  + moyens
+
+  + date_prevue
+  + date_lancement
+  + date_realisation
+  + avancement
+  + efficacite
+  + remarque
+
+  + state
+  + etat_avancement
+
+  + submission_state
+  + sent_to_rmqse
+  + date_envoi
+  + sent_by
+
+  + is_global
+  + global_plan_id
+  + child_plan_ids
+
+  + improvement_plan_id
+  + direct_global_plan_id
+
+  --
+  + action_generate_plan_number()
+  + action_open_send_plan_wizard()
+  + action_envoyer_rmqse()
+  + action_consolider_tous()
+  + action_cloturer_plan()
+}
+
+class SmiImprovementPlan <<Model>> {
+
+  + name
+  + direction_id
+  + department_id
+  + service_id
+  + description
+
+  + plan_ids
+
+  + nb_plans
+  + nb_en_cours
+  + nb_realises
+  + nb_non_realises
+  + nb_clotures
+  + taux_avancement
+  + taux_realisation
+  + taux_efficacite
+
+  + state
+  + date_soumission
+  + submitted_by_id
+  + global_plan_id
+
+  --
+  + action_soumettre()
+  + action_consolider()
+}
+
+class SmiGlobalPlan <<Model>> {
+
+  + name
+  + date_derniere_maj
+
+  + improvement_plan_ids
+  + direct_plan_ids
+
+  + nb_directions
+  + nb_plans_total
+  + nb_en_cours
+  + nb_realises
+  + nb_clotures
+  + taux_avancement
+  + taux_efficacite
+
+  --
+  + _get_all_plans()
+  + action_retour_actuel()
+}
+
+}
+
+' =====================================================
+' PACKAGE : DASHBOARD
+' =====================================================
+
+package "Dashboard" {
+
+class NcDashboard <<Model>> {
+  --
+  + get_stats()
+  + get_user_stats()
+  + get_plan_smi_stats()
+  + get_direction_details()
+  + get_sender_info()
+}
+
+}
+
+' =====================================================
+' RELATIONS
+' =====================================================
+
+AbstractFiche <|-- Nonconformity
+AbstractFiche <|-- CorrectiveAction
+
+' Regle metier : toute FNC traitee genere au moins une FAC
+Nonconformity "0..1" -right- "1..*" CorrectiveAction : génère
+CorrectiveAction "1" *-- "0..*" ActionLine : contient
+
+NumberGeneratorWizard "0..*" --> "1" NcType : nc_type_id
+NumberGeneratorWizard "0..*" --> "0..1" Nonconformity : fnc_id
+Nonconformity ..> NumberGeneratorWizard : action_open_number_wizard()
+
+' Relations Plans d'Action SMI
+Nonconformity "0..1" -- "0..*" PlanActionSmi : fnc_id
+
+SmiImprovementPlan "0..1" o-- "0..*" PlanActionSmi : plan_ids / improvement_plan_id
+SmiGlobalPlan "0..1" o-- "0..*" SmiImprovementPlan : improvement_plan_ids / global_plan_id
+SmiGlobalPlan "0..1" o-- "0..*" PlanActionSmi : direct_plan_ids / direct_global_plan_id
+
+' Ancien systeme (legacy, conserve pour compat)
+PlanActionSmi "0..1" -- "0..*" PlanActionSmi : global_plan_id / child_plan_ids
+
+' Relations Dashboard (lecture RPC, sans persistance)
+NcDashboard ..> Nonconformity : lit
+NcDashboard ..> CorrectiveAction : lit
+NcDashboard ..> PlanActionSmi : lit
+NcDashboard ..> SmiImprovementPlan : lit
+
+@enduml

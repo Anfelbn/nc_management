@@ -13,17 +13,15 @@
               import="false" create="false" delete="false"
               decoration-info="state == 'brouillon'"
               decoration-success="state == 'soumis'">
-            <field name="name"            string="Référence"/>
-            <field name="direction_id"    string="Direction"/>
-            <field name="department_id"   string="Département"/>
-            <field name="nb_plans"        string="Plans"/>
-            <field name="nb_en_cours"     string="En cours"/>
-            <field name="nb_clotures"     string="Clôturés"/>
-            <field name="taux_avancement" string="Avancement %"
-                   widget="progressbar"/>
-            <field name="taux_efficacite" string="Efficacité %"/>
-            <field name="state"           string="État"/>
-            <field name="date_soumission" string="Date soumission"/>
+            <field name="name"             string="Référence"/>
+            <field name="direction_id"     string="Direction"/>
+            <field name="date_ouverture"   string="Date création"/>
+            <field name="write_date"       string="Dernière màj"/>
+            <field name="nb_plans"         string="Nb Plans"/>
+            <field name="taux_avancement"  string="Avancement Global %"/>
+            <field name="taux_realisation" string="Taux de réalisation %"/>
+            <field name="taux_efficacite"  string="Taux d'efficacité %"/>
+            <field name="state"            string="État"/>
         </tree>
     </field>
 </record>
@@ -65,9 +63,7 @@
                         string="Consolider"
                         type="object"
                         class="oe_highlight"
-                        attrs="{'invisible': ['|',
-                            ('state', '!=', 'brouillon'),
-                            ('date_consultation', '!=', False)]}"/>
+                        attrs="{'invisible': [('date_consultation', '!=', False)]}"/>
                 <button name="action_soumettre"
                         string="Envoyer"
                         type="object"
@@ -193,6 +189,26 @@
 </record>
 
 <!-- ============================================================ -->
+<!--  VUE RECHERCHE — Plans Reçus (RMQSE)                         -->
+<!-- ============================================================ -->
+<record model="ir.ui.view" id="view_smi_improvement_plan_search_recus">
+    <field name="name">nc_management.smi_improvement_plan.search.recus</field>
+    <field name="model">nc_management.smi_improvement_plan</field>
+    <field name="arch" type="xml">
+        <search string="Rechercher Plans Reçus">
+            <field name="name"         string="Référence"/>
+            <field name="direction_id"/>
+            <group expand="1" string="Grouper par">
+                <filter string="Direction"  name="group_direction"
+                        context="{'group_by': 'direction_id'}"/>
+                <filter string="Mois"       name="group_mois"
+                        context="{'group_by': 'date_soumission:month'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+<!-- ============================================================ -->
 <!--  ACTIONS FENÊTRE                                              -->
 <!-- ============================================================ -->
 
@@ -210,12 +226,13 @@
     <field name="search_view_id" ref="view_smi_improvement_plan_search"/>
 </record>
 
-<!-- Action : Tous les Plans d'Amélioration (RMQSE) -->
+<!-- Action : Plans Reçus RMQSE — PAA soumis par les directions -->
 <record model="ir.actions.act_window"
         id="action_smi_improvement_plan_rmqse">
-    <field name="name">Plans d'Amélioration — Toutes directions</field>
+    <field name="name">Plans Reçus</field>
     <field name="res_model">nc_management.smi_improvement_plan</field>
     <field name="view_mode">tree,form</field>
+    <field name="domain">[('state', '=', 'soumis'), ('create_uid', '!=', uid)]</field>
     <field name="context">{'search_default_group_direction': 1}</field>
     <field name="view_ids" eval="[(5, 0, 0),
         (0, 0, {'view_mode': 'tree',
@@ -223,8 +240,9 @@
         (0, 0, {'view_mode': 'form',
                 'view_id': ref('view_smi_improvement_plan_form')})]"/>
     <field name="search_view_id"
-           ref="view_smi_improvement_plan_search"/>
+           ref="view_smi_improvement_plan_search_recus"/>
 </record>
+
 
 <!-- ============================================================ -->
 <!--  ACTIONS LIÉES AU MODÈLE (Action ▼ dans le control panel)    -->
@@ -255,6 +273,15 @@ if records:
 <!-- ============================================================ -->
 <!--  MENUS                                                        -->
 <!-- ============================================================ -->
+
+<!-- Sous-menu "Plans Reçus" RMQSE — PAA soumis par les directions (sequence 3) -->
+<menuitem
+    name="Plans Reçus"
+    id="nc_management.menu_smi_improvement_plan_recus"
+    parent="nc_management.menu_plan_smi_root"
+    action="action_smi_improvement_plan_rmqse"
+    groups="nc_management.group_responsable_qualite"
+    sequence="3"/>
 
 <!-- Sous-menu "Plan d'Action d'Amélioration" pour NC Utilisateur -->
 <menuitem

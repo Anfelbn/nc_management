@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="1151px" preserveAspectRatio="none" style="width:592px;height:1151px;" version="1.1" viewBox="0 0 592 1151" width="592px" zoomAndPan="magnify"><defs><filter height="300%" id="f19wgh0n6ew7jz" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacingAndGlyphs" textLength="571" x="9" y="19.2419">Diagramme de classes — Gestion des Non-Conformités (FNC / FAC)</text><!--MD5=[83bd9fab42512b7b905655d4bf5caf34]
+cluster Gestion des Non-Conformités (FNC / FAC)--><polygon fill="#FFFFFF" filter="url(#f19wgh0n6ew7jz)" points="22,48.5158,354,48.5158,361,76.3079,555,76.3079,555,1139.5158,22,1139.5158,22,48.5158" style="stroke: #5DADE2; stroke-width: 1.5;"/><line style="stroke: #5DADE2; stroke-width: 1.5;" x1="22" x2="361" y1="76.3079" y2="76.3079"/><text fill="#000000" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="326" x="26" y="67.6199">Gestion des Non-Conformités (FNC / FAC)</text><!--MD5=[ccc00c5484eaff259508d48c84915fba]
+class AbstractFiche--><rect fill="#EAEDED" filter="url(#f19wgh0n6ew7jz)" height="223.4913" id="AbstractFiche" style="stroke: #2C3E50; stroke-width: 1.5;" width="130" x="222" y="88.5158"/><rect fill="#EAEDED" height="44.0501" style="stroke: #2C3E50; stroke-width: 1.5;" width="130" x="222" y="88.5158"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="56" x="259" y="106.3439">«Abstract»</text><text fill="#000000" font-family="sans-serif" font-size="13" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="76" x="249" y="123.757">AbstractFiche</text><line style="stroke: #2C3E50; stroke-width: 1.5;" x1="223" x2="351" y1="132.566" y2="132.566"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="39" x="228" y="149.3941">+name</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="32" x="228" y="165.7382">+date</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="71" x="228" y="182.0823">+direction_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="94" x="228" y="198.4264">+analyse_causes</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="35" x="228" y="214.7705">+state</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="118" x="228" y="231.1146">+current_handler_uid</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="64" x="228" y="247.4588">+sent_by_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="67" x="228" y="263.8029">+date_envoi</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="231" y="280.147"/><line style="stroke: #2C3E50; stroke-width: 1.0;" x1="223" x2="351" y1="287.663" y2="287.663"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="94" x="228" y="304.4911">+action_envoyer()</text><!--MD5=[8057d4cca14ffe88800fe0f09bc3e605]
+class ActionLine--><rect fill="#FFFFFF" filter="url(#f19wgh0n6ew7jz)" height="150.1148" id="ActionLine" style="stroke: #2C3E50; stroke-width: 1.5;" width="120" x="360" y="973.5158"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="45" x="397.5" y="991.3439">«Model»</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="63" x="388.5" y="1008.757">ActionLine</text><line style="stroke: #2C3E50; stroke-width: 1.5;" x1="361" x2="479" y1="1017.566" y2="1017.566"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="39" x="366" y="1034.3941">+fac_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="108" x="366" y="1050.7382">+action_description</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="76" x="366" y="1067.0823">+date_prevue</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="96" x="366" y="1083.4264">+date_realisation</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="91" x="366" y="1099.7705">+responsable_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="71" x="366" y="1116.1146">+direction_id</text><!--MD5=[a9941217782ca6db437f3579f3a7352c]
+class Nonconformity--><rect fill="#FFFFFF" filter="url(#f19wgh0n6ew7jz)" height="501.3412" id="Nonconformity" style="stroke: #2C3E50; stroke-width: 1.5;" width="185" x="61.5" y="383.0158"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="45" x="131.5" y="400.8439">«Model»</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="92" x="108" y="418.257">Nonconformity</text><line style="stroke: #2C3E50; stroke-width: 1.5;" x1="62.5" x2="245.5" y1="427.066" y2="427.066"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="69" x="67.5" y="443.8941">+description</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="45" x="67.5" y="460.2382">+impact</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="70.5" y="476.5823"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="94" x="67.5" y="492.9264">+type_nc_produit</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="117" x="67.5" y="509.2705">+type_autre_preciser</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="70.5" y="525.6146"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="86" x="67.5" y="541.9588">+signale_par_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="106" x="67.5" y="558.3029">+date_signalement</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="79" x="67.5" y="574.647">+fonction_visa</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="70.5" y="590.9911"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="106" x="67.5" y="607.3352">+action_immediate</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="84" x="67.5" y="623.6793">+realise_par_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="96" x="67.5" y="640.0234">+date_realisation</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="75" x="67.5" y="656.3676">+trait_reprise</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="70.5" y="672.7117"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="88" x="67.5" y="689.0558">+department_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="62" x="67.5" y="705.3999">+service_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="130" x="67.5" y="721.744">+responsable_action_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="70.5" y="738.0881"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="76" x="67.5" y="754.4322">+superieur_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="91" x="67.5" y="770.7764">+date_validation</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="60" x="67.5" y="787.1205">+signature</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="70.5" y="803.4646"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="8" x="67.5" y="819.8087">--</text><line style="stroke: #2C3E50; stroke-width: 1.5;" x1="62.5" x2="245.5" y1="827.3247" y2="827.3247"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="114" x="67.5" y="844.1528">+action_valider_fnc()</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="156" x="67.5" y="860.4969">+action_open_send_wizard()</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="173" x="67.5" y="876.841">+action_open_number_wizard()</text><!--MD5=[ad84c1c258410392691c09fb390dc22d]
+class CorrectiveAction--><rect fill="#FFFFFF" filter="url(#f19wgh0n6ew7jz)" height="517.6853" id="CorrectiveAction" style="stroke: #2C3E50; stroke-width: 1.5;" width="190" x="325" y="374.5158"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="45" x="397.5" y="392.3439">«Model»</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="99" x="370.5" y="409.757">CorrectiveAction</text><line style="stroke: #2C3E50; stroke-width: 1.5;" x1="326" x2="514" y1="418.566" y2="418.566"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="39" x="331" y="435.3941">+fnc_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="84" x="331" y="451.7382">+ref_document</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="54" x="331" y="468.0823">+date_fnc</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="91" x="331" y="484.4264">+responsable_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="334" y="500.7705"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="139" x="331" y="517.1146">+responsable_analyse_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="80" x="331" y="533.4588">+date_analyse</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="77" x="331" y="549.8029">+visa_analyse</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="334" y="566.147"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="114" x="331" y="582.4911">+description_actions</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="136" x="331" y="598.8352">+responsable_actions_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="77" x="331" y="615.1793">+date_actions</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="74" x="331" y="631.5234">+visa_actions</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="334" y="647.8676"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="102" x="331" y="664.2117">+actions_efficaces</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="125" x="331" y="680.5558">+verification_efficacite</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="112" x="331" y="696.8999">+extension_possible</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="334" y="713.244"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="72" x="331" y="729.5881">+qse_nom_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="57" x="331" y="745.9322">+qse_date</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="54" x="331" y="762.2764">+qse_visa</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="334" y="778.6205"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="85" x="331" y="794.9646">+cloture_par_id</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="76" x="331" y="811.3087">+date_cloture</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="73" x="331" y="827.6528">+visa_cloture</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="0" x="334" y="843.9969"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="8" x="331" y="860.341">--</text><line style="stroke: #2C3E50; stroke-width: 1.5;" x1="326" x2="514" y1="867.8571" y2="867.8571"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="178" x="331" y="884.6852">+action_open_send_fac_wizard()</text><!--MD5=[76b1c92eaa5207f83ff943396291040f]
+reverse link AbstractFiche to Nonconformity--><path d="M247.01,330.7658 C241.86,347.4558 236.46,364.9758 230.97,382.8058 " fill="none" id="AbstractFiche&lt;-Nonconformity" style="stroke: #2C3E50; stroke-width: 1.0;"/><polygon fill="none" points="240.34,328.6258,252.92,311.5758,253.72,332.7558,240.34,328.6258" style="stroke: #2C3E50; stroke-width: 1.0;"/><!--MD5=[7d4b034254ff99f96a24144458d119c2]
+reverse link AbstractFiche to CorrectiveAction--><path d="M327.06,330.9758 C331.38,344.9958 335.88,359.5958 340.46,374.4658 " fill="none" id="AbstractFiche&lt;-CorrectiveAction" style="stroke: #2C3E50; stroke-width: 1.0;"/><polygon fill="none" points="320.28,332.7558,321.08,311.5758,333.66,328.6258,320.28,332.7558" style="stroke: #2C3E50; stroke-width: 1.0;"/><!--MD5=[73eb8ed155b6592398f436c060315757]
+link Nonconformity to CorrectiveAction--><path d="M246.66,633.5158 C272,633.5158 299.5,633.5158 324.97,633.5158 " fill="none" id="Nonconformity-CorrectiveAction" style="stroke: #2C3E50; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="42" x="264.75" y="626.4129">génère</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="7" x="254.6232" y="629.7241">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="20" x="296.9286" y="648.1027">0..*</text><!--MD5=[1e522b2e1ffe8e647f603dc70390ccdf]
+reverse link CorrectiveAction to ActionLine--><path d="M420,905.7858 C420,930.0958 420,953.0758 420,973.1758 " fill="none" id="CorrectiveAction&lt;-ActionLine" style="stroke: #2C3E50; stroke-width: 1.0;"/><polygon fill="#2C3E50" points="420,892.5558,416,898.5558,420,904.5558,424,898.5558,420,892.5558" style="stroke: #2C3E50; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="50" x="421" y="939.4129">contient</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="7" x="412.8961" y="914.4106">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="20" x="398.9688" y="961.4573">0..*</text><!--MD5=[340f87498aef4747032ea40454cb7c2d]
+@startuml class_diagram_nc_management_final
+
+title Diagramme de classes — Gestion des Non-Conformités (FNC / FAC)
+
+skinparam classAttributeIconSize 0
+
+skinparam class {
+    BackgroundColor White
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+    FontSize 13
+    AttributeFontSize 12
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #5DADE2
+    FontSize 16
+    FontStyle bold
+}
+
+hide circle
+hide empty members
+
+package "Gestion des Non-Conformités (FNC / FAC)" {
+
+
+abstract class AbstractFiche <<Abstract>> #EAEDED {
+  + name
+  + date
+  + direction_id
+  + analyse_causes
+  + state
+  + current_handler_uid
+  + sent_by_id
+  + date_envoi
+
+  - -
+  + action_envoyer() {abstract}
+}
+
+
+together {
+
+class Nonconformity <<Model>> {
+
+  + description
+  + impact
+
+  + type_nc_produit
+  + type_autre_preciser
+
+  + signale_par_id
+  + date_signalement
+  + fonction_visa
+
+  + action_immediate
+  + realise_par_id
+  + date_realisation
+  + trait_reprise
+
+  + department_id
+  + service_id
+  + responsable_action_id
+
+  + superieur_id
+  + date_validation
+  + signature
+
+  - -
+  + action_valider_fnc()
+  + action_open_send_wizard()
+  + action_open_number_wizard()
+}
+
+class CorrectiveAction <<Model>> {
+
+  + fnc_id
+  + ref_document
+  + date_fnc
+  + responsable_id
+
+  + responsable_analyse_id
+  + date_analyse
+  + visa_analyse
+
+  + description_actions
+  + responsable_actions_id
+  + date_actions
+  + visa_actions
+
+  + actions_efficaces
+  + verification_efficacite
+  + extension_possible
+
+  + qse_nom_id
+  + qse_date
+  + qse_visa
+
+  + cloture_par_id
+  + date_cloture
+  + visa_cloture
+
+  - -
+  + action_open_send_fac_wizard()
+}
+
+}
+
+
+class ActionLine <<Model>> {
+
+  + fac_id
+  + action_description
+  + date_prevue
+  + date_realisation
+  + responsable_id
+  + direction_id
+}
+
+}
+
+
+AbstractFiche <|- - Nonconformity
+AbstractFiche <|- - CorrectiveAction
+
+Nonconformity "1" -right- "0..*" CorrectiveAction : génère
+CorrectiveAction "1" *- - "0..*" ActionLine : contient
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 11:22:07 CET 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.11+10-1-24.04.2-Ubuntu
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

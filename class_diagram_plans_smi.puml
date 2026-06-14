@@ -1,0 +1,174 @@
+@startuml class_diagram_plans_smi
+
+title Diagramme de classes — Plans d'Action d'Amélioration SMI
+
+' =====================================================
+' Correspondance avec les modeles Odoo actuels :
+'   ActionAmelioration             <- nc_management.plan_action_smi      (Niveau 1)
+'   SmiImprovementActionPlan       <- nc_management.smi_improvement_plan (Niveau 2, par direction)
+'   GlobalSmiImprovementActionPlan <- nc_management.smi_global_plan      (Niveau 3, singleton RMQSE)
+' =====================================================
+
+skinparam classAttributeIconSize 0
+
+skinparam class {
+    BackgroundColor White
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+    FontSize 13
+    AttributeFontSize 12
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #5DADE2
+    FontSize 16
+    FontStyle bold
+}
+
+hide circle
+hide empty members
+
+package "Plans d'Action d'Amélioration SMI (3 niveaux)" {
+
+' =====================================================
+' CLASSES ABSTRAITES : attributs et fonctions communs
+' =====================================================
+
+abstract class AbstractSmiEntity <<Abstract>> #EAEDED {
+  + name
+  + date_consultation
+  + historique_html
+}
+
+abstract class AbstractSmiPlanGroup <<Abstract>> #D5DBDB {
+  + nb_en_cours
+  + nb_realises
+  + nb_clotures
+  + taux_avancement
+  + taux_efficacite
+
+  --
+  + action_retour_actuel()
+}
+
+AbstractSmiEntity <|-- AbstractSmiPlanGroup
+
+' =====================================================
+' NIVEAU 1 — ACTION D'AMELIORATION (ex PlanActionSmi)
+' =====================================================
+
+class ActionAmelioration <<Model>> {
+
+  + nature
+  + fnc_id
+  + reference
+
+  + direction_id
+  + department_id
+  + service_id
+
+  + description
+  + causes
+  + action
+
+  + responsable_id
+  + responsable_ids
+  + moyens
+
+  + date_prevue
+  + date_lancement
+  + date_realisation
+  + avancement
+  + efficacite
+  + critere_efficacite
+  + remarque
+
+  + state
+  + etat_avancement
+  + is_late
+  + is_integrated
+
+  + submission_state
+  + sent_to_rmqse
+  + date_envoi
+  + sent_by
+
+  + improvement_plan_id
+  + direct_global_plan_id
+
+  --
+  + action_generate_plan_number()
+  + action_open_send_plan_wizard()
+  + action_envoyer_rmqse()
+  + action_open_consulter_version_wizard()
+  + action_retour_actuel_plan()
+  + action_cloturer_plan()
+}
+
+AbstractSmiEntity <|-- ActionAmelioration
+
+' =====================================================
+' NIVEAU 2 — SMI IMPROVEMENT ACTION PLAN (ex SmiImprovementPlan)
+' Plan d'Amélioration par direction (regroupe les ActionAmelioration)
+' =====================================================
+
+class SmiImprovementActionPlan <<Model>> {
+
+  + direction_id
+  + department_id
+  + service_id
+  + description
+
+  + plan_ids
+
+  + nb_plans
+  + nb_non_realises
+  + taux_realisation
+
+  + date_ouverture
+  + state
+  + date_soumission
+  + submitted_by_id
+  + global_plan_id
+
+  --
+  + action_soumettre()
+  + action_consolider()
+  + action_open_consulter_version_wizard()
+}
+
+AbstractSmiPlanGroup <|-- SmiImprovementActionPlan
+
+' =====================================================
+' NIVEAU 3 — GLOBAL SMI IMPROVEMENT ACTION PLAN (ex SmiGlobalPlan)
+' Singleton RMQSE, consolide tous les niveaux 2 + ajouts directs
+' =====================================================
+
+class GlobalSmiImprovementActionPlan <<Model>> {
+
+  + date_derniere_maj
+
+  + improvement_plan_ids
+  + direct_plan_ids
+
+  + nb_directions
+  + nb_plans_total
+
+  --
+  + _get_all_plans()
+}
+
+AbstractSmiPlanGroup <|-- GlobalSmiImprovementActionPlan
+
+}
+
+' =====================================================
+' RELATIONS
+' =====================================================
+
+SmiImprovementActionPlan       "0..1" o-- "0..*" ActionAmelioration       : plan_ids / improvement_plan_id
+GlobalSmiImprovementActionPlan "0..1" o-- "0..*" SmiImprovementActionPlan : improvement_plan_ids / global_plan_id
+GlobalSmiImprovementActionPlan "0..1" o-- "0..*" ActionAmelioration       : direct_plan_ids / direct_global_plan_id
+
+@enduml

@@ -6,34 +6,32 @@
     <field name="name">nc_management.consolidate_wizard.form</field>
     <field name="model">nc_management.consolidate_wizard</field>
     <field name="arch" type="xml">
-        <form string="Consolider des plans d'action d'améliorations">
+        <form string="Consolider des Plans Reçus">
             <sheet>
                 <field name="global_plan_id" invisible="1"/>
                 <field name="line_ids" nolabel="1">
                     <tree editable="bottom" create="false" delete="false"
                           class="smi_plan_tree">
-                        <field name="selected"       string="✓"/>
-                        <field name="nature"         string="Nature"/>
-                        <field name="plan_id"        string="Référence"/>
-                        <field name="direction_id"   string="Direction"/>
-                        <field name="responsable_id" string="Responsable"/>
-                        <field name="date_realisation" string="Date de réalisation"/>
-                        <field name="avancement"     string="Avancement %"/>
-                        <field name="efficacite"     string="Efficacité"/>
-                        <field name="etat_avancement" string="État"/>
-                        <field name="sent_to_rmqse"  invisible="1"/>
-                        <field name="department_id"  invisible="1"/>
+                        <field name="selected"          string="✓"/>
+                        <field name="improvement_plan_id" string="Référence"/>
+                        <field name="direction_id"      string="Direction"/>
+                        <field name="date_ouverture"    string="Date création"/>
+                        <field name="nb_plans"          string="Nb Plans"/>
+                        <field name="taux_avancement"   string="Avancement Global %"/>
+                        <field name="taux_realisation"  string="Taux de réalisation %"/>
+                        <field name="taux_efficacite"   string="Taux d'efficacité %"/>
+                        <field name="state"             string="État"/>
                     </tree>
                 </field>
             </sheet>
             <footer>
+                <button name="action_open_new_plan"
+                        string="Ajouter Action d'Amélioration"
+                        type="object"/>
                 <button name="action_consolidate"
                         string="Consolider"
                         type="object"
                         class="oe_highlight"/>
-                <button name="action_open_new_plan"
-                        string="Ajouter un plan"
-                        type="object"/>
                 <button string="Annuler" class="oe_link" special="cancel"/>
             </footer>
         </form>

@@ -2014,7 +2014,7 @@ class PlanActionSmi(models.Model):
                     lambda r: not r.is_global and r.global_plan_id
                 ).mapped('global_plan_id')
                 if parents:
-                    parents.with_context(_skip_date_maj=True).write(
+                    parents.sudo().with_context(_skip_date_maj=True).write(
                         {'date_maj': fields.Datetime.now()})
 
         return res
@@ -2108,26 +2108,29 @@ class PlanActionSmi(models.Model):
 
     @api.multi
     def action_consolider_tous(self):
-        """Pré-crée le wizard et ses lignes en base, puis ouvre le popup."""
+        """Pré-crée le wizard et ses lignes en base, puis ouvre le popup.
+
+        Liste les Plans Reçus (PAA soumis par les directions) dont les
+        plans d'action ne sont pas encore tous intégrés à ce Plan
+        d'Action d'Amélioration SMI.
+        """
         self.ensure_one()
-        plans = self.env['nc_management.plan_action_smi'].search([
-            ('is_global', '=', False),
-            ('global_plan_id', '=', False),
-            '|',
-            ('create_uid', '=', self.env.uid),
-            ('sent_to_rmqse', '=', True),
-        ])
+        paas = self.env['nc_management.smi_improvement_plan'].search([
+            ('state', '=', 'soumis'),
+        ]).filtered(
+            lambda p: any(pl.global_plan_id.id != self.id for pl in p.plan_ids)
+        )
         wizard = self.env['nc_management.consolidate_wizard'].create({
             'global_plan_id': self.id,
         })
-        for plan in plans:
+        for paa in paas:
             self.env['nc_management.consolidate_wizard.line'].create({
                 'wizard_id': wizard.id,
-                'plan_id': plan.id,
+                'improvement_plan_id': paa.id,
             })
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Consolider des plans',
+            'name': 'Consolider des Plans Reçus',
             'res_model': 'nc_management.consolidate_wizard',
             'res_id': wizard.id,
             'view_mode': 'form',

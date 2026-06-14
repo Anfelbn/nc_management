@@ -393,26 +393,6 @@ class SmiImprovementPlan(models.Model):
             })
         self.write({'global_plan_id': global_plan.id})
 
-        # Auto-consolider les plans dans le plan RMQSE (is_global=True) en cours
-        rmqse_plan = self.env['nc_management.plan_action_smi'].sudo().search([
-            ('is_global', '=', True),
-            ('submission_state', '!=', 'cloture'),
-        ], order='create_date desc', limit=1)
-        if not rmqse_plan:
-            rmqse_plan = self.env['nc_management.plan_action_smi'].sudo().create({
-                'is_global': True,
-                'submission_state': 'brouillon',
-                'mois_reception': fields.Date.today(),
-            })
-        if self.plan_ids:
-            self.plan_ids.with_context(_skip_date_maj=True).write({
-                'global_plan_id': rmqse_plan.id,
-                'submission_state': 'integre',
-            })
-            rmqse_plan.with_context(_skip_date_maj=True).write({
-                'date_maj': fields.Datetime.now(),
-            })
-
         # Notifier la Responsable Qualité par mail interne
         rmqse_group = self.env.ref(
             'nc_management.group_responsable_qualite',

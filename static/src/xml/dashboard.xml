@@ -100,14 +100,14 @@
           <div class="aud-btn btn-list"
                data-model="nc_management.nonconformity"
                data-domain='[["type_audit_interne","=",true]]'
-               data-context='{"search_default_mes_fnc":0,"default_type_audit_interne":true,"default_type_audit":true}'>
+               data-context='{"search_default_mes_fnc":0,"search_default_fnc_recues":1,"search_default_audit_interne":1,"default_type_audit_interne":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FNC</div>
             <div class="aud-btn-val" style="color:#1d4ed8"><t t-esc="widget.stats.fnc_audit_interne"/></div>
           </div>
           <div class="aud-btn btn-list"
                data-model="nc_management.corrective_action"
                data-domain='[["fnc_id.type_audit_interne","=",true]]'
-               data-context='{"fnc_audit_domain":[["type_audit_interne","=",true]],"default_type_audit_interne":true,"default_type_audit":true}'>
+               data-context='{"fnc_audit_domain":[["type_audit_interne","=",true]],"search_default_toutes_fac":1,"search_default_audit_interne":1,"default_type_audit_interne":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FAC</div>
             <div class="aud-btn-val" style="color:#991b1b"><t t-esc="widget.stats.fac_audit_interne"/></div>
           </div>
@@ -122,14 +122,14 @@
           <div class="aud-btn btn-list"
                data-model="nc_management.nonconformity"
                data-domain='[["type_audit_externe","=",true]]'
-               data-context='{"search_default_mes_fnc":0,"default_type_audit_externe":true,"default_type_audit":true}'>
+               data-context='{"search_default_mes_fnc":0,"search_default_audit_externe":1,"default_type_audit_externe":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FNC</div>
             <div class="aud-btn-val" style="color:#1d4ed8"><t t-esc="widget.stats.fnc_audit_externe"/></div>
           </div>
           <div class="aud-btn btn-list"
                data-model="nc_management.corrective_action"
                data-domain='[["fnc_id.type_audit_externe","=",true]]'
-               data-context='{"fnc_audit_domain":[["type_audit_externe","=",true]],"default_type_audit_externe":true,"default_type_audit":true}'>
+               data-context='{"fnc_audit_domain":[["type_audit_externe","=",true]],"search_default_audit_externe":1,"default_type_audit_externe":true,"default_type_audit":true}'>
             <div class="aud-btn-label">FAC</div>
             <div class="aud-btn-val" style="color:#991b1b"><t t-esc="widget.stats.fac_audit_externe"/></div>
           </div>

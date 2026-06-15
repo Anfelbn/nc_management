@@ -1,0 +1,306 @@
+@startuml class_diagram_simplified
+
+title Diagramme de classes — Module nc_management (classes principales)
+
+skinparam classAttributeIconSize 0
+
+skinparam class {
+    BackgroundColor White
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+    FontSize 13
+    AttributeFontSize 12
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #5DADE2
+    FontSize 16
+    FontStyle bold
+}
+
+hide circle
+hide empty members
+
+' #####################################################################
+' PACKAGE 0 : SOCLE COMMUN (classes abstraites)
+' #####################################################################
+
+package "0. Socle commun (classes abstraites)" {
+
+abstract class AbstractDocument <<Abstract>> #EAEDED {
+  + name
+  + sent_by_id
+  + date_envoi
+}
+
+abstract class AbstractFiche <<Abstract>> #EAEDED {
+  + date
+  + analyse_causes
+  + state
+  + current_handler_uid
+}
+
+AbstractDocument <|-- AbstractFiche
+
+note bottom of AbstractDocument
+  direction_id : Many2one(hr.department)
+  Sur PlanActionSmi : champ "sent_by" (au lieu de
+  "sent_by_id"), date_envoi de type Datetime
+end note
+
+}
+
+' #####################################################################
+' PACKAGE 1 : FNC / FAC
+' #####################################################################
+
+package "1. Gestion des Non-Conformités (FNC / FAC)" {
+
+class Nonconformity <<Model>> {
+  nc_management.nonconformity
+  --
+  + type_nc_produit
+  + description
+  + date_signalement
+  + trait_reprise
+  + action_immediate
+  + date_realisation
+  + impact
+  + fac_ids
+  + fac_reference {computed}
+  + date_validation
+  + submitted_by_id
+  --
+  + action_valider_fnc()
+  + action_open_send_wizard()
+  + action_open_number_wizard()
+}
+
+note left of Nonconformity
+  **state** (hérité d'AbstractFiche) :
+  draft -> submitted
+  -> in_progress -> validated
+end note
+
+note right of Nonconformity
+  Champs Many2one(hr.employee) :
+  signale_par_id, realise_par_id,
+  responsable_action_id, superieur_id,
+  validated_by_id, assigned_to_id
+
+  Champs Many2one(hr.department) :
+  department_id, service_id,
+  section_id, equipe_id
+end note
+
+class CorrectiveAction <<Model>> {
+  nc_management.corrective_action
+  --
+  + fnc_id
+  + ref_document
+  + fnc_ref_display {computed}
+  + date_fnc
+  + responsable_id
+  + rappel_nc
+  + date_analyse
+  + visa_analyse
+  + description_actions
+  + action_line_ids
+  + date_actions
+  + visa_actions
+  + actions_efficaces
+  + qse_date
+  + qse_visa
+  + date_validated
+  + date_cloture
+  + visa_cloture
+  --
+  + action_open_send_fac_wizard()
+}
+
+note right of CorrectiveAction
+  **state** (hérité d'AbstractFiche) :
+  draft -> submitted ->
+  in_progress -> validated -> closed
+end note
+
+note left of CorrectiveAction
+  Champs Many2one(hr.employee) :
+  responsable_analyse_id, responsable_actions_id,
+  responsable_efficacite_id, qse_nom_id,
+  cloture_par_id
+end note
+
+class ActionLine <<Model>> {
+  nc_management.action_line
+  --
+  + fac_id
+  + action_description
+  + date_prevue
+  + date_realisation
+}
+
+note bottom of ActionLine
+  responsable_id : Many2one(hr.employee)
+  direction_id : Many2one(hr.department) {related}
+end note
+
+}
+
+' #####################################################################
+' PACKAGE 2 : PLANS SMI
+' #####################################################################
+
+package "2. Plans d'Action d'Amelioration SMI (3 niveaux)" {
+
+class PlanActionSmi <<Model>> {
+  nc_management.plan_action_smi (Niveau 1)
+  --
+  + nature
+  + fnc_id
+  + reference
+  + description
+  + causes
+  + action
+  + critere_efficacite
+  + date_prevue
+  + date_lancement
+  + date_realisation
+  + avancement
+  + etat_avancement {computed}
+  + is_late {computed}
+  + is_integrated {computed}
+  + efficacite
+  + remarque
+  + submission_state
+  + sent_to_rmqse
+  + improvement_plan_id
+  + direct_global_plan_id
+  + date_consultation
+  + historique_html {computed}
+  --
+  + action_generate_plan_number()
+  + action_open_send_plan_wizard()
+  + action_open_consulter_version_wizard()
+  + action_retour_actuel_plan()
+  + action_open_analyser_wizard()
+}
+
+note bottom of PlanActionSmi
+  **submission_state** :
+  brouillon -> soumis -> integre -> cloture
+end note
+
+note left of PlanActionSmi
+  responsable_id : Many2one(hr.employee)
+  Champs Many2one(hr.department) :
+  department_id, service_id
+end note
+
+class SmiImprovementPlan <<Model>> {
+  nc_management.smi_improvement_plan (Niveau 2 — par direction)
+  --
+  + name
+  + description
+  + plan_ids
+  + nb_plans
+  + nb_en_cours
+  + nb_realises
+  + nb_non_realises
+  + nb_clotures
+  + taux_avancement
+  + taux_realisation
+  + taux_efficacite
+  + date_ouverture
+  + date_consultation
+  + historique_html {computed}
+  + state
+  + date_soumission
+  + submitted_by_id
+  + global_plan_id
+  --
+  + action_open_my_plan()
+  + action_consolider()
+  + action_soumettre()
+  + action_open_consulter_version_wizard()
+  + action_retour_actuel()
+  + action_print_plan()
+}
+
+note right of SmiImprovementPlan
+  Champs Many2one(hr.department) :
+  direction_id, department_id, service_id
+end note
+
+class SmiGlobalPlan <<Model>> {
+  nc_management.smi_global_plan (Niveau 3 — singleton RMQSE)
+  --
+  + name
+  + date_derniere_maj
+  + improvement_plan_ids
+  + direct_plan_ids
+  + date_consultation
+  + historique_html {computed}
+  + nb_directions
+  + nb_plans_total
+  + nb_en_cours
+  + nb_realises
+  + nb_clotures
+  + taux_avancement
+  + taux_efficacite
+  --
+  + _get_all_plans()
+  + action_retour_actuel()
+}
+
+note bottom of SmiGlobalPlan
+  Singleton : cree a la volee par
+  SmiImprovementPlan.action_soumettre()
+  si inexistant. Ne se cloture jamais.
+end note
+
+}
+
+' #####################################################################
+' PACKAGE 3 : DASHBOARD
+' #####################################################################
+
+package "3. Dashboard" {
+
+class NcDashboard <<Model>> {
+  nc_management.dashboard
+  (sans champ stocke — point d entree RPC)
+  --
+  + get_stats(period)
+  + get_user_stats()
+  + get_plan_smi_stats()
+  + get_direction_details(direction_id, period)
+  + get_sender_info(model, record_id)
+}
+
+}
+
+' #####################################################################
+' RELATIONS
+' #####################################################################
+
+AbstractFiche <|-- Nonconformity
+AbstractFiche <|-- CorrectiveAction
+AbstractDocument <|-- PlanActionSmi
+
+Nonconformity "0..1" -right- "0..*" CorrectiveAction : genere\n(fnc_id / fac_ids)
+CorrectiveAction "1" *-- "0..*" ActionLine : action_line_ids
+
+Nonconformity "0..1" -- "0..*" PlanActionSmi : fnc_id (optionnel)
+
+SmiImprovementPlan "0..1" o-- "0..*" PlanActionSmi : plan_ids /\nimprovement_plan_id
+SmiGlobalPlan "0..1" o-- "0..*" SmiImprovementPlan : improvement_plan_ids /\nglobal_plan_id
+SmiGlobalPlan "0..1" o-- "0..*" PlanActionSmi : direct_plan_ids /\ndirect_global_plan_id
+
+NcDashboard ..> Nonconformity : lit
+NcDashboard ..> CorrectiveAction : lit
+NcDashboard ..> PlanActionSmi : lit
+NcDashboard ..> SmiImprovementPlan : lit
+
+@enduml

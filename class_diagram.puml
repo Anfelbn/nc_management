@@ -1,0 +1,776 @@
+@startuml class_diagram_nc_management
+' ============================================================================
+'  Diagramme de classes UML — Module nc_management (Odoo 11)
+'  SCAEK Sétif — Gestion FNC / FAC / Plans d'Action d'Amélioration SMI
+' ============================================================================
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam class {
+    BackgroundColor White
+    BorderColor #2c3e50
+    ArrowColor #2c3e50
+    HeaderBackgroundColor #2c3e50
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F4F6F9
+    BorderColor #B0BEC5
+}
+hide circle
+hide empty members
+
+' ============================================================================
+'  PACKAGE 0 — Modèles natifs Odoo (référencés, non détaillés)
+' ============================================================================
+package "Odoo Core (référencés)" #ECEFF1 {
+    class HrDepartment <<hr.department>>
+    class HrEmployee   <<hr.employee>>
+    class ResUsersCore <<res.users>>
+}
+
+' ============================================================================
+'  PACKAGE 1 — Extensions de modèles natifs
+' ============================================================================
+package "Extensions Odoo natives" {
+
+    class HrDepartmentScaek <<extension hr.department>> {
+        +scaek_level : Selection(pdg, direction, departement, service, section, equipe)
+        +scaek_code : Char
+    }
+
+    class HrJobScaek <<extension hr.job>> {
+        +is_linked_to_pdg : Boolean
+    }
+
+    class ResUsersExt <<extension res.users>> {
+        --
+        +write(vals)
+        .. propage vals['lang'] vers partner_id ..
+    }
+}
+
+HrDepartmentScaek -up-|> HrDepartment
+HrJobScaek -up-|> HrEmployee
+ResUsersExt -up-|> ResUsersCore
+
+' ============================================================================
+'  PACKAGE 2 — Référentiels
+' ============================================================================
+package "Référentiels" {
+
+    class NcType <<nc_management.nc_type>> {
+        +name : Char {required}
+        +code : Char {required, unique}
+        +category : Selection(type_nc_produit, type_reclamation, type_sst,
+                               type_environnement, type_audit, type_achat,
+                               type_reception, type_dysfonctionnement,
+                               type_travaux, type_autre)
+        --
+        .. _sql_constraints ..
+        +code_unique : unique(code)
+    }
+
+    class DocumentRevision <<nc_management.document_revision>> {
+        +doc_type : Selection(fnc, fac, plan_smi) {required}
+        +revision_number : Integer {required}
+        +revision_date : Date {required, default=today}
+        +reference : Char
+        +description : Text
+        +etat : Selection(valable, obsolete) {default=obsolete}
+        +name : Char {computed, stored}
+        +revision_number_link : Html {computed}
+        --
+        +_compute_revision_number_link()
+        +_compute_name()
+        +_obsolete_others()
+        +create(vals)
+        +write(vals)
+        .. _order = 'revision_date desc, revision_number desc' ..
+        .. garantit 1 seule revision 'valable' par doc_type ..
+    }
+}
+
+' ============================================================================
+'  PACKAGE 3 — FNC / FAC
+' ============================================================================
+package "FNC / FAC" {
+
+    class Nonconformity <<nc_management.nonconformity>> {
+        .. En-tête ..
+        +name : Char {required, copy=False, default='New'}
+        +direction_id : M2O(hr.department)
+        +department_id : M2O(hr.department)
+        +service_id : M2O(hr.department)
+        +section_id : M2O(hr.department)
+        +equipe_id : M2O(hr.department)
+        +service_dpt : Char
+        +sce_dpt_computed : Char {computed}
+        +date : Date {default=today}
+        .. Type de NC (12 booleens exclusifs) ..
+        +type_nc_produit : Boolean
+        +type_audit : Boolean
+        +type_audit_interne : Boolean
+        +type_audit_externe : Boolean
+        +type_reclamation : Boolean
+        +type_achat : Boolean
+        +type_sst : Boolean
+        +type_reception : Boolean
+        +type_environnement : Boolean
+        +type_dysfonctionnement : Boolean
+        +type_travaux : Boolean
+        +type_autre : Boolean
+        +type_autre_preciser : Char
+        .. Section 1 — Description ..
+        +description : Text
+        +signale_par_id : M2O(hr.employee)
+        +date_signalement : Date
+        +fonction_visa : Char
+        .. Traitement (6 booleens) ..
+        +trait_reprise : Boolean
+        +trait_declassement : Boolean
+        +trait_retour_fourn : Boolean
+        +trait_recyclage : Boolean
+        +trait_reparation : Boolean
+        +trait_autre : Boolean
+        +trait_autre_preciser : Char
+        .. Section 2 — Action immédiate ..
+        +action_immediate : Text
+        +realise_par_id : M2O(hr.employee)
+        +date_realisation : Date
+        .. Section 3 — Analyse des causes ..
+        +analyse_causes : Text
+        +impact : Text
+        .. Références FAC ..
+        +fac_ids : O2M(CorrectiveAction.fnc_id)
+        +fac_reference : M2O(CorrectiveAction) {computed, stored}
+        +fac_number_display : Char {computed}
+        +can_access_fac : Boolean {computed}
+        +responsable_action_id : M2O(hr.employee)
+        .. Validation hiérarchique ..
+        +superieur_id : M2O(hr.employee)
+        +date_validation : Date
+        +signature : Char
+        .. Routing / statut ..
+        +assigned_to_id : M2O(hr.employee) {tracked}
+        +current_handler_uid : M2O(res.users) {copy=False}
+        +submitted_by_id : M2O(res.users) {readonly}
+        +validated_by_id : M2O(hr.employee)
+        +state : Selection(draft, submitted, in_progress, validated) {tracked}
+        +date_in_progress : Date
+        +date_envoi : Date {readonly}
+        +sent_by_id : M2O(res.users) {readonly}
+        --
+        .. Compute ..
+        +_compute_sce_dpt()
+        +_compute_fac_reference()
+        +_compute_fac_number_display()
+        +_compute_can_access_fac()
+        .. Contraintes (@api.constrains) ..
+        +_check_fnc_required()
+        +_check_fonction_visa_requirements()
+        .. Onchange ..
+        +_onchange_fonction_visa()
+        +_onchange_autofill_fonction_visa()
+        +_onchange_responsable_action_id()
+        +_onchange_autofill_responsable_action()
+        +_onchange_autofill_signature()
+        +_onchange_traitement_complet()
+        +_onchange_assigned_to_id()
+        +_onchange_signature()
+        +_onchange_direction_id()
+        +_onchange_department_id()
+        +_onchange_service_id()
+        +_onchange_section_id()
+        +_onchange_type_exclusive()
+        .. CRUD / Métier ..
+        +default_get(fields_list)
+        +create(vals)
+        +write(vals)
+        +unlink()
+        +_traitement_complet()
+        +_is_creator()
+        +_is_assigned()
+        .. Actions (boutons) ..
+        +action_valider_fnc()
+        +action_open_send_wizard()
+        +action_open_number_wizard()
+    }
+
+    class CorrectiveAction <<nc_management.corrective_action>> {
+        .. En-tête ..
+        +name : Char {required, readonly, default='New'}
+        +direction_id : M2O(hr.department)
+        +date : Date {default=today}
+        +fnc_id : M2O(Nonconformity) {ondelete=set null, index}
+        +ref_document : Char
+        +fnc_ref_display : Char {computed}
+        +date_fnc : Date
+        +responsable_id : M2O(res.users) {index}
+        .. Section 1 — Rappel NC ..
+        +rappel_nc : Text
+        .. Section 2 — Analyse causes ..
+        +analyse_causes : Text
+        +responsable_analyse_id : M2O(hr.employee)
+        +date_analyse : Date
+        +visa_analyse : Char
+        .. Section 3 — Actions décidées ..
+        +description_actions : Text
+        +action_line_ids : O2M(ActionLine.fac_id)
+        +responsable_actions_id : M2O(hr.employee)
+        +date_actions : Date
+        +visa_actions : Char
+        .. Efficacité ..
+        +actions_efficaces : Selection(oui, non)
+        +responsable_efficacite_id : M2O(hr.employee)
+        .. Section 4 — Approbation QSE ..
+        +qse_nom_id : M2O(hr.employee)
+        +qse_date : Date
+        +qse_visa : Char
+        .. Section 5 — Vérification ..
+        +verification_efficacite : Text
+        +extension_possible : Selection(non, oui)
+        .. Clôture ..
+        +cloture_par_id : M2O(hr.employee)
+        +date_cloture : Date
+        +visa_cloture : Char
+        +date_envoi : Date {readonly}
+        +sent_by_id : M2O(res.users) {readonly}
+        +current_handler_uid : M2O(res.users) {copy=False}
+        .. Statut ..
+        +state : Selection(draft, submitted, in_progress, validated, closed) {tracked}
+        +date_validated : Date
+        --
+        +default_get(fields_list)
+        +_compute_fnc_ref_display()
+        +_onchange_fnc_id()
+        +create(vals)
+        +_state_from_visas(visa_analyse, visa_actions, qse_visa, visa_cloture) : state
+        +_onchange_visa_state()
+        +_check_visa_analyse()
+        +_check_visa_actions()
+        +_check_qse_visa()
+        +_check_visa_cloture()
+        +write(vals)
+        +action_open_send_fac_wizard()
+        +unlink()
+    }
+
+    class ActionLine <<nc_management.action_line>> {
+        +fac_id : M2O(CorrectiveAction) {required, ondelete=cascade, index}
+        +direction_id : M2O(hr.department) {related='fac_id.direction_id', stored}
+        +action_description : Char
+        +date_prevue : Date
+        +date_realisation : Date
+        +responsable_id : M2O(hr.employee)
+    }
+}
+
+Nonconformity "1" o-- "0..*" CorrectiveAction : fac_ids / fnc_id (set null)
+CorrectiveAction "1" *-- "0..*" ActionLine : action_line_ids / fac_id (cascade)
+
+' ============================================================================
+'  PACKAGE 4 — Plans d'Action SMI (hiérarchie à 3 niveaux)
+' ============================================================================
+package "Plans d'Action SMI (3 niveaux)" {
+
+    class PlanActionSmi <<nc_management.plan_action_smi>> {
+        .. Identification (niveau 1) ..
+        +name : Char {required, readonly, default='New', tracked}
+        +nature : Selection(nc_produit, reclamation_pi, environnement, sst,
+                             audit_externe, audit_interne, swot, risque,
+                             objectif_non_atteint, decision_revue_direction,
+                             amelioration, nc_reglementaire)
+        +fnc_id : M2O(Nonconformity)
+        +reference : Char
+        +direction_id : M2O(hr.department)
+        +department_id : M2O(hr.department)
+        +service_id : M2O(hr.department)
+        +is_late : Boolean {computed, stored}
+        +is_integrated : Char {computed, stored} = Oui/Non
+        .. Description / suivi ..
+        +description : Text {tracked}
+        +causes : Text {tracked}
+        +action : Text {tracked}
+        +responsable_id : M2O(hr.employee) {tracked}
+        +responsable_ids : M2M(hr.employee) "plan_smi_responsable_rel"
+        +moyens : Char {tracked}
+        +duree_estimee : Char
+        +date_prevue : Date {tracked}
+        +date_lancement : Date
+        +date_realisation : Date {tracked}
+        +avancement : Integer {default=0, tracked}
+        +avancement_choice : Selection(0,25,50,75,100) {computed/inverse}
+        +duree_reelle : Char
+        +critere_efficacite : Text
+        +efficacite : Selection(oui, non) {tracked}
+        +remarque : Text
+        +state : Selection(draft, done, en_cours, realise, cloture) {tracked}
+        +etat_avancement : Selection(non_realise, en_cours, realise) {computed, stored}
+        .. Cycle RMQSE (ancien système) ..
+        +submission_state : Selection(brouillon, soumis, integre, cloture) {tracked}
+        +sent_to_rmqse : Boolean {readonly, default=False}
+        +date_envoi : Datetime {readonly}
+        +sent_by : M2O(res.users) {readonly}
+        .. Plan global niveau 3 (ancien système) ..
+        +is_global : Boolean {default=False}
+        +global_plan_id : M2O(PlanActionSmi) {domain is_global=True, set null, index}
+        +child_plan_ids : O2M(PlanActionSmi.global_plan_id)
+        +mois_reception : Date
+        +date_maj : Datetime {readonly}
+        +version_number : Integer {default=1}
+        .. Filtres UI (plan global) ..
+        +filter_nature : Selection(12 valeurs) {default=False}
+        +filter_direction_id : M2O(hr.department) {default=False}
+        +child_plan_ids_display : M2M(PlanActionSmi) {computed}
+        .. Nouvelle hiérarchie 3 niveaux ..
+        +improvement_plan_id : M2O(SmiImprovementPlan) {set null, index, tracked}
+        +direct_global_plan_id : M2O(SmiGlobalPlan) {set null, index}
+        +name_display : Char {computed}
+        .. Traçabilité / historique ..
+        +date_consultation : Date
+        +historique_html : Html {computed, sanitize=False}
+        +analyse_html : Html {computed, sanitize=False}
+        .. Statistiques plan global (si is_global=True) ..
+        +nb_plans_integres : Integer {computed}
+        +avancement_global : Integer {computed}
+        +nb_realises : Integer {computed}
+        +nb_en_cours : Integer {computed}
+        +nb_non_realises : Integer {computed}
+        +nb_en_retard : Integer {computed}
+        +taux_realisation : Integer {computed}
+        +taux_efficacite : Integer {computed}
+        +etat_global : Selection(brouillon, en_cours, cloture) {computed}
+        --
+        .. Constantes ..
+        +_CAT_COLORS : [4 couleurs rotation graphique]
+        +_GLOBAL_TRACKED_FIELDS : [action, causes, description, date_prevue,
+                                    date_realisation, avancement, efficacite,
+                                    responsable_id, state, moyens]
+        .. Compute ..
+        +_compute_is_integrated()
+        +_compute_etat_avancement()
+        +_compute_avancement_choice() / _set_avancement_choice()
+        +_compute_child_display()
+        +_compute_name_display()
+        +_compute_plan_historique_html()
+        +_compute_analyse_html()
+        +_get_analyse_rows()
+        +_compute_etat_global()
+        +_compute_global_stats()
+        +_compute_is_late()
+        .. Onchange ..
+        +_onchange_efficacite()
+        +_onchange_avancement_smi()
+        +_onchange_nature()
+        +_onchange_smi_direction_id()
+        +_onchange_smi_department_id()
+        .. CRUD / Métier ..
+        +copy()
+        +create(vals)
+        +write(vals)
+        .. Actions (boutons) ..
+        +action_reset_filters()
+        +action_generate_plan_number()
+        +action_open_send_plan_wizard()
+        +action_envoyer_rmqse()
+        +action_analyse_efficacite()
+        +action_consolider_tous()
+        +action_open_consulter_version_wizard()
+        +action_retour_actuel_plan()
+        +action_print_global()
+        +action_print_plan_smi_pdf()
+        +action_supprimer_plan()
+        +action_open_new_child_plan_form()
+        +action_cloturer_plan()
+        +action_open_global_plan()
+        +action_open_analyse_efficacite()
+        +action_open_analyser_wizard()
+        +action_retour_analyse_actuelle()
+        +_auto_create_global_plan()
+    }
+
+    class SmiImprovementPlan <<nc_management.smi_improvement_plan>> {
+        .. En-tête (niveau 2 — par direction) ..
+        +name : Char {required, readonly, default='New'}
+        +direction_id : M2O(hr.department) {tracked}
+        +department_id : M2O(hr.department)
+        +service_id : M2O(hr.department)
+        +description : Text {tracked}
+        .. Plans niveau 1 ..
+        +plan_ids : O2M(PlanActionSmi.improvement_plan_id)
+        .. Statistiques (compute, store=True) ..
+        +nb_plans : Integer
+        +nb_en_cours : Integer
+        +nb_realises : Integer
+        +nb_non_realises : Integer
+        +nb_clotures : Integer
+        +taux_avancement : Integer
+        +taux_realisation : Integer
+        +taux_efficacite : Integer
+        .. Dates / historique ..
+        +date_ouverture : Date
+        +date_consultation : Date
+        +historique_html : Html {computed, sanitize=False}
+        .. Cycle de vie ..
+        +state : Selection(brouillon, soumis) {default=brouillon, tracked}
+        +date_soumission : Datetime {readonly}
+        +submitted_by_id : M2O(res.users) {readonly}
+        .. Lien vers niveau 3 ..
+        +global_plan_id : M2O(SmiGlobalPlan) {readonly, set null, index}
+        --
+        +default_get(fields_list)
+        +_compute_stats()
+        +unlink()
+        +copy()
+        +create(vals)
+        +_compute_historique_html()
+        .. Actions (boutons) ..
+        +action_print_plan()
+        +action_supprimer_plan()
+        +action_open_consulter_version_wizard()
+        +action_open_new_plan_form()
+        +action_retour_actuel()
+        +action_consolider()
+        +action_soumettre()
+        +action_open_my_plan()
+        .. Onchange ..
+        +_onchange_direction_id()
+        +_onchange_department_id()
+    }
+
+    class SmiGlobalPlan <<nc_management.smi_global_plan>> {
+        .. Singleton RMQSE (niveau 3) ..
+        +name : Char {required, default="Plan d'Action Global SMI", tracked}
+        +date_derniere_maj : Datetime {readonly}
+        +improvement_plan_ids : O2M(SmiImprovementPlan.global_plan_id) {readonly}
+        +direct_plan_ids : O2M(PlanActionSmi.direct_global_plan_id)
+        .. Historique ..
+        +date_consultation : Date
+        +vue_historique : Boolean {computed}
+        +historique_html : Html {computed, sanitize=False}
+        .. Statistiques globales (compute à la volée) ..
+        +nb_directions : Integer {computed}
+        +nb_plans_total : Integer {computed}
+        +nb_en_cours : Integer {computed}
+        +nb_realises : Integer {computed}
+        +nb_clotures : Integer {computed}
+        +taux_avancement : Integer {computed}
+        +taux_efficacite : Integer {computed}
+        --
+        +_get_all_plans() : improvement_plan_ids.plan_ids | direct_plan_ids
+        +_compute_vue_historique()
+        +_compute_global_stats()
+        +_compute_historique_html()
+        +action_retour_actuel()
+        +write(vals)
+        .. write() met à jour date_derniere_maj automatiquement ..
+    }
+}
+
+PlanActionSmi "0..1" -- "0..*" PlanActionSmi : global_plan_id / child_plan_ids\n(ancien système, legacy)
+SmiImprovementPlan "1" o-- "0..*" PlanActionSmi : plan_ids / improvement_plan_id
+SmiGlobalPlan "1" o-- "0..*" SmiImprovementPlan : improvement_plan_ids / global_plan_id
+SmiGlobalPlan "1" o-- "0..*" PlanActionSmi : direct_plan_ids / direct_global_plan_id
+Nonconformity "0..1" -- "0..*" PlanActionSmi : fnc_id
+
+' ============================================================================
+'  PACKAGE 5 — Gabarits de formulaires PDF (FNC / FAC / Plan SMI)
+' ============================================================================
+package "Gabarits de formulaires PDF" {
+
+    class FormTemplate <<nc_management.form_template>> {
+        +name : Char {required}
+        +doc_type : Selection(fnc, fac, plan_smi) {required}
+        +is_active : Boolean {default=False}
+        +revision_id : M2O(DocumentRevision) {set null}
+        +section_ids : O2M(FormSection.template_id)
+        +section_count : Integer {computed}
+        --
+        +_compute_counts()
+        +action_activate()
+        .. _order = 'doc_type asc, id desc' ..
+        .. 1 seul gabarit actif par doc_type ..
+    }
+
+    class FormSection <<nc_management.form_section>> {
+        +template_id : M2O(FormTemplate) {required, cascade}
+        +name : Char {required}
+        +sequence : Integer {default=10}
+        +is_active : Boolean {default=True}
+        +show_title : Boolean {default=True}
+        +section_layout : Selection(standard, checkboxes_2col,\naction_lines, blank_table) {required, default=standard}
+        +table_rows : Integer {default=20}
+        +line_ids : O2M(FormLine.section_id)
+        +line_count : Integer {computed}
+        --
+        +_compute_line_count()
+    }
+
+    class FormLine <<nc_management.form_line>> {
+        +section_id : M2O(FormSection) {required, cascade}
+        +sequence : Integer {default=10}
+        +is_active : Boolean {default=True}
+        +line_type : Selection(textarea, row, checkbox,\ncustom_text, separator, table_column) {required, default=row}
+        .. textarea ..
+        +ta_field : Selection(ALL_FIELD_SELECTION ~60 valeurs)
+        +ta_label : Char
+        +ta_height : Selection(sm, md, lg, xl) {default=md}
+        .. row (1-3 colonnes) ..
+        +col1_field / col1_label
+        +col2_field / col2_label
+        +col3_field / col3_label
+        .. checkbox ..
+        +cb_field : Selection(ALL_FIELD_SELECTION)
+        +cb_label : Char
+        +cb_column : Selection(left, right) {default=left}
+        +cb_extra_field : Selection(ALL_FIELD_SELECTION)
+        +cb_extra_label : Char
+        .. texte fixe ..
+        +custom_text : Char
+        .. colonne de tableau (Plan SMI) ..
+        +col_width : Char
+        .. render types (computed, stored) ..
+        +render_type_ta : Char
+        +render_type_col1 : Char
+        +render_type_col2 : Char
+        +render_type_col3 : Char
+        +render_type_cb : Char
+        +nb_cols : Integer
+        --
+        +_compute_render_types()
+    }
+
+    note bottom of FormLine
+      FIELD_RENDER_TYPES (module-level dict) :
+      mappe chaque champ FNC/FAC sélectionnable
+      vers son type de rendu (char, text, date,
+      many2one, boolean, selection_yes_no,
+      selection_non_oui).
+      ALL_FIELD_SELECTION : ~60 entrées
+      (libellés FR de tous les champs FNC + FAC).
+    end note
+}
+
+DocumentRevision "0..1" -- "0..*" FormTemplate : revision_id (set null)
+FormTemplate "1" *-- "0..*" FormSection : section_ids / template_id (cascade)
+FormSection "1" *-- "0..*" FormLine : line_ids / section_id (cascade)
+
+' ============================================================================
+'  PACKAGE 6 — Dashboard (RPC, sans persistance)
+' ============================================================================
+package "Dashboard" {
+
+    class NcDashboard <<nc_management.dashboard>> {
+        .. Modèle sans champ stocké — point d'entrée RPC pour le JS ..
+        --
+        +get_plan_smi_stats() : dict
+        +get_efficacite_categorie(field_name) : dict
+        +get_stats(period, target_year, target_month) : dict
+        +get_user_stats(period, cal_year, cal_month) : dict
+        +get_direction_details(direction_id, period) : dict
+        +get_sender_info(model, record_id) : dict
+    }
+}
+
+NcDashboard ..> Nonconformity : lit (search/read)
+NcDashboard ..> CorrectiveAction : lit (search/read)
+NcDashboard ..> PlanActionSmi : lit (search/read)
+NcDashboard ..> SmiImprovementPlan : lit (search/read)
+
+' ============================================================================
+'  PACKAGE 7 — Wizards (TransientModel)
+' ============================================================================
+package "Wizards (TransientModel)" {
+
+    class SendFncWizard <<nc_management.send_fnc_wizard>> {
+        +fnc_id : M2O(Nonconformity) {readonly}
+        +recipient_id : M2O(hr.employee) {required}
+        +note : Text
+        --
+        +action_send()
+        .. routage selon state (draft/submitted/in_progress/validated) ..
+        .. sync FAC liée si destinataire = RMQSE ..
+    }
+
+    class SendFacWizard <<nc_management.send_fac_wizard>> {
+        +fac_id : M2O(CorrectiveAction) {readonly}
+        +recipient_id : M2O(hr.employee) {required}
+        +note : Text
+        --
+        +action_send()
+        .. si destinataire = RMQSE et fnc_id : sync FNC liée ..
+    }
+
+    class SendPlanWizard <<nc_management.send_plan_wizard>> {
+        +plan_id : M2O(PlanActionSmi) {readonly}
+        +recipient_id : M2O(hr.employee) {required}
+        +note : Text
+        --
+        +action_send()
+        .. submission_state -> 'soumis' ..
+    }
+
+    class NumberGeneratorWizard <<nc_management.number_generator_wizard>> {
+        +fnc_id : M2O(Nonconformity) {ondelete=cascade}
+        +category : Selection(10 valeurs type_*) {required}
+        +nc_type_id : M2O(NcType) {required}
+        --
+        +_onchange_category()
+        +_generate_name(abr) : "ABR-NNN YYYY"
+        +action_confirm()
+        .. crée ir.sequence 'nc_management.fnc.<abr>' si absente ..
+    }
+
+    class PlanNumberWizard <<nc_management.plan_number_wizard>> {
+        +plan_id : M2O(PlanActionSmi) {required, cascade}
+        +reference : Char {required}
+        --
+        +action_confirm()
+        .. interdit si plan.name != 'New' ..
+    }
+
+    class ReplyWizard <<nc_management.reply_wizard>> {
+        +record_model : Char {required}
+        +record_id : Integer {required}
+        +recipient_id : M2O(hr.employee) {required}
+        +note : Text
+        --
+        +action_reply()
+        .. générique : FNC / FAC / Plan ..
+    }
+
+    class ExportPlanWizard <<nc_management.export_plan_wizard>> {
+        +excel_file : Binary {readonly}
+        +file_name : Char {readonly}
+        --
+        +action_export()
+        .. export xlwt — tous les plan_action_smi (16 colonnes) ..
+    }
+
+    class ExportSmiAnalysisWizard <<nc_management.export_smi_analysis_wizard>> {
+        +excel_file : Binary {readonly}
+        +file_name : Char {readonly}
+        --
+        +action_export()
+        .. 2 feuilles : Efficacité Globale + Réalisation Processus ..
+        .. via dashboard.get_plan_smi_stats() ..
+    }
+
+    class PlanEfficaciteWizard <<nc_management.plan_efficacite_wizard>> {
+        +plan_id : M2O(PlanActionSmi) {readonly}
+        +line_ids : O2M(PlanEfficaciteLine.wizard_id)
+        +chart_html : Html {computed}
+        --
+        +default_get(fields_list)
+        +_compute_chart_html()
+        .. graphique SVG barres, 12 catégories (CATEGORIES) ..
+    }
+
+    class PlanEfficaciteLine <<nc_management.plan_efficacite_line>> {
+        +wizard_id : M2O(PlanEfficaciteWizard) {cascade}
+        +categorie : Char
+        +total : Integer
+        +efficace : Integer
+        +non_efficace : Integer
+        +realise_100 : Integer
+        +realise_50plus : Integer
+        +realise_50moins : Integer
+        +taux : Float(5,1)
+    }
+
+    class ConsolidateWizard <<nc_management.consolidate_wizard>> {
+        +global_plan_id : M2O(PlanActionSmi) {readonly, required, cascade}
+        +line_ids : O2M(ConsolidateWizardLine.wizard_id)
+        --
+        +action_consolidate()
+        +action_open_new_plan()
+    }
+
+    class ConsolidateWizardLine <<nc_management.consolidate_wizard.line>> {
+        +wizard_id : M2O(ConsolidateWizard) {cascade}
+        +plan_id : M2O(PlanActionSmi) {readonly}
+        +selected : Boolean {default=False}
+        +direction_id / department_id / nature / responsable_id /
+         date_realisation / avancement / efficacite /
+         etat_avancement / sent_to_rmqse : related (readonly)
+    }
+
+    class ConsolidateImprovementWizard <<nc_management.consolidate_improvement_wizard>> {
+        +improvement_plan_id : M2O(SmiImprovementPlan) {readonly, required, cascade}
+        +line_ids : O2M(ConsolidateImprovementLine.wizard_id)
+        --
+        +default_get(fields_list)
+        +action_consolidate()
+        +action_open_new_plan()
+    }
+
+    class ConsolidateImprovementLine <<nc_management.consolidate_improvement_wizard.line>> {
+        +wizard_id : M2O(ConsolidateImprovementWizard) {cascade}
+        +plan_id : M2O(PlanActionSmi) {readonly}
+        +selected : Boolean {default=False}
+        +nature / description / responsable_id /
+         date_prevue / avancement / state : related (readonly)
+    }
+
+    class ConsulterVersionWizard <<nc_management.consulter_version_wizard>> {
+        +plan_id : M2O(PlanActionSmi) {readonly, required, cascade}
+        +date_consultation : Date {required}
+        +return_view_ref : Char {default='view_plan_smi_form_global'}
+        --
+        +action_consulter()
+        .. retrouve le plan global historique à la date donnée ..
+    }
+
+    class ConsulterVersionImprovementWizard <<nc_management.consulter_version_improvement_wizard>> {
+        +improvement_plan_id : M2O(SmiImprovementPlan) {readonly, required, cascade}
+        +date_consultation : Date {required}
+        --
+        +action_consulter()
+    }
+}
+
+PlanEfficaciteWizard "1" *-- "0..*" PlanEfficaciteLine : line_ids
+ConsolidateWizard "1" *-- "0..*" ConsolidateWizardLine : line_ids
+ConsolidateImprovementWizard "1" *-- "0..*" ConsolidateImprovementLine : line_ids
+
+SendFncWizard ..> Nonconformity : fnc_id
+SendFacWizard ..> CorrectiveAction : fac_id
+SendPlanWizard ..> PlanActionSmi : plan_id
+NumberGeneratorWizard ..> Nonconformity : fnc_id
+NumberGeneratorWizard ..> NcType : nc_type_id
+PlanNumberWizard ..> PlanActionSmi : plan_id
+PlanEfficaciteWizard ..> PlanActionSmi : plan_id
+ConsolidateWizard ..> PlanActionSmi : global_plan_id
+ConsolidateWizardLine ..> PlanActionSmi : plan_id
+ConsolidateImprovementWizard ..> SmiImprovementPlan : improvement_plan_id
+ConsolidateImprovementLine ..> PlanActionSmi : plan_id
+ConsulterVersionWizard ..> PlanActionSmi : plan_id
+ConsulterVersionImprovementWizard ..> SmiImprovementPlan : improvement_plan_id
+
+' ============================================================================
+'  RELATIONS — Modèles natifs Odoo (associations agrégées, voir notes)
+' ============================================================================
+HrDepartment "1" -- "0..*" Nonconformity : direction/department/service/\nsection/equipe_id
+HrEmployee   "1" -- "0..*" Nonconformity : signale_par/realise_par/\nresponsable_action/superieur/\nassigned_to/validated_by_id
+ResUsersCore "1" -- "0..*" Nonconformity : current_handler_uid/\nsubmitted_by_id/sent_by_id
+
+HrDepartment "1" -- "0..*" CorrectiveAction : direction_id
+ResUsersCore "1" -- "0..*" CorrectiveAction : responsable_id/sent_by_id/\ncurrent_handler_uid
+HrEmployee   "1" -- "0..*" CorrectiveAction : responsable_analyse/actions/\nefficacite/qse_nom/cloture_par_id
+
+HrEmployee   "1" -- "0..*" ActionLine : responsable_id
+
+HrDepartment "1" -- "0..*" PlanActionSmi : direction/department/service_id
+HrEmployee   "1" -- "0..*" PlanActionSmi : responsable_id
+HrEmployee   "0..*" -- "0..*" PlanActionSmi : responsable_ids\n(plan_smi_responsable_rel)
+ResUsersCore "1" -- "0..*" PlanActionSmi : sent_by
+
+HrDepartment "1" -- "0..*" SmiImprovementPlan : direction/department/service_id
+ResUsersCore "1" -- "0..*" SmiImprovementPlan : submitted_by_id
+
+note "Modèles natifs Odoo non détaillés ici :\nhr.department, hr.employee, res.users\n(voir extensions ci-dessus pour les\nchamps ajoutés par nc_management)" as N1
+N1 .. HrDepartment
+N1 .. HrEmployee
+N1 .. ResUsersCore
+
+@enduml

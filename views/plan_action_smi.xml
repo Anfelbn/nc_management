@@ -57,9 +57,10 @@
     <field name="priority">16</field>
     <field name="arch" type="xml">
         <tree string="Plans d'Action d'Amélioration SMI" class="nc_list_tree smi_global_tree"
-              import="false" create="false"
+              import="false"
               decoration-muted="submission_state == 'cloture'">
             <field name="name"/>
+            <field name="direction_id"      string="Direction"/>
             <field name="mois_reception"    string="Date création"/>
             <field name="date_maj"          string="Dernière màj"/>
             <field name="nb_plans_integres" string="Nb Plans"/>
@@ -316,7 +317,7 @@
                     </h1>
                 </div>
 
-                <group>
+                <group attrs="{'invisible': [('date_consultation', '!=', False)]}">
                     <group>
                         <field name="mois_reception"    string="Date de création"
                                attrs="{'readonly': [('submission_state', '!=', 'brouillon')]}"/>
@@ -333,6 +334,22 @@
                     </group>
                 </group>
 
+                <!-- Synthèse historique — vue "Consulter une version" -->
+                <group attrs="{'invisible': [('date_consultation', '=', False)]}">
+                    <group>
+                        <field name="mois_reception"         string="Date de création" readonly="1"/>
+                        <field name="hist_nb_plans_integres" string="Plans intégrés"/>
+                        <field name="hist_nb_realises"       string="Plans réalisés"/>
+                        <field name="hist_nb_en_cours"       string="Plans en cours"/>
+                        <field name="hist_nb_non_realises"   string="Plans non réalisés"/>
+                    </group>
+                    <group>
+                        <field name="hist_avancement_global" string="Taux d'avancement %"/>
+                        <field name="hist_taux_realisation"  string="Taux de réalisation %"/>
+                        <field name="hist_taux_efficacite"   string="Taux d'efficacité %"/>
+                    </group>
+                </group>
+
                 <!-- Vue historique : tableau reconstruit à la date choisie -->
                 <div attrs="{'invisible': [('date_consultation', '=', False)]}">
                     <field name="historique_html" widget="html" readonly="1" nolabel="1"/>
@@ -344,7 +361,7 @@
                         <field name="child_plan_ids" nolabel="1"
                                attrs="{'readonly': [('submission_state', '=', 'cloture')]}"
                                context="{'default_global_plan_id': active_id}">
-                            <tree string="Plans intégrés" import="false"
+                            <tree string="Plans intégrés" import="false" create="false"
                                   class="smi_plan_tree"
                                   decoration-success="etat_avancement == 'realise'"
                                   decoration-warning="etat_avancement == 'en_cours'"
@@ -470,10 +487,9 @@
             <separator/>
             <filter string="Mes Plans SMI"   name="mes_plans"
                     domain="[('create_uid', '=', uid), ('is_global', '=', True)]"/>
-            <filter string="Plans SMI Reçus" name="plans_recus"
-                    domain="[('sent_to_rmqse', '=', True),
-                             ('is_global', '=', True),
-                             ('create_uid', '!=', uid)]"/>
+            <filter string="Plans Reçus" name="plans_recus"
+                    domain="[('is_global', '=', True),
+                             ('child_plan_ids.improvement_plan_id', '!=', False)]"/>
             <filter string="En retard"    name="en_retard"
                     domain="[('date_prevue', '&lt;', context_today().strftime('%Y-%m-%d')),
                              ('state', '!=', 'verified')]"/>
@@ -561,14 +577,13 @@
     <field name="search_view_id" ref="view_plan_smi_search_recus"/>
 </record>
 
-<!-- Plan d'Action d'Amélioration (Responsable Qualité uniquement)
-     Liste des plans globaux : sélection d'un plan puis ouverture de sa fiche -->
+<!-- Plan d'Action d'Amélioration SMI (Responsable Qualité) — plans globaux is_global=True -->
 <record model="ir.actions.act_window" id="action_plan_global_smi_list">
     <field name="name">Plan d'Action d'Amélioration SMI</field>
     <field name="res_model">nc_management.plan_action_smi</field>
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_global', '=', True)]</field>
-    <field name="context">{'no_import': True, 'no_export': True}</field>
+    <field name="context">{'no_import': True, 'no_export': True, 'default_is_global': True}</field>
     <field name="view_ids" eval="[(5, 0, 0),
         (0, 0, {'view_mode': 'tree', 'view_id': ref('view_plan_smi_tree_global')}),
         (0, 0, {'view_mode': 'form', 'view_id': ref('view_plan_smi_form_global')})]"/>
@@ -697,14 +712,14 @@
     groups="nc_management.group_responsable_qualite"
     sequence="2"/>
 
-<!-- Analyse d'Efficacité : sous-menu RMQSE (sequence 3) -->
+<!-- Analyse d'Efficacité : sous-menu RMQSE (sequence 4) -->
 <menuitem
     name="Analyse d'Efficacité"
     id="nc_management.menu_plan_smi_analyse"
     parent="nc_management.menu_plan_smi_root"
     action="action_plan_smi_analyse_efficacite"
     groups="nc_management.group_responsable_qualite"
-    sequence="3"/>
+    sequence="4"/>
 
 </data>
 </odoo>

@@ -1,0 +1,147 @@
+@startuml class_diagram_simplifie
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+    HeaderBackgroundColor #2C3E50
+    FontColor White
+    FontSize 14
+    AttributeFontSize 12
+    AttributeFontName Consolas
+}
+skinparam package {
+    FontSize 16
+    FontStyle bold
+    BorderColor #95A5A6
+}
+hide circle
+hide empty members
+
+package "Gestion des Non-Conformites : FNC / FAC" #FDEBD0 {
+
+  together {
+
+  class Nonconformity <<nc_management.nonconformity>> {
+    .. Identification ..
+    + name : Char
+    + direction_id : Many2one(hr.department)
+    + department_id : Many2one(hr.department)
+    + service_id : Many2one(hr.department)
+    + date : Date
+    .. Type de non-conformite (voir note) ..
+    + type_nc_produit : Boolean
+    .. 1- Description de la NC ..
+    + description : Text
+    + signale_par_id : Many2one(hr.employee)
+    + date_signalement : Date
+    + fonction_visa : Char
+    .. Traitement (voir note) ..
+    + trait_reprise : Boolean
+    .. 2- Action immediate ..
+    + action_immediate : Text
+    + realise_par_id : Many2one(hr.employee)
+    + date_realisation : Date
+    .. 3- Analyse des causes ..
+    + analyse_causes : Text
+    + impact : Text
+    .. References FAC ..
+    + fac_ids : One2many(CorrectiveAction)
+    + responsable_action_id : Many2one(hr.employee)
+    .. Validation hierarchique ..
+    + superieur_id : Many2one(hr.employee)
+    + date_validation : Date
+    + signature : Char
+    .. Routage / Statut ..
+    + current_handler_uid : Many2one(res.users)
+    + sent_by_id : Many2one(res.users)
+    + date_envoi : Date
+    + state : Selection(draft, submitted, in_progress, validated)
+    --
+    + action_valider_fnc()
+    + action_open_send_wizard()
+    + action_open_number_wizard()
+  }
+
+  class CorrectiveAction <<nc_management.corrective_action>> {
+    .. Identification ..
+    + name : Char
+    + direction_id : Many2one(hr.department)
+    + date : Date
+    + fnc_id : Many2one(Nonconformity)
+    + ref_document : Char
+    + fnc_ref_display : Char {computed}
+    + date_fnc : Date
+    + responsable_id : Many2one(res.users)
+    .. 1- Rappel de la NC ..
+    + rappel_nc : Text
+    .. 2- Analyse des causes ..
+    + analyse_causes : Text
+    + responsable_analyse_id : Many2one(hr.employee)
+    + date_analyse : Date
+    + visa_analyse : Char
+    .. 3- Actions decidees ..
+    + description_actions : Text
+    + action_line_ids : One2many(ActionLine)
+    + responsable_actions_id : Many2one(hr.employee)
+    + date_actions : Date
+    + visa_actions : Char
+    .. Efficacite ..
+    + actions_efficaces : Selection(oui, non)
+    + responsable_efficacite_id : Many2one(hr.employee)
+    .. 4- Approbation QSE ..
+    + qse_nom_id : Many2one(hr.employee)
+    + qse_date : Date
+    + qse_visa : Char
+    .. 5- Verification ..
+    + verification_efficacite : Text
+    + extension_possible : Selection(non, oui)
+    .. Cloture / Envoi ..
+    + cloture_par_id : Many2one(hr.employee)
+    + date_cloture : Date
+    + visa_cloture : Char
+    + date_envoi : Date
+    + sent_by_id : Many2one(res.users)
+    + current_handler_uid : Many2one(res.users)
+    .. Statut ..
+    + state : Selection(draft, submitted, in_progress, validated, closed)
+    + date_validated : Date
+    --
+    + action_open_send_fac_wizard()
+  }
+
+  }
+
+  class ActionLine <<nc_management.action_line>> {
+    + fac_id : Many2one(CorrectiveAction)
+    + direction_id : Many2one(hr.department) {related}
+    + action_description : Char
+    + date_prevue : Date
+    + date_realisation : Date
+    + responsable_id : Many2one(hr.employee)
+  }
+}
+
+note right of Nonconformity::type_nc_produit
+  **12 autres champs Boolean :**
+  type_audit, type_audit_interne, type_audit_externe,
+  type_reclamation, type_achat, type_sst, type_reception,
+  type_environnement, type_dysfonctionnement, type_travaux,
+  type_autre
+  + type_autre_preciser : Char
+end note
+
+note right of Nonconformity::trait_reprise
+  **6 autres champs :**
+  trait_declassement, trait_retour_fourn, trait_recyclage,
+  trait_reparation, trait_autre : Boolean
+  + trait_autre_preciser : Char
+end note
+
+' ===== Relations =====
+' Regle metier : toute FNC traitee genere au moins une FAC
+Nonconformity "0..1" -right- "1..*" CorrectiveAction : fnc_id / fac_ids
+CorrectiveAction "1" *-- "0..*" ActionLine : action_line_ids
+
+@enduml

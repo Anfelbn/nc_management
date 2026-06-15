@@ -104,7 +104,7 @@
                 </div>
 
                 <!-- Synthèse — même layout que la RMQSE -->
-                <group>
+                <group attrs="{'invisible': [('date_consultation', '!=', False)]}">
                     <group>
                         <field name="date_ouverture"   string="Date de création"
                                attrs="{'readonly': [('state', '!=', 'brouillon')]}"/>
@@ -120,6 +120,22 @@
                         <field name="taux_avancement"  string="Taux d'avancement %"/>
                         <field name="taux_realisation" string="Taux de réalisation %"/>
                         <field name="taux_efficacite"  string="Taux d'efficacité %"/>
+                    </group>
+                </group>
+
+                <!-- Synthèse historique — vue "Consulter une version" -->
+                <group attrs="{'invisible': [('date_consultation', '=', False)]}">
+                    <group>
+                        <field name="date_ouverture"        string="Date de création" readonly="1"/>
+                        <field name="hist_nb_plans"          string="Plans intégrés"/>
+                        <field name="hist_nb_realises"       string="Plans réalisés"/>
+                        <field name="hist_nb_en_cours"       string="Plans en cours"/>
+                        <field name="hist_nb_non_realises"   string="Plans non réalisés"/>
+                    </group>
+                    <group>
+                        <field name="hist_taux_avancement"   string="Taux d'avancement %"/>
+                        <field name="hist_taux_realisation"  string="Taux de réalisation %"/>
+                        <field name="hist_taux_efficacite"   string="Taux d'efficacité %"/>
                     </group>
                 </group>
 
@@ -145,8 +161,7 @@
                                 <field name="responsable_id"   string="Responsable"
                                        options="{'no_create': True}"/>
                                 <field name="date_realisation" string="Date de réalisation"/>
-                                <field name="avancement"       string="Avancement %"
-                                       widget="progressbar"/>
+                                <field name="avancement"       string="Avancement %"/>
                                 <field name="efficacite"       string="Efficacité"/>
                                 <field name="etat_avancement"  string="État"/>
                                 <field name="is_late"          invisible="1"/>

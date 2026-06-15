@@ -1342,15 +1342,32 @@ class PlanActionSmi(models.Model):
             False: '-', None: '-', '': '-',
         }
 
+        def _reset_hist_stats(rec):
+            rec.hist_nb_plans_integres = 0
+            rec.hist_nb_realises = 0
+            rec.hist_nb_en_cours = 0
+            rec.hist_nb_non_realises = 0
+            rec.hist_avancement_global = 0
+            rec.hist_taux_realisation = 0
+            rec.hist_taux_efficacite = 0
+
         for rec in self:
             if not rec.is_global or not rec.date_consultation:
                 rec.historique_html = ''
+                _reset_hist_stats(rec)
                 continue
 
             date_limit = fields.Datetime.to_string(
                 _dt.combine(
                     fields.Date.from_string(str(rec.date_consultation)),
                     _dt.max.time()))
+
+            # mail.tracking.value stocke le LIBELLÉ des champs Selection
+            # (ex. "OUI"/"NON") et non leur clé technique ('oui'/'non') :
+            # on reconstruit le mapping inverse pour normaliser.
+            eff_key_by_label = {
+                label: key
+                for key, label in rec._fields['efficacite'].selection}
 
             def _val(res_id, field_name, default):
                 tracking = self.env['mail.tracking.value'].sudo().search([
@@ -1363,37 +1380,38 @@ class PlanActionSmi(models.Model):
                     return default
                 if field_name == 'avancement':
                     return tracking.new_value_integer
+                if field_name == 'efficacite':
+                    return eff_key_by_label.get(
+                        tracking.new_value_char, tracking.new_value_char or default)
                 return tracking.new_value_char or default
 
             # Inclure les plans intégrés à cette date :
             # on vérifie via le tracking si submission_state = 'integre'
-            # était actif à date_limit. Si aucun tracking trouvé mais que
-            # le plan est actuellement intégré, on l'inclut quand même
-            # (cas où l'intégration n'a pas généré de tracking).
+            # était actif à date_limit (le tracking stocke le LIBELLÉ de la
+            # sélection, pas sa clé technique). Le champ global_plan_id
+            # n'étant pas tracké, on se base en repli sur la date de création
+            # du plan (présent dans child_plan_ids et créé avant la date
+            # consultée ⇒ considéré comme déjà intégré à cette date).
+            integre_label = dict(rec._fields['submission_state'].selection).get('integre')
             plans = rec.env['nc_management.plan_action_smi'].browse()
             for p in rec.child_plan_ids:
                 integre_tracking = rec.env['mail.tracking.value'].sudo().search([
                     ('mail_message_id.res_id', '=', p.id),
                     ('mail_message_id.model', '=', 'nc_management.plan_action_smi'),
                     ('field', '=', 'submission_state'),
-                    ('new_value_char', '=', 'integre'),
+                    ('new_value_char', '=', integre_label),
                     ('mail_message_id.date', '<=', date_limit),
                 ], order='id desc', limit=1)
                 if integre_tracking:
                     plans |= p
-                elif not rec.env['mail.tracking.value'].sudo().search([
-                    ('mail_message_id.res_id', '=', p.id),
-                    ('mail_message_id.model', '=', 'nc_management.plan_action_smi'),
-                    ('field', '=', 'submission_state'),
-                    ('mail_message_id.date', '<=', date_limit),
-                ], order='id desc', limit=1):
-                    # Aucun tracking du tout → intégré depuis la création
+                elif p.create_date and p.create_date <= date_limit:
                     plans |= p
 
             if not plans:
                 rec.historique_html = (
                     '<p style="color:#888;padding:16px;">'
                     "Aucun plan n'était intégré à cette date.</p>")
+                _reset_hist_stats(rec)
                 continue
 
             nature_sel = rec._fields['nature'].selection
@@ -1401,18 +1419,27 @@ class PlanActionSmi(models.Model):
                 nature_sel if not callable(nature_sel) else nature_sel(rec))
 
             rows = ''
+            nb_realises = nb_en_cours = nb_non_realises = 0
+            nb_efficaces = 0
+            total_av = 0
             for i, plan in enumerate(plans):
                 hist_av  = _val(plan.id, 'avancement', plan.avancement)
                 hist_eff = _val(plan.id, 'efficacite', plan.efficacite or '')
 
                 # État calculé depuis l'avancement historique (cohérent avec etat_avancement)
                 av_int = hist_av if hist_av is not None else 0
+                total_av += av_int
                 if av_int >= 100:
                     state_lbl, sc = 'Réalisé',     '#1fa255'
+                    nb_realises += 1
                 elif av_int > 0:
                     state_lbl, sc = 'En cours',    '#cc8800'
+                    nb_en_cours += 1
                 else:
                     state_lbl, sc = 'Non réalisé', '#d44535'
+                    nb_non_realises += 1
+                if hist_eff == 'oui':
+                    nb_efficaces += 1
 
                 eff_lbl = EFF_LABELS.get(hist_eff, '-')
                 bg = '#fff' if i % 2 == 0 else '#f8f9fa'
@@ -1437,6 +1464,15 @@ class PlanActionSmi(models.Model):
                     av=hist_av if hist_av is not None else 0,
                     state=state_lbl, sc=sc, eff=eff_lbl,
                 )
+
+            nb = len(plans)
+            rec.hist_nb_plans_integres = nb
+            rec.hist_nb_realises = nb_realises
+            rec.hist_nb_en_cours = nb_en_cours
+            rec.hist_nb_non_realises = nb_non_realises
+            rec.hist_avancement_global = int(total_av / nb) if nb else 0
+            rec.hist_taux_realisation = int(nb_realises / nb * 100) if nb else 0
+            rec.hist_taux_efficacite = int(nb_efficaces / nb * 100) if nb else 0
 
             consul_str = fields.Date.from_string(
                 str(rec.date_consultation)).strftime('%d/%m/%Y')
@@ -1658,6 +1694,29 @@ class PlanActionSmi(models.Model):
     nb_en_retard      = fields.Integer('En retard',            compute='_compute_global_stats')
     taux_realisation  = fields.Integer('Taux de réalisation (%)', compute='_compute_global_stats')
     taux_efficacite   = fields.Integer("Taux d'efficacité (%)",   compute='_compute_global_stats')
+
+    # ── Statistiques historiques (vue "Consulter une version") ────
+    hist_nb_plans_integres = fields.Integer(
+        string='Plans intégrés (historique)',
+        compute='_compute_plan_historique_html', store=False)
+    hist_nb_realises = fields.Integer(
+        string='Plans réalisés (historique)',
+        compute='_compute_plan_historique_html', store=False)
+    hist_nb_en_cours = fields.Integer(
+        string='Plans en cours (historique)',
+        compute='_compute_plan_historique_html', store=False)
+    hist_nb_non_realises = fields.Integer(
+        string='Plans non réalisés (historique)',
+        compute='_compute_plan_historique_html', store=False)
+    hist_avancement_global = fields.Integer(
+        string="Taux d'avancement historique (%)",
+        compute='_compute_plan_historique_html', store=False)
+    hist_taux_realisation = fields.Integer(
+        string='Taux de réalisation historique (%)',
+        compute='_compute_plan_historique_html', store=False)
+    hist_taux_efficacite = fields.Integer(
+        string="Taux d'efficacité historique (%)",
+        compute='_compute_plan_historique_html', store=False)
     etat_global      = fields.Selection([
         ('brouillon', 'Brouillon'),
         ('en_cours',  'En cours'),

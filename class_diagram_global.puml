@@ -1,0 +1,699 @@
+@startuml class_diagram_global
+
+title Diagramme de classes global — Module nc_management\n(uniquement les tables créées par ce module — hors tables natives Odoo)
+
+skinparam classAttributeIconSize 0
+
+skinparam class {
+    BackgroundColor White
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+    FontSize 13
+    AttributeFontSize 12
+}
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #5DADE2
+    FontSize 16
+    FontStyle bold
+}
+
+hide circle
+hide empty members
+
+' #####################################################################
+' PACKAGE 1 : GESTION DES NON-CONFORMITES (FNC / FAC)
+' #####################################################################
+
+package "1. Gestion des Non-Conformités (FNC / FAC)" {
+
+abstract class AbstractFiche <<Abstract>> #EAEDED {
+  + name
+  + date
+  + direction_id
+  + analyse_causes
+  + state
+  + current_handler_uid
+  + sent_by_id
+  + date_envoi
+}
+
+together {
+
+class Nonconformity <<Model>> {
+  nc_management.nonconformity
+  --
+  + department_id
+  + service_id
+  + section_id
+  + equipe_id
+  + service_dpt
+  + sce_dpt_computed {computed}
+
+  + type_nc_produit
+  + type_autre_preciser
+
+  + description
+  + signale_par_id
+  + date_signalement
+  + fonction_visa
+
+  + trait_reprise
+  + trait_autre_preciser
+  + action_immediate
+  + realise_par_id
+  + date_realisation
+
+  + impact
+
+  + fac_ids
+  + fac_reference {computed}
+  + fac_number_display {computed}
+  + can_access_fac {computed}
+
+  + responsable_action_id
+  + superieur_id
+  + date_validation
+  + signature
+  + validated_by_id
+
+  + assigned_to_id
+  + submitted_by_id
+  + date_in_progress
+  --
+  + action_valider_fnc()
+  + action_open_send_wizard()
+  + action_open_number_wizard()
+}
+
+note left of Nonconformity
+  **type_nc_produit** : 1 de 12 champs Boolean
+  exclusifs (type de NC) :
+  type_audit, type_audit_interne, type_audit_externe,
+  type_reclamation, type_achat, type_sst, type_reception,
+  type_environnement, type_dysfonctionnement, type_travaux,
+  type_autre + type_autre_preciser : Char
+  ---
+  **trait_reprise** : 1 de 6 champs Boolean
+  (traitement) :
+  trait_declassement, trait_retour_fourn, trait_recyclage,
+  trait_reparation, trait_autre + trait_autre_preciser : Char
+  ---
+  **state** : draft → submitted → in_progress → validated
+end note
+
+class CorrectiveAction <<Model>> {
+  nc_management.corrective_action
+  --
+  + fnc_id
+  + ref_document
+  + fnc_ref_display {computed}
+  + date_fnc
+  + responsable_id
+
+  + rappel_nc
+
+  + analyse_causes
+  + responsable_analyse_id
+  + date_analyse
+  + visa_analyse
+
+  + description_actions
+  + action_line_ids
+  + responsable_actions_id
+  + date_actions
+  + visa_actions
+
+  + actions_efficaces
+  + responsable_efficacite_id
+  + verification_efficacite
+  + extension_possible
+
+  + qse_nom_id
+  + qse_date
+  + qse_visa
+  + date_validated
+
+  + cloture_par_id
+  + date_cloture
+  + visa_cloture
+  --
+  + action_open_send_fac_wizard()
+}
+
+note right of CorrectiveAction
+  **state** : draft → submitted →
+  in_progress → validated → closed
+  (recalculé à chaque write() via
+  _state_from_visas())
+end note
+
+}
+
+class ActionLine <<Model>> {
+  nc_management.action_line
+  --
+  + fac_id
+  + direction_id {related}
+  + action_description
+  + date_prevue
+  + date_realisation
+  + responsable_id
+}
+
+class NcType <<Model>> {
+  nc_management.nc_type
+  --
+  + name
+  + code
+  + category
+}
+
+}
+
+' #####################################################################
+' PACKAGE 2 : PLANS D'ACTION D'AMELIORATION SMI (3 NIVEAUX)
+' #####################################################################
+
+package "2. Plans d'Action d'Amélioration SMI (3 niveaux)" {
+
+class PlanActionSmi <<Model>> {
+  nc_management.plan_action_smi (Niveau 1)
+  --
+  + name
+  + nature
+  + fnc_id
+  + reference
+
+  + direction_id
+  + department_id
+  + service_id
+
+  + description
+  + causes
+  + action
+  + critere_efficacite
+
+  + responsable_id
+  + responsable_ids
+  + moyens
+  + duree_estimee
+  + duree_reelle
+
+  + date_prevue
+  + date_lancement
+  + date_realisation
+  + avancement
+  + avancement_choice {computed}
+  + etat_avancement {computed}
+  + is_late {computed}
+  + is_integrated {computed}
+  + efficacite
+  + remarque
+
+  + state
+  + submission_state
+  + sent_to_rmqse
+  + date_envoi
+  + sent_by
+
+  + improvement_plan_id
+  + direct_global_plan_id
+
+  + is_global
+  + global_plan_id
+  + child_plan_ids
+  + mois_reception
+  + date_maj
+  + version_number
+  + filter_nature
+  + filter_direction_id
+  + child_plan_ids_display {computed}
+  + name_display {computed}
+
+  + date_consultation
+  + historique_html {computed}
+  + analyse_html {computed}
+  --
+  + action_generate_plan_number()
+  + action_open_send_plan_wizard()
+  + action_open_consulter_version_wizard()
+  + action_retour_actuel_plan()
+  + action_open_analyser_wizard()
+  + action_envoyer_rmqse() <<legacy>>
+  + action_consolider_tous() <<legacy>>
+  + action_cloturer_plan() <<legacy>>
+}
+
+note bottom of PlanActionSmi
+  Champs **is_global / global_plan_id /
+  child_plan_ids / mois_reception /
+  version_number / filter_* / action_envoyer_rmqse() /
+  action_consolider_tous() / action_cloturer_plan()**
+  = ancien système 1 niveau, conservé pour
+  compatibilité ascendante.
+  ---
+  **_compute_is_integrated()** teste les deux
+  systèmes (ancien global_plan_id OU
+  improvement_plan_id.global_plan_id)
+end note
+
+class SmiImprovementPlan <<Model>> {
+  nc_management.smi_improvement_plan (Niveau 2 — par direction)
+  --
+  + name
+  + direction_id
+  + department_id
+  + service_id
+  + description
+
+  + plan_ids
+
+  + nb_plans
+  + nb_en_cours
+  + nb_realises
+  + nb_non_realises
+  + nb_clotures
+  + taux_avancement
+  + taux_realisation
+  + taux_efficacite
+
+  + date_ouverture
+  + date_consultation
+  + historique_html {computed}
+
+  + state
+  + date_soumission
+  + submitted_by_id
+  + global_plan_id
+  --
+  + action_open_my_plan()
+  + action_consolider()
+  + action_soumettre()
+  + action_open_consulter_version_wizard()
+  + action_retour_actuel()
+  + action_supprimer_plan()
+  + action_print_plan()
+}
+
+class SmiGlobalPlan <<Model>> {
+  nc_management.smi_global_plan (Niveau 3 — singleton RMQSE)
+  --
+  + name
+  + date_derniere_maj
+
+  + improvement_plan_ids
+  + direct_plan_ids
+
+  + date_consultation
+  + vue_historique {computed}
+  + historique_html {computed}
+
+  + nb_directions
+  + nb_plans_total
+  + nb_en_cours
+  + nb_realises
+  + nb_clotures
+  + taux_avancement
+  + taux_efficacite
+  --
+  + _get_all_plans()
+  + action_retour_actuel()
+}
+
+note bottom of SmiGlobalPlan
+  Singleton conventionnel (pas de
+  contrainte BDD) : créé à la volée
+  par SmiImprovementPlan.action_soumettre()
+  si inexistant. Ne se clôture jamais.
+end note
+
+}
+
+' #####################################################################
+' PACKAGE 3 : GABARITS DE FORMULAIRES PDF & REVISIONS
+' #####################################################################
+
+package "3. Gabarits de Formulaires PDF & Révisions" {
+
+class DocumentRevision <<Model>> {
+  nc_management.document_revision
+  --
+  + doc_type
+  + revision_number
+  + revision_date
+  + reference
+  + description
+  + etat
+  + name {computed, store}
+  + revision_number_link {computed}
+  --
+  + _obsolete_others()
+}
+
+note bottom of DocumentRevision
+  **etat** : valable / obsolete
+  Une seule révision "valable" par doc_type :
+  create()/write() repassent
+  automatiquement les autres à "obsolete".
+end note
+
+class FormTemplate <<Model>> {
+  nc_management.form_template
+  --
+  + name
+  + doc_type
+  + is_active
+  + revision_id
+  + section_ids
+  + section_count {computed}
+  --
+  + action_activate()
+  + action_apercu_gabarit()
+}
+
+class FormSection <<Model>> {
+  nc_management.form_section
+  --
+  + template_id
+  + name
+  + sequence
+  + is_active
+  + show_title
+  + section_layout
+  + table_rows
+  + line_ids
+  + line_count {computed}
+}
+
+class FormLine <<Model>> {
+  nc_management.form_line
+  --
+  + section_id
+  + sequence
+  + is_active
+  + line_type
+
+  + ta_field / ta_label / ta_height
+  + col1_field/label
+  + col2_field/label
+  + col3_field/label
+  + cb_field / cb_label / cb_column
+  + cb_extra_field / cb_extra_label
+  + custom_text
+  + col_width
+
+  + render_type_ta {computed}
+  + render_type_col1/2/3 {computed}
+  + render_type_cb {computed}
+  + nb_cols {computed}
+}
+
+note bottom of FormLine
+  **line_type** : textarea / row /
+  checkbox / custom_text / separator /
+  table_column (Plan SMI, blank_table)
+end note
+
+}
+
+' #####################################################################
+' PACKAGE 4 : DASHBOARD
+' #####################################################################
+
+package "4. Dashboard" {
+
+class NcDashboard <<Model>> {
+  nc_management.dashboard
+  (sans champ stocké — point d'entrée RPC)
+  --
+  + get_stats(period)
+  + get_user_stats()
+  + get_plan_smi_stats()
+  + get_direction_details(direction_id, period)
+  + get_sender_info(model, record_id)
+}
+
+}
+
+' #####################################################################
+' PACKAGE 5 : ASSISTANTS (WIZARDS)
+' #####################################################################
+
+package "5. Assistants (Wizards)" {
+
+class NumberGeneratorWizard <<Wizard>> {
+  nc_management.number_generator_wizard
+  --
+  + fnc_id
+  + category
+  + nc_type_id
+  --
+  + _generate_name(abr)
+  + action_confirm()
+}
+
+class SendFncWizard <<Wizard>> {
+  nc_management.send_fnc_wizard
+  --
+  + fnc_id
+  + recipient_id
+  + note
+  --
+  + action_send()
+}
+
+class SendFacWizard <<Wizard>> {
+  nc_management.send_fac_wizard
+  --
+  + fac_id
+  + recipient_id
+  + note
+  --
+  + action_send()
+}
+
+class SendPlanWizard <<Wizard>> {
+  nc_management.send_plan_wizard
+  --
+  + plan_id
+  + recipient_id
+  + note
+  --
+  + action_send()
+}
+
+class ReplyWizard <<Wizard>> {
+  nc_management.reply_wizard
+  --
+  + record_model
+  + record_id
+  + recipient_id
+  + note
+  --
+  + action_reply()
+}
+
+class PlanNumberWizard <<Wizard>> {
+  nc_management.plan_number_wizard
+  --
+  + plan_id
+  + reference
+  --
+  + action_confirm()
+}
+
+class ExportPlanWizard <<Wizard>> {
+  nc_management.export_plan_wizard
+  --
+  + excel_file
+  + file_name
+  --
+  + action_export()
+}
+
+class ExportSmiAnalysisWizard <<Wizard>> {
+  nc_management.export_smi_analysis_wizard
+  --
+  + excel_file
+  + file_name
+  --
+  + action_export()
+}
+
+class ConsolidateWizard <<Wizard>> {
+  nc_management.consolidate_wizard
+  (ancien système 1 niveau)
+  --
+  + global_plan_id
+  + line_ids
+  --
+  + action_consolidate()
+  + action_open_new_plan()
+}
+
+class ConsolidateWizardLine <<Wizard>> {
+  nc_management.consolidate_wizard.line
+  --
+  + wizard_id
+  + improvement_plan_id
+  + selected
+  + direction_id {related}
+  + date_ouverture {related}
+  + nb_plans {related}
+  + taux_avancement {related}
+  + taux_realisation {related}
+  + taux_efficacite {related}
+  + state {related}
+}
+
+class ConsolidateImprovementWizard <<Wizard>> {
+  nc_management.consolidate_improvement_wizard
+  (nouveau système 3 niveaux)
+  --
+  + improvement_plan_id
+  + line_ids
+  --
+  + action_consolidate()
+  + action_open_new_plan()
+}
+
+class ConsolidateImprovementWizardLine <<Wizard>> {
+  nc_management.consolidate_improvement_wizard.line
+  --
+  + wizard_id
+  + plan_id
+  + selected
+  + nature {related}
+  + description {related}
+  + responsable_id {related}
+  + date_prevue {related}
+  + avancement {related}
+  + state {related}
+}
+
+class PlanEfficaciteWizard <<Wizard>> {
+  nc_management.plan_efficacite_wizard
+  --
+  + plan_id
+  + line_ids
+  + chart_html {computed, SVG}
+  --
+  + default_get()
+  + _compute_chart_html()
+}
+
+class PlanEfficaciteLine <<Wizard>> {
+  nc_management.plan_efficacite_line
+  --
+  + wizard_id
+  + categorie
+  + total
+  + efficace
+  + non_efficace
+  + realise_100
+  + realise_50plus
+  + realise_50moins
+  + taux
+}
+
+class ConsulterVersionWizard <<Wizard>> {
+  nc_management.consulter_version_wizard
+  --
+  + plan_id
+  + date_consultation
+  + return_view_ref
+  --
+  + action_consulter()
+}
+
+class ConsulterVersionImprovementWizard <<Wizard>> {
+  nc_management.consulter_version_improvement_wizard
+  --
+  + improvement_plan_id
+  + date_consultation
+  --
+  + action_consulter()
+}
+
+}
+
+' #####################################################################
+' RELATIONS
+' #####################################################################
+
+AbstractFiche <|-- Nonconformity
+AbstractFiche <|-- CorrectiveAction
+
+' --- Domaine 1 : FNC / FAC ---
+Nonconformity   "0..1" -right- "0..*" CorrectiveAction : génère (fnc_id / fac_ids)
+CorrectiveAction "1" *-- "0..*" ActionLine : action_line_ids
+
+' --- Domaine 2 : Plans SMI 3 niveaux ---
+Nonconformity "0..1" -- "0..*" PlanActionSmi : fnc_id (optionnel)
+
+SmiImprovementPlan "0..1" o-- "0..*" PlanActionSmi : plan_ids / improvement_plan_id
+SmiGlobalPlan       "0..1" o-- "0..*" SmiImprovementPlan : improvement_plan_ids / global_plan_id
+SmiGlobalPlan       "0..1" o-- "0..*" PlanActionSmi : direct_plan_ids / direct_global_plan_id
+
+' Ancien systeme (legacy, conservé pour compat)
+PlanActionSmi "0..1" -- "0..*" PlanActionSmi : global_plan_id / child_plan_ids
+
+' --- Domaine 3 : Gabarits & Révisions ---
+DocumentRevision "0..1" -- "0..*" FormTemplate : revision_id
+FormTemplate "1" *-- "0..*" FormSection : section_ids
+FormSection  "1" *-- "0..*" FormLine    : line_ids
+
+' --- Domaine 4 : Dashboard (lecture RPC, sans persistance) ---
+NcDashboard ..> Nonconformity : lit
+NcDashboard ..> CorrectiveAction : lit
+NcDashboard ..> PlanActionSmi : lit
+NcDashboard ..> SmiImprovementPlan : lit
+
+' --- Domaine 5 : Assistants (Wizards) ---
+
+NumberGeneratorWizard "0..*" --> "1"    NcType        : nc_type_id
+NumberGeneratorWizard "0..*" --> "0..1" Nonconformity : fnc_id
+Nonconformity ..> NumberGeneratorWizard : action_open_number_wizard()
+
+SendFncWizard "0..*" --> "1" Nonconformity : fnc_id
+Nonconformity ..> SendFncWizard : action_open_send_wizard()
+
+SendFacWizard "0..*" --> "1" CorrectiveAction : fac_id
+CorrectiveAction ..> SendFacWizard : action_open_send_fac_wizard()
+
+SendPlanWizard "0..*" --> "1" PlanActionSmi : plan_id
+PlanActionSmi ..> SendPlanWizard : action_open_send_plan_wizard()
+
+PlanNumberWizard "0..*" --> "1" PlanActionSmi : plan_id
+PlanActionSmi ..> PlanNumberWizard : action_generate_plan_number()
+
+ConsulterVersionWizard "0..*" --> "1" PlanActionSmi : plan_id
+PlanActionSmi ..> ConsulterVersionWizard : action_open_consulter_version_wizard()
+
+ConsulterVersionImprovementWizard "0..*" --> "1" SmiImprovementPlan : improvement_plan_id
+SmiImprovementPlan ..> ConsulterVersionImprovementWizard : action_open_consulter_version_wizard()
+
+PlanEfficaciteWizard "1" *-- "0..*" PlanEfficaciteLine : line_ids
+PlanEfficaciteWizard "0..*" --> "1" PlanActionSmi : plan_id
+PlanActionSmi ..> PlanEfficaciteWizard : action_open_analyser_wizard()
+
+ConsolidateWizard "1" *-- "0..*" ConsolidateWizardLine : line_ids
+ConsolidateWizard "0..*" --> "1" PlanActionSmi : global_plan_id (is_global=True)
+ConsolidateWizardLine "0..*" --> "1" SmiImprovementPlan : improvement_plan_id
+PlanActionSmi ..> ConsolidateWizard : action_consolider_tous() <<legacy>>
+
+ConsolidateImprovementWizard "1" *-- "0..*" ConsolidateImprovementWizardLine : line_ids
+ConsolidateImprovementWizard "0..*" --> "1" SmiImprovementPlan : improvement_plan_id
+ConsolidateImprovementWizardLine "0..*" --> "1" PlanActionSmi : plan_id
+SmiImprovementPlan ..> ConsolidateImprovementWizard : action_consolider()
+
+ReplyWizard ..> Nonconformity : action_reply()\n(record_model générique)
+ReplyWizard ..> CorrectiveAction : action_reply()\n(record_model générique)
+ReplyWizard ..> PlanActionSmi : action_reply()\n(record_model générique)
+
+ExportPlanWizard ..> PlanActionSmi : action_export()\n(search([]))
+ExportSmiAnalysisWizard ..> NcDashboard : action_export()\n(get_plan_smi_stats())
+
+@enduml

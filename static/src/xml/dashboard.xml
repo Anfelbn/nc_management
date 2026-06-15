@@ -508,7 +508,10 @@
            son niveau via inset:0 -->
       <div style="position:relative;">
         <div class="nc-card" style="position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;">
-          <div class="nc-card-title" style="flex-shrink:0;">Fiches reçues</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0;">
+            <div class="nc-card-title" style="margin-bottom:0">Fiches reçues</div>
+            <div class="received-sub" style="font-size:11px;color:#64748b"></div>
+          </div>
           <div style="overflow-y:auto;flex:1;min-height:0;padding-right:2px;">
             <div class="received-list"></div>
           </div>
@@ -553,152 +556,132 @@
     </div>
 
     <!-- Évolution + KPI FNC / FAC / Plans -->
-    <div class="g2" style="align-items:stretch">
+    <div class="g2" style="align-items:stretch;grid-template-rows:380px">
 
       <!-- Graphique évolution mensuelle -->
-      <div class="nc-card" style="display:flex;flex-direction:column">
+      <div class="nc-card" style="display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;">
         <div class="nc-card-title">Évolution FNC &amp; FAC — Mes Fiches</div>
-        <canvas id="udChart" style="flex:1;min-height:130px"></canvas>
+        <canvas id="udChart" style="flex:1;min-height:0"></canvas>
         <div style="display:flex;gap:12px;margin-top:6px;justify-content:flex-end">
           <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#5B8CDB"></div>FNC</div>
           <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><div style="width:10px;height:10px;border-radius:2px;background:#C9443A"></div>FAC</div>
         </div>
       </div>
 
-      <!-- Colonne KPI : Total FNC + Total FAC + Plans SMI -->
-      <div style="display:flex;flex-direction:column;gap:10px">
+      <!-- Colonne KPI : Total FNC + Total FAC + Alertes -->
+      <div style="display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden;box-sizing:border-box">
 
-        <!-- Total FNC -->
-        <div class="nc-kpi" style="flex:1">
-          <div class="nc-kpi-top" style="background:#2196F3"></div>
-          <div class="nc-kpi-label">Total FNC</div>
-          <div class="nc-kpi-val ud-open-list" data-filter="fnc_total" style="color:#1565C0;cursor:pointer"><t t-esc="widget.stats.fnc_total"/></div>
-          <div class="nc-kpi-sub">↳ Taux validation : <t t-esc="widget.stats.fnc_taux_validation"/>%</div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-            <span class="badge" style="background:#f1f5f9;color:#475569;pointer-events:none">Brouillon <t t-esc="widget.stats.fnc_brouillon"/></span>
-            <span class="badge orange" style="pointer-events:none">Soumise <t t-esc="widget.stats.fnc_submitted"/></span>
-            <span class="badge blue" style="pointer-events:none">En cours <t t-esc="widget.stats.fnc_cours"/></span>
-            <span class="badge" style="background:#d1fae5;color:#065f46;pointer-events:none">Validée <t t-esc="widget.stats.fnc_validated"/></span>
+        <!-- Total FNC + Total FAC côte à côte -->
+        <div class="g4" style="flex-shrink:0">
+          <!-- Total FNC -->
+          <div class="nc-kpi">
+            <div class="nc-kpi-top" style="background:#2196F3"></div>
+            <div class="nc-kpi-label">Total FNC</div>
+            <div class="nc-kpi-val" style="color:#1565C0"><t t-esc="widget.stats.fnc_total"/></div>
+            <div class="nc-kpi-sub">↳ Taux validation : <t t-esc="widget.stats.fnc_taux_validation"/>%</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+              <span class="badge" style="background:#f1f5f9;color:#475569;pointer-events:none">Brouillon <t t-esc="widget.stats.fnc_brouillon"/></span>
+              <span class="badge orange" style="pointer-events:none">Soumise <t t-esc="widget.stats.fnc_submitted"/></span>
+              <span class="badge blue" style="pointer-events:none">En cours <t t-esc="widget.stats.fnc_cours"/></span>
+              <span class="badge" style="background:#d1fae5;color:#065f46;pointer-events:none">Validée <t t-esc="widget.stats.fnc_validated"/></span>
+            </div>
+          </div>
+
+          <!-- Total FAC -->
+          <div class="nc-kpi">
+            <div class="nc-kpi-top" style="background:#10B981"></div>
+            <div class="nc-kpi-label">Total FAC</div>
+            <div class="nc-kpi-val" style="color:#065F46"><t t-esc="widget.stats.fac_total"/></div>
+            <div class="nc-kpi-sub">↳ Taux de clôture : <t t-esc="widget.stats.fac_taux_cloture"/>%</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+              <span class="badge" style="background:#f1f5f9;color:#475569;pointer-events:none">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
+              <span class="badge orange" style="pointer-events:none">Soumise <t t-esc="widget.stats.fac_submitted"/></span>
+              <span class="badge blue" style="pointer-events:none">En cours <t t-esc="widget.stats.fac_cours"/></span>
+              <span class="badge" style="background:#d1fae5;color:#065f46;pointer-events:none">Validée <t t-esc="widget.stats.fac_validated"/></span>
+              <span class="badge green" style="pointer-events:none">Clôturée <t t-esc="widget.stats.fac_closed"/></span>
+            </div>
           </div>
         </div>
 
-        <!-- Total FAC -->
-        <div class="nc-kpi" style="flex:1">
-          <div class="nc-kpi-top" style="background:#10B981"></div>
-          <div class="nc-kpi-label">Total FAC</div>
-          <div class="nc-kpi-val ud-open-list" data-filter="fac_total" style="color:#065F46;cursor:pointer"><t t-esc="widget.stats.fac_total"/></div>
-          <div class="nc-kpi-sub">↳ Taux de clôture : <t t-esc="widget.stats.fac_taux_cloture"/>%</div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-            <span class="badge" style="background:#f1f5f9;color:#475569;pointer-events:none">Brouillon <t t-esc="widget.stats.fac_brouillon"/></span>
-            <span class="badge orange" style="pointer-events:none">Soumise <t t-esc="widget.stats.fac_submitted"/></span>
-            <span class="badge blue" style="pointer-events:none">En cours <t t-esc="widget.stats.fac_cours"/></span>
-            <span class="badge" style="background:#d1fae5;color:#065f46;pointer-events:none">Validée <t t-esc="widget.stats.fac_validated"/></span>
-            <span class="badge green" style="pointer-events:none">Clôturée <t t-esc="widget.stats.fac_closed"/></span>
-          </div>
-        </div>
+        <!-- Alertes & Notifications -->
+        <div class="nc-card" style="flex:2;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;min-height:0">
+          <div class="nc-card-title" style="flex-shrink:0;">Alertes &amp; Notifications</div>
+          <div style="overflow-y:auto;flex:1;min-height:0;padding-right:2px;">
 
-        <!-- Total plan -->
-        <div class="nc-kpi" style="flex:1;background:linear-gradient(135deg,#faf5ff 0%,#f5f3ff 100%);border-color:#e9d5ff">
-          <div class="nc-kpi-top" style="background:linear-gradient(90deg,#6d28d9,#7c3aed)"></div>
-          <div class="nc-kpi-label">Total plan</div>
-          <div class="nc-kpi-val ud-open-list" data-filter="plan_total" style="color:#5B21B6;cursor:pointer"><t t-esc="widget.stats.plan_total"/></div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-            <span class="badge" style="background:#f8fafc;color:#475569;pointer-events:none">Brouillon <t t-esc="widget.stats.plan_brouillon"/></span>
-            <span class="badge" style="background:#f0fdf4;color:#059669;border:1px solid #bbf7d0;pointer-events:none">Réalisé <t t-esc="widget.stats.plan_done"/></span>
+            <!-- 1. Mes FNC à valider -->
+            <details style="margin-bottom:5px">
+              <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff7ed;border:1px solid #ffedd5;border-left:3px solid #FF9800;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#9a3412;user-select:none">
+                <span>&#9656; Mes FNC — À valider</span>
+                <span style="background:#FF9800;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.user_fnc_retard_list || []).length"/></span>
+              </summary>
+              <div style="padding:4px 0 0 6px">
+                <t t-if="!widget.stats.user_fnc_retard_list || !widget.stats.user_fnc_retard_list.length">
+                  <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
+                </t>
+                <t t-foreach="widget.stats.user_fnc_retard_list" t-as="fnc">
+                  <div class="nc-alert orange" style="margin-bottom:5px">
+                    <div style="flex:1">
+                      <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — À valider</div>
+                      <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours en cours</div>
+                    </div>
+                    <div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" t-att-data-id="fnc.id">Ouvrir</div>
+                  </div>
+                </t>
+              </div>
+            </details>
+
+            <!-- 2. Mes FAC à valider -->
+            <details style="margin-bottom:5px">
+              <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f0fdf4;border:1px solid #d1fae5;border-left:3px solid #10B981;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#065f46;user-select:none">
+                <span>&#9656; Mes FAC — À valider</span>
+                <span style="background:#10B981;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.user_fac_en_cours_list || []).length"/></span>
+              </summary>
+              <div style="padding:4px 0 0 6px">
+                <t t-if="!widget.stats.user_fac_en_cours_list || !widget.stats.user_fac_en_cours_list.length">
+                  <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
+                </t>
+                <t t-foreach="widget.stats.user_fac_en_cours_list" t-as="fac">
+                  <div class="nc-alert orange" style="margin-bottom:5px">
+                    <div style="flex:1">
+                      <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fac.name"/> — À valider</div>
+                      <div style="font-size:11px;color:#c2410c;margin-top:2px">
+                        <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · En cours depuis <t t-esc="fac.days"/>j
+                      </div>
+                    </div>
+                    <div class="btn-sm primary btn-open" data-model="nc_management.corrective_action" t-att-data-id="fac.id">Ouvrir</div>
+                  </div>
+                </t>
+              </div>
+            </details>
+
+            <!-- 3. Mes FAC envoyées validées -->
+            <details style="margin-bottom:5px">
+              <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#eff6ff;border:1px solid #dbeafe;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#1d4ed8;user-select:none">
+                <span>&#9656; Mes FAC envoyées — Validées</span>
+                <span style="background:#3b82f6;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.user_fac_validees_list || []).length"/></span>
+              </summary>
+              <div style="padding:4px 0 0 6px">
+                <t t-if="!widget.stats.user_fac_validees_list || !widget.stats.user_fac_validees_list.length">
+                  <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
+                </t>
+                <t t-foreach="widget.stats.user_fac_validees_list" t-as="fac">
+                  <div class="nc-alert" style="margin-bottom:5px;border-left-color:#3b82f6;border-color:#dbeafe;background:#eff6ff;">
+                    <div style="flex:1">
+                      <div style="font-size:12px;font-weight:600;color:#1d4ed8"><t t-esc="fac.name"/> — Validée ✓</div>
+                      <div style="font-size:11px;color:#2563eb;margin-top:2px">
+                        <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · Validée depuis <t t-esc="fac.days"/>j
+                      </div>
+                    </div>
+                    <div class="btn-sm primary btn-open btn-fac-val-ack" data-model="nc_management.corrective_action" t-att-data-id="fac.id">Ouvrir</div>
+                  </div>
+                </t>
+              </div>
+            </details>
+
           </div>
         </div>
 
       </div>
-    </div>
-  </div>
-
-  <!-- Alertes -->
-  <div class="nc-section-hdr globale">
-    <span>Alertes &amp; Notifications</span>
-    <div class="nc-section-hdr-sep"></div>
-  </div>
-
-  <div>
-    <div class="g2" style="grid-template-rows:260px;align-items:stretch;">
-
-      <!-- Alertes accordéon -->
-      <div class="nc-card" style="display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;grid-column:1/-1;">
-        <div class="nc-card-title" style="flex-shrink:0;">Alertes &amp; Notifications</div>
-        <div style="overflow-y:auto;flex:1;min-height:0;padding-right:2px;">
-
-          <!-- 1. Mes FNC à valider -->
-          <details style="margin-bottom:5px">
-            <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff7ed;border:1px solid #ffedd5;border-left:3px solid #FF9800;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#9a3412;user-select:none">
-              <span>&#9656; Mes FNC — À valider</span>
-              <span style="background:#FF9800;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.user_fnc_retard_list || []).length"/></span>
-            </summary>
-            <div style="padding:4px 0 0 6px">
-              <t t-if="!widget.stats.user_fnc_retard_list || !widget.stats.user_fnc_retard_list.length">
-                <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
-              </t>
-              <t t-foreach="widget.stats.user_fnc_retard_list" t-as="fnc">
-                <div class="nc-alert orange" style="margin-bottom:5px">
-                  <div style="flex:1">
-                    <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fnc.name"/> — À valider</div>
-                    <div style="font-size:11px;color:#c2410c;margin-top:2px"><t t-esc="fnc.department"/> · <t t-esc="fnc.days"/> jours en cours</div>
-                  </div>
-                  <div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" t-att-data-id="fnc.id">Ouvrir</div>
-                </div>
-              </t>
-            </div>
-          </details>
-
-          <!-- 2. Mes FAC à valider -->
-          <details style="margin-bottom:5px">
-            <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f0fdf4;border:1px solid #d1fae5;border-left:3px solid #10B981;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#065f46;user-select:none">
-              <span>&#9656; Mes FAC — À valider</span>
-              <span style="background:#10B981;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.user_fac_en_cours_list || []).length"/></span>
-            </summary>
-            <div style="padding:4px 0 0 6px">
-              <t t-if="!widget.stats.user_fac_en_cours_list || !widget.stats.user_fac_en_cours_list.length">
-                <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
-              </t>
-              <t t-foreach="widget.stats.user_fac_en_cours_list" t-as="fac">
-                <div class="nc-alert orange" style="margin-bottom:5px">
-                  <div style="flex:1">
-                    <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fac.name"/> — À valider</div>
-                    <div style="font-size:11px;color:#c2410c;margin-top:2px">
-                      <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · En cours depuis <t t-esc="fac.days"/>j
-                    </div>
-                  </div>
-                  <div class="btn-sm primary btn-open" data-model="nc_management.corrective_action" t-att-data-id="fac.id">Ouvrir</div>
-                </div>
-              </t>
-            </div>
-          </details>
-
-          <!-- 3. Mes FAC envoyées validées -->
-          <details style="margin-bottom:5px">
-            <summary style="list-style:none;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#eff6ff;border:1px solid #dbeafe;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;cursor:pointer;font-size:12px;font-weight:600;color:#1d4ed8;user-select:none">
-              <span>&#9656; Mes FAC envoyées — Validées</span>
-              <span style="background:#3b82f6;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px"><t t-esc="(widget.stats.user_fac_validees_list || []).length"/></span>
-            </summary>
-            <div style="padding:4px 0 0 6px">
-              <t t-if="!widget.stats.user_fac_validees_list || !widget.stats.user_fac_validees_list.length">
-                <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
-              </t>
-              <t t-foreach="widget.stats.user_fac_validees_list" t-as="fac">
-                <div class="nc-alert" style="margin-bottom:5px;border-left-color:#3b82f6;border-color:#dbeafe;background:#eff6ff;">
-                  <div style="flex:1">
-                    <div style="font-size:12px;font-weight:600;color:#1d4ed8"><t t-esc="fac.name"/> — Validée ✓</div>
-                    <div style="font-size:11px;color:#2563eb;margin-top:2px">
-                      <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · Validée depuis <t t-esc="fac.days"/>j
-                    </div>
-                  </div>
-                  <div class="btn-sm primary btn-open btn-fac-val-ack" data-model="nc_management.corrective_action" t-att-data-id="fac.id">Ouvrir</div>
-                </div>
-              </t>
-            </div>
-          </details>
-
-        </div>
-      </div>
-
     </div>
   </div>
 

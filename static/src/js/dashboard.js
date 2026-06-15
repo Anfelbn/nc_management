@@ -908,27 +908,11 @@ odoo.define('nc_management.dashboard', function(require){
                 });
             });
 
-            this.$el.on('click', '.ud-open-list', function(){
-                var uid    = self.stats.uid;
-                var filter = $(this).data('filter');
-                var modelMap = {
-                    fnc_total:  'nc_management.nonconformity',
-                    fac_total:  'nc_management.corrective_action',
-                    plan_total: 'nc_management.plan_action_smi',
-                };
-                var domainMap = {
-                    fnc_total:  [['create_uid', '=', uid]],
-                    fac_total:  [['fnc_id.create_uid', '=', uid]],
-                    plan_total: [['create_uid', '=', uid], ['is_global', '=', false]],
-                };
-                if(!filter) return;
-                self.do_action({
-                    type: 'ir.actions.act_window',
-                    res_model: modelMap[filter] || 'nc_management.nonconformity',
-                    domain: domainMap[filter] || [],
-                    views: [[false, 'list'], [false, 'form']],
-                    target: 'current',
-                });
+            this.$el.on('click', '.avatar-clickable', function(e){
+                e.stopPropagation();
+                var model = $(this).data('model');
+                var id    = parseInt($(this).data('id'), 10);
+                self._onAvatarClick(model, id);
             });
 
             this._initCalendar();
@@ -1015,9 +999,8 @@ odoo.define('nc_management.dashboard', function(require){
                 year  = pickerYear;
                 month = parseInt($(this).data('m'), 10);
                 self.$('.cal-picker').hide();
-                render(year, month);
-                // Recharger les stats ancrées sur le nouveau mois (month 0-based → +1)
-                var period = self.stats.period || '1m';
+                // Recharge toutes les stats ancrées sur le nouveau mois (month 0-based → +1)
+                var period = self.$('.pb.active').data('period') || '1m';
                 self._reload(period, year, month + 1);
             });
 
@@ -1029,55 +1012,38 @@ odoo.define('nc_management.dashboard', function(require){
         },
 
         _renderReceivedDocs: function(docs, key){
+            this.$('.received-sub').text(key ? this._formatDateKey(key) : '');
+
             if(!docs || !docs.length){
                 this.$('.received-list').html('<div class="nc-empty">Aucun document reçu pour cette date.</div>');
                 return;
             }
-
-            var stateLabel = {
-                draft:       'Brouillon',
-                submitted:   'Soumis',
-                in_progress: 'En cours',
-                validated:   'Validé',
-                closed:      'Clôturé',
-            };
-            var stateBadge = {
-                draft:       'style="background:#f1f5f9;color:#475569"',
-                submitted:   'class="badge orange"',
-                in_progress: 'class="badge blue"',
-                validated:   'style="background:#d1fae5;color:#065f46"',
-                closed:      'class="badge green"',
-            };
 
             var html = '';
 
             // Each item displayed independently — no FNC/FAC grouping, no plans
             docs.forEach(function(item){
                 if(item.kind === 'FNC'){
-                    var sb = stateBadge[item.state] || '';
                     html += '<div style="border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden">'
                           + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f8fafc">'
-                          + '<div class="nc-avatar avatar-blue">' + _.escape(item.sender_initials || '?') + '</div>'
+                          + '<div class="nc-avatar avatar-blue avatar-clickable" data-model="nc_management.nonconformity" data-id="' + item.id + '" title="' + _.escape(item.sender_name || 'Émetteur') + '">' + _.escape(item.sender_initials || '?') + '</div>'
                           + '<div style="flex:1;min-width:0">'
                           + '<div style="display:flex;justify-content:space-between;align-items:center">'
                           + '<div class="nc-notif-ref">' + _.escape(item.name || '') + '</div>'
-                          + '<div style="display:flex;gap:4px"><span class="badge blue">FNC</span>'
-                          + '<span ' + sb + '>' + (stateLabel[item.state] || item.state || '') + '</span></div>'
+                          + '<span class="badge blue">FNC</span>'
                           + '</div>'
                           + (item.sender_name ? '<div style="font-size:11px;color:#64748b;margin-top:2px">De : ' + _.escape(item.sender_name) + '</div>' : '')
                           + '<div class="nc-notif-actions">'
                           + '<div class="btn-sm primary btn-open" data-model="nc_management.nonconformity" data-id="' + item.id + '">Ouvrir FNC</div>'
                           + '</div></div></div></div>';
                 } else if(item.kind === 'FAC'){
-                    var fsb = stateBadge[item.state] || '';
                     html += '<div style="border:1px solid #fecaca;border-radius:10px;margin-bottom:8px;overflow:hidden">'
                           + '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#fef2f2">'
-                          + '<div class="nc-avatar avatar-red">' + _.escape(item.sender_initials || '?') + '</div>'
+                          + '<div class="nc-avatar avatar-red avatar-clickable" data-model="nc_management.corrective_action" data-id="' + item.id + '" title="' + _.escape(item.sender_name || 'Émetteur') + '">' + _.escape(item.sender_initials || '?') + '</div>'
                           + '<div style="flex:1;min-width:0">'
                           + '<div style="display:flex;justify-content:space-between;align-items:center">'
                           + '<div class="nc-notif-ref">' + _.escape(item.name || '') + '</div>'
-                          + '<div style="display:flex;gap:4px"><span class="badge red">FAC</span>'
-                          + '<span ' + fsb + '>' + (stateLabel[item.state] || item.state || '') + '</span></div>'
+                          + '<span class="badge red">FAC</span>'
                           + '</div>'
                           + (item.sender_name ? '<div style="font-size:11px;color:#64748b;margin-top:2px">De : ' + _.escape(item.sender_name) + '</div>' : '')
                           + '<div class="nc-notif-actions">'
@@ -1092,7 +1058,9 @@ odoo.define('nc_management.dashboard', function(require){
         },
 
         _formatDateKey: function(key){
-            return 'Fiches reçues';
+            var p = key.split('-');
+            if(p.length !== 3) return key;
+            return p[2] + '/' + p[1] + '/' + p[0];
         },
 
         _drawChart: function(){
@@ -1154,6 +1122,93 @@ odoo.define('nc_management.dashboard', function(require){
             ctx.fillStyle = '#64748b'; ctx.font = '9px Segoe UI'; ctx.textAlign = 'center';
             labels.forEach(function(lbl, gi){
                 ctx.fillText(lbl, pL + gi * gW + gW / 2, pT + cH + 13);
+            });
+        },
+
+        _onAvatarClick: function(model, id) {
+            var self = this;
+            this._rpc({
+                model:  'nc_management.dashboard',
+                method: 'get_sender_info',
+                args:   [model, id],
+            }).then(function(data) {
+                self._showSenderModal(data);
+            });
+        },
+
+        _showSenderModal: function(data) {
+            $('#nc-sender-modal').remove();
+            $(document).off('keydown.nsm');
+
+            var nom    = data.nom    || '';
+            var prenom = data.prenom || '';
+            var fullName = (nom + ' ' + prenom).trim() || 'Inconnu';
+            var initials = fullName.split(' ').slice(0, 2).map(function(w) {
+                return (w[0] || '').toUpperCase();
+            }).join('') || '?';
+
+            function row(label, val) {
+                if (!val) return '';
+                return '<div class="nsm-row">'
+                     + '<span class="nsm-label">' + label + '</span>'
+                     + '<span class="nsm-val">' + _.escape(val) + '</span>'
+                     + '</div>';
+            }
+
+            // Construire "direction, service/département"
+            var orgParts = [];
+            if (data.direction)  orgParts.push(_.escape(data.direction));
+            var sdPart = [data.service, data.department].filter(Boolean).map(_.escape).join('/');
+            if (sdPart) orgParts.push(sdPart);
+            var orgLine = orgParts.join(', ');
+
+            var rows = row('Nom',        nom)
+                     + row('Prénom',     prenom)
+                     + (orgLine ? '<div class="nsm-row"><span class="nsm-label">Org.</span><span class="nsm-val">' + orgLine + '</span></div>' : '')
+                     + row('Envoyé le',  data.send_datetime);
+
+            var msgHtml = '';
+            if (data.message) {
+                msgHtml = '<div class="nsm-msg-box">'
+                        + '<div class="nsm-msg-label">Message envoyé</div>'
+                        + '<div class="nsm-msg-body">' + _.escape(data.message) + '</div>'
+                        + '</div>';
+            }
+
+            if (!nom && !prenom && !orgLine && !data.send_datetime && !data.message) {
+                rows = '<div class="nsm-row"><span class="nsm-val" style="color:#94a3b8;font-style:italic">Aucune information disponible.</span></div>';
+            }
+
+            var modal = $(
+                '<div id="nc-sender-modal" class="nsm-overlay">'
+              + '<div class="nsm-card">'
+              + '<button class="nsm-close" title="Fermer">&times;</button>'
+              + '<div class="nsm-avatar-lg">' + _.escape(initials) + '</div>'
+              + '<div class="nsm-name">' + _.escape(fullName) + '</div>'
+              + '<div class="nsm-rows">' + rows + '</div>'
+              + msgHtml
+              + '</div>'
+              + '</div>'
+            );
+
+            $('body').append(modal);
+            modal[0].offsetHeight;
+            modal.addClass('nsm-visible');
+
+            function closeModal() {
+                modal.removeClass('nsm-visible');
+                $(document).off('keydown.nsm');
+                setTimeout(function() { modal.remove(); }, 260);
+            }
+
+            modal.on('click', function(e) {
+                if ($(e.target).is('#nc-sender-modal') || $(e.target).hasClass('nsm-close')) {
+                    closeModal();
+                }
+            });
+
+            $(document).on('keydown.nsm', function(e) {
+                if (e.key === 'Escape') { closeModal(); }
             });
         },
     });

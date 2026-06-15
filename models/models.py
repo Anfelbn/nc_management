@@ -2641,15 +2641,10 @@ class NcDashboard(models.Model):
             ('date', '<', period_end.strftime('%Y-%m-%d')),
             ('create_uid', '=', self.env.uid),
         ]
-        # Domaine FNC créées par RMQSE (Total FNC/FAC + Évolution) — y compris Audit Externe :
-        # les compteurs Total FNC/FAC comptabilisent aussi les FNC/FAC Audit Externe créées par la RMQSE
+        # Domaine FNC créées par RMQSE (Total FNC + Évolution) — y compris Audit Externe :
+        # le compteur Total FNC comptabilise aussi les FNC Audit Externe créées par la RMQSE
         combined_fnc_domain = own_fnc_domain
         combined_fnc_ids = fnc.search(combined_fnc_domain).ids
-        combined_fac_domain = [
-            ('date', '>=', period_start.strftime('%Y-%m-%d')),
-            ('date', '<', period_end.strftime('%Y-%m-%d')),
-            ('fnc_id', 'in', combined_fnc_ids),
-        ]
 
         # ── FNC counters (créées par RMQSE, y compris Audit Externe) ──
         total_fnc     = len(combined_fnc_ids)
@@ -2786,8 +2781,33 @@ class NcDashboard(models.Model):
             d['pct_fnc'] = round(d['fnc_count'] / max_dir_fnc * 100)
             d['pct_fac'] = round(d['fac_count'] / max_dir_fac * 100)
 
-        # ── FAC counters (liées aux FNC créées par RMQSE) ──
-        total_fac          = fac.search_count(combined_fac_domain)
+        # ── FAC counters — Total FAC = FAC "Évolution... Créées par RMQSE" + FAC Audit Externe ──
+        # FNC créées par la RMQSE sur la période, hors Audit Externe (base de l'évolution FAC)
+        evo_fnc_ids = fnc.search(own_fnc_domain + [('type_audit_externe', '=', False)]).ids
+        fac_evo_domain = [
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<', period_end.strftime('%Y-%m-%d')),
+            '|',
+                ('fnc_id', 'in', evo_fnc_ids),
+                '&',
+                    ('responsable_id', '=', self.env.uid),
+                    '|',
+                        ('fnc_id', '=', False),
+                        ('fnc_id.type_audit_externe', '=', False),
+        ]
+        # Audit externe : FAC liées à une FNC audit externe créée par la RMQSE
+        fac_audit_externe_domain = [
+            ('date', '>=', period_start.strftime('%Y-%m-%d')),
+            ('date', '<',  period_end.strftime('%Y-%m-%d')),
+            ('fnc_id.type_audit_externe', '=', True),
+            ('fnc_id.create_uid', '=', self.env.uid),
+        ]
+        fac_evo_ids = fac.search(fac_evo_domain).ids
+        fac_audit_externe_ids = fac.search(fac_audit_externe_domain).ids
+        combined_fac_ids = list(set(fac_evo_ids) | set(fac_audit_externe_ids))
+        combined_fac_domain = [('id', 'in', combined_fac_ids)]
+
+        total_fac          = len(combined_fac_ids)
         fac_open           = fac.search_count(combined_fac_domain + [('state','=','submitted')])
         fac_verif          = fac.search_count(combined_fac_domain + [('state','=','in_progress')])
         fac_closed         = fac.search_count(combined_fac_domain + [('state','=','closed')])
@@ -2798,14 +2818,8 @@ class NcDashboard(models.Model):
         taux_validation_fac = round(fac_verif  / total_fac * 100, 1) if total_fac else 0
         taux_cloture_fac   = round(fac_closed  / total_fac * 100, 1) if total_fac else 0
         # Audit interne : FAC reçues, liées à une FNC audit interne reçue
-        # Audit externe : FAC liées à une FNC audit externe créée par la RMQSE
         fac_audit_interne = fac.search_count(fac_received_period_domain + [('fnc_id.type_audit_interne','=',True)])
-        fac_audit_externe = fac.search_count([
-            ('date', '>=', period_start.strftime('%Y-%m-%d')),
-            ('date', '<',  period_end.strftime('%Y-%m-%d')),
-            ('fnc_id.type_audit_externe', '=', True),
-            ('fnc_id.create_uid', '=', self.env.uid),
-        ])
+        fac_audit_externe = len(fac_audit_externe_ids)
         audit_interne_total = fnc_audit_interne + fac_audit_interne
         audit_externe_total = fnc_audit_externe + fac_audit_externe
 
@@ -2866,7 +2880,13 @@ class NcDashboard(models.Model):
             count_fac = fac.search_count([
                 ('date', '>=', str(m_start)),
                 ('date', '<', str(m_end)),
-                ('fnc_id', 'in', m_fnc_ids),
+                '|',
+                    ('fnc_id', 'in', m_fnc_ids),
+                    '&',
+                        ('responsable_id', '=', self.env.uid),
+                        '|',
+                            ('fnc_id', '=', False),
+                            ('fnc_id.type_audit_externe', '=', False),
             ])
             monthly_labels.append(fr_months[m_start.month - 1])
             monthly_fnc.append(len(m_fnc_recs))
@@ -2980,9 +3000,40 @@ class NcDashboard(models.Model):
             ]).ids
             all_m_fnc_ids = list(set(m_own_fnc_ids) | set(m_recv_fnc_ids))
             monthly_fnc_global.append(len(all_m_fnc_ids))
-            monthly_fac_global.append(
-                fac.search_count([('fnc_id', 'in', all_m_fnc_ids)]) if all_m_fnc_ids else 0
-            )
+
+            # Total FAC du mois (même logique que le compteur "Total FAC")
+            m_evo_fnc_ids = fnc.browse(m_own_fnc_ids).filtered(
+                lambda r: not r.type_audit_externe).ids
+            m_fac_evo_ids = fac.search([
+                ('date', '>=', d_start.strftime('%Y-%m-%d')),
+                ('date', '<', d_end.strftime('%Y-%m-%d')),
+                '|',
+                    ('fnc_id', 'in', m_evo_fnc_ids),
+                    '&',
+                        ('responsable_id', '=', self.env.uid),
+                        '|',
+                            ('fnc_id', '=', False),
+                            ('fnc_id.type_audit_externe', '=', False),
+            ]).ids
+            m_fac_audit_externe_ids = fac.search([
+                ('date', '>=', d_start.strftime('%Y-%m-%d')),
+                ('date', '<', d_end.strftime('%Y-%m-%d')),
+                ('fnc_id.type_audit_externe', '=', True),
+                ('fnc_id.create_uid', '=', self.env.uid),
+            ]).ids
+            m_total_fac = len(set(m_fac_evo_ids) | set(m_fac_audit_externe_ids))
+
+            # Total global FAC du mois (FAC reçues des autres directions)
+            m_global_fac = fac.search_count([
+                '|',
+                ('fnc_id', 'in', m_recv_fnc_ids),
+                '&', '&',
+                ('date_envoi', '>=', d_start.strftime('%Y-%m-%d')),
+                ('date_envoi', '<', d_end.strftime('%Y-%m-%d')),
+                ('create_uid', '!=', self.env.uid),
+            ])
+
+            monthly_fac_global.append(m_total_fac + m_global_fac)
         result['monthly_fnc_global'] = monthly_fnc_global
         result['monthly_fac_global'] = monthly_fac_global
 
@@ -3283,11 +3334,15 @@ class NcDashboard(models.Model):
         fac_model = self.env['nc_management.corrective_action']
         plan_model = self.env['nc_management.plan_action_smi']
         today = date.today()
+        if cal_year and cal_month:
+            ref_date = date(int(cal_year), int(cal_month), 1)
+        else:
+            ref_date = today
         fr_months = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
 
         period_months = {'1m': 1, '6m': 6, '1y': 12}.get(period or '1m', 1)
-        period_end = today.replace(day=1) + relativedelta(months=1)
-        period_start = today.replace(day=1) - relativedelta(months=period_months - 1)
+        period_end = ref_date.replace(day=1) + relativedelta(months=1)
+        period_start = ref_date.replace(day=1) - relativedelta(months=period_months - 1)
 
         # Domaines tous temps (alertes, calendrier)
         user_fnc_domain_all = [('create_uid', '=', uid)]
@@ -3342,7 +3397,7 @@ class NcDashboard(models.Model):
         monthly_fnc = []
         monthly_fac = []
         for i in range(nb_chart_months - 1, -1, -1):
-            d = today - relativedelta(months=i)
+            d = ref_date - relativedelta(months=i)
             m_start = d.replace(day=1)
             m_end = (d + relativedelta(months=1)).replace(day=1)
             m_fnc_ids = fnc_model.search([
@@ -3506,8 +3561,8 @@ class NcDashboard(models.Model):
             'monthly_fnc':     monthly_fnc,
             'monthly_fac':     monthly_fac,
             'calendar_events': calendar_events,
-            'calendar_year':   today.year,
-            'calendar_month':  today.month,
+            'calendar_year':   ref_date.year,
+            'calendar_month':  ref_date.month,
             'user_fnc_retard_list':   user_fnc_retard_list,
             'user_fac_en_cours_list': user_fac_en_cours_list,
             'user_fac_validees_list': user_fac_validees_list,

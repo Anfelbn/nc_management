@@ -1,0 +1,212 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   NC MANAGEMENT — Compléments sobres (style Fiori / Salesforce)
+   Ce fichier complète nc_management.css (thème bleu GICA #0a3d7c) sans
+   redéfinir ses couleurs : pas de dégradé, pas de second bleu, peu
+   d'animation. Il couvre la mise en page générale (sidebar, control
+   panel, fiches formulaire, onglets, kanban, boutons) en plus de ce que
+   nc_management.css ne traite pas encore (modals, champs requis, badges).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --nc-primary: #0a3d7c;
+  --nc-primary-dark: #072d5c;
+  --nc-primary-light: #9db8d9;
+  --nc-danger: #b91c1c;
+  --nc-bg: #f5f7fa;
+  --nc-surface: #ffffff;
+  --nc-text: #1e293b;
+  --nc-text-secondary: #64748b;
+  --nc-border: #e2e8f0;
+  --nc-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --nc-radius: 10px;
+  --nc-radius-sm: 6px;
+}
+
+/* ── Fond général de l'application ───────────────────────────────── */
+.o_web_client,
+.o_action_manager,
+.o_content {
+  background-color: var(--nc-bg) !important;
+}
+
+/* ── Barre latérale (.o_sub_menu) : panneau net, séparé du contenu ── */
+.o_sub_menu {
+  background-color: var(--nc-surface);
+  border-right: 1px solid var(--nc-border);
+}
+
+/* ── Control panel (breadcrumb + boutons + recherche) ────────────── */
+.o_control_panel {
+  background-color: var(--nc-surface);
+  border-bottom: 1px solid var(--nc-border);
+  box-shadow: var(--nc-shadow);
+}
+.o_control_panel .breadcrumb {
+  background-color: transparent;
+}
+.o_control_panel .breadcrumb > li.active {
+  color: var(--nc-text);
+  font-weight: 600;
+}
+
+/* ── Filtres actifs (facettes de recherche) : pilule discrète ────── */
+.o_searchview_facet {
+  border: 1px solid var(--nc-border);
+  border-radius: 999px;
+  background-color: #eef2f7;
+}
+.o_searchview_facet .o_searchview_facet_label {
+  color: var(--nc-primary);
+}
+
+/* ── Titres de groupe (<group string="...">) : bandeau clair, texte
+   bleu en majuscules — plus de lisibilité, sans changer de couleur ── */
+.o_form_view .o_horizontal_separator {
+  background-color: #eef2f7;
+  color: var(--nc-primary) !important;
+  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 8px 12px;
+  border-radius: var(--nc-radius-sm);
+  border-bottom: none !important;
+  margin: 16px 0 10px !important;
+}
+
+/* ── Champs requis : léger fond teinté + astérisque rouge ────────── */
+.o_form_view .o_required_modifier {
+  background-color: rgba(10, 61, 124, 0.04);
+  border-radius: var(--nc-radius-sm);
+}
+.o_form_view .o_form_label.o_required_modifier:after,
+.o_form_view label.o_required_modifier:after {
+  content: " *";
+  color: var(--nc-danger);
+  font-weight: 700;
+}
+
+/* ── Fiche formulaire (.o_form_sheet) : carte nette ──────────────── */
+.o_form_view .o_form_sheet {
+  border-color: var(--nc-border) !important;
+  border-radius: var(--nc-radius) !important;
+  box-shadow: var(--nc-shadow) !important;
+}
+
+/* ── Boutons : coins arrondis cohérents, survol discret ──────────── */
+.btn {
+  border-radius: var(--nc-radius-sm) !important;
+}
+.btn-default:hover,
+.btn-default:focus {
+  border-color: var(--nc-primary) !important;
+}
+
+/* ── Onglets de formulaire (.o_notebook) ─────────────────────────── */
+.o_notebook > .nav-tabs {
+  border-bottom: 1px solid var(--nc-border);
+}
+.o_notebook > .nav-tabs > li > a:hover {
+  color: var(--nc-primary) !important;
+}
+.o_notebook > .nav-tabs > li.active > a,
+.o_notebook > .nav-tabs > li.active > a:hover,
+.o_notebook > .nav-tabs > li.active > a:focus {
+  color: var(--nc-primary) !important;
+  border-bottom: 2px solid var(--nc-primary) !important;
+}
+
+/* ── Vue Kanban : fond, cartes nettes ─────────────────────────────── */
+.o_kanban_view {
+  background-color: var(--nc-bg) !important;
+}
+.o_kanban_view .o_kanban_record {
+  border-radius: var(--nc-radius-sm) !important;
+  border: 1px solid var(--nc-border) !important;
+  box-shadow: var(--nc-shadow);
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.o_kanban_view .o_kanban_record:hover {
+  border-color: var(--nc-primary-light) !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10);
+}
+.o_kanban_view .o_kanban_group .o_column_title {
+  font-weight: 700;
+  color: var(--nc-text) !important;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--nc-primary);
+  padding-bottom: 6px;
+}
+
+/* ── Tableaux non couverts par nc_management.css (filet de sécurité,
+   même bleu) ─────────────────────────────────────────────────────── */
+.o_list_view table.o_list_table > thead > tr > th {
+  background-color: var(--nc-primary) !important;
+  color: #fff !important;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Lignes de statut (decoration-success/warning/danger/info/muted) :
+   liseré gauche coloré, cohérent avec les badges du tableau de bord ── */
+.smi_plan_tree tbody tr.o_data_row.text-success,
+.smi_global_tree tbody tr.o_data_row.text-success,
+.smi_improvement_tree tbody tr.o_data_row.text-success,
+.smi_improvement_user_tree tbody tr.o_data_row.text-success,
+.smi_hist_tree tbody tr.o_data_row.text-success {
+  box-shadow: inset 3px 0 0 #15803d !important;
+}
+.smi_plan_tree tbody tr.o_data_row.text-warning,
+.smi_global_tree tbody tr.o_data_row.text-warning,
+.smi_improvement_tree tbody tr.o_data_row.text-warning,
+.smi_improvement_user_tree tbody tr.o_data_row.text-warning,
+.smi_hist_tree tbody tr.o_data_row.text-warning {
+  box-shadow: inset 3px 0 0 #c2410c !important;
+}
+.smi_plan_tree tbody tr.o_data_row.text-danger,
+.smi_global_tree tbody tr.o_data_row.text-danger,
+.smi_improvement_tree tbody tr.o_data_row.text-danger,
+.smi_improvement_user_tree tbody tr.o_data_row.text-danger,
+.smi_hist_tree tbody tr.o_data_row.text-danger {
+  box-shadow: inset 3px 0 0 #b91c1c !important;
+}
+.smi_plan_tree tbody tr.o_data_row.text-info,
+.smi_global_tree tbody tr.o_data_row.text-info,
+.smi_improvement_tree tbody tr.o_data_row.text-info,
+.smi_improvement_user_tree tbody tr.o_data_row.text-info,
+.smi_hist_tree tbody tr.o_data_row.text-info {
+  box-shadow: inset 3px 0 0 #0284c7 !important;
+}
+.smi_plan_tree tbody tr.o_data_row.text-muted,
+.smi_global_tree tbody tr.o_data_row.text-muted,
+.smi_improvement_tree tbody tr.o_data_row.text-muted,
+.smi_improvement_user_tree tbody tr.o_data_row.text-muted,
+.smi_hist_tree tbody tr.o_data_row.text-muted {
+  box-shadow: inset 3px 0 0 #94a3b8 !important;
+}
+
+/* ── Modals & wizards : coins nets, ombre légère ─────────────────── */
+.modal-content {
+  border: none !important;
+  border-radius: var(--nc-radius) !important;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.12) !important;
+}
+.modal-header {
+  background-color: #fafbfc;
+  border-bottom: 1px solid var(--nc-border);
+}
+.modal-header .modal-title {
+  color: var(--nc-text) !important;
+  font-weight: 700;
+}
+
+/* ── Badges de statut (classes utilitaires, à appliquer si besoin) ── */
+.badge-brouillon { background: #eceff1; color: #546e7a; }
+.badge-soumise   { background: #fff3e0; color: #c2410c; }
+.badge-en_cours  { background: #e3f2fd; color: #0a3d7c; }
+.badge-validee   { background: #e8f5e9; color: #15803d; }
+.badge-cloture   { background: #ede9fe; color: #5b21b6; }

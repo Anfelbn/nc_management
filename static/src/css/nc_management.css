@@ -8,16 +8,16 @@
 .nc-header-right{display:flex;align-items:center;gap:12px}
 .nc-period-label,.nc-update{font-size:11px;color:#94a3b8}
 .nc-db .pb{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;transition:all .15s}
-.nc-db .pb:hover{border-color:#1e40af;color:#1e40af}
-.nc-db .pb.active{background:#1e40af;color:white;border-color:#1e40af}
+.nc-db .pb:hover{border-color:#0a3d7c;color:#0a3d7c}
+.nc-db .pb.active{background:#0a3d7c;color:white;border-color:#0a3d7c}
 .nc-db .period-btn{display:flex;gap:5px}
 .nc-section-hdr{display:flex;align-items:center;gap:14px;margin:22px 0 16px;padding:12px 18px;border-radius:10px;color:white;font-size:13px;font-weight:700;letter-spacing:.4px}
-.nc-section-hdr.rmqse{background:linear-gradient(90deg,#1e3a8a,#2563eb)}
-.nc-section-hdr.autres{background:linear-gradient(90deg,#065f46,#059669)}
-.nc-section-hdr.globale{background:linear-gradient(90deg,#581c87,#7c3aed)}
+.nc-section-hdr.rmqse{background:#0a3d7c}
+.nc-section-hdr.autres{background:#059669}
+.nc-section-hdr.globale{background:#7c3aed}
 .nc-section-hdr-sep{flex:1;height:1px;background:rgba(255,255,255,.25)}
 .nc-db .section-title{font-size:10px;font-weight:700;letter-spacing:1px;color:#94a3b8;text-transform:uppercase;margin-bottom:10px;padding-left:2px}
-.nc-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.nc-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative;overflow:hidden}
 .nc-card-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:3px}
 .nc-card-sub{font-size:11px;color:#94a3b8;margin-bottom:10px}
 .nc-kpi{background:white;border-radius:12px;padding:12px 14px;border:1px solid #e2e8f0;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
@@ -29,7 +29,7 @@
 .nc-kpi-txt{font-size:10px;color:#94a3b8;margin-top:4px}
 .nc-db .badge{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:500}
 .nc-db .badge.red{background:#fef2f2;color:#991b1b}
-.nc-db .badge.blue{background:#eff6ff;color:#1d4ed8}
+.nc-db .badge.blue{background:#eff6ff;color:#1f5fa8}
 .nc-db .badge.green{background:#f0fdf4;color:#166534}
 .nc-db .badge.orange{background:#fff7ed;color:#9a3412}
 .nc-db .badge.purple{background:#f5f3ff;color:#6d28d9}
@@ -43,10 +43,10 @@
 .nc-notif-ref{font-size:12px;font-weight:600;color:#1e293b}
 .nc-notif-info{font-size:11px;color:#64748b;margin-top:2px}
 .nc-notif-actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-.nc-db .btn-sm{font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid #e2e8f0;background:white;color:#1e40af;cursor:pointer;transition:all .15s}
+.nc-db .btn-sm{font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid #e2e8f0;background:white;color:#0a3d7c;cursor:pointer;transition:all .15s}
 .nc-db .btn-sm:hover{background:#eff6ff}
-.nc-db .btn-sm.primary{background:#1e40af;color:white;border-color:#1e40af}
-.nc-db .btn-sm.primary:hover{background:#1d4ed8}
+.nc-db .btn-sm.primary{background:#0a3d7c;color:white;border-color:#0a3d7c}
+.nc-db .btn-sm.primary:hover{background:#1f5fa8}
 .nc-alert{display:flex;gap:10px;align-items:center;padding:10px;border-radius:0 8px 8px 0;border:1px solid #fee2e2;border-left:3px solid #EF4444;background:#fef2f2;margin-bottom:7px}
 .nc-alert.orange{border-left-color:#FF9800;border-color:#ffedd5;background:#fff7ed}
 .nc-alert.green{border-left-color:#10B981;border-color:#d1fae5;background:#f0fdf4}
@@ -63,16 +63,16 @@
 .cal-day{text-align:center;padding:5px 2px;border-radius:6px;cursor:pointer;font-size:12px;color:#374151;transition:background .15s;min-height:30px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .cal-day:hover{background:#f1f5f9}
 .cal-day.other-month{color:#d1d5db}
-.cal-day.today{background:#1e40af;color:white;font-weight:700}
-.cal-day.selected{outline:2px solid #1e40af;background:#dbeafe;color:#1e3a8a;font-weight:700}
-.cal-day.today.selected{outline:2px solid #0f172a;background:#1e40af;color:white}
+.cal-day.today{background:#0a3d7c;color:white;font-weight:700}
+.cal-day.selected{outline:2px solid #0a3d7c;background:#dbeafe;color:#072d5c;font-weight:700}
+.cal-day.today.selected{outline:2px solid #0f172a;background:#0a3d7c;color:white}
 .cal-dot-row{display:flex;gap:2px;justify-content:center;margin-top:1px}
 .cdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .nc-empty{font-size:12px;color:#94a3b8;text-align:center;padding:22px 8px;border:1px dashed #e2e8f0;border-radius:8px;background:#f8fafc}
 .gc-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .gc-lbl{font-size:11px;color:#64748b;width:80px;text-align:right;flex-shrink:0}
 .gc-bars{flex:1;display:flex;flex-direction:column;gap:3px}
-.gc-bar-fnc{height:9px;border-radius:3px;background:#2196F3;transition:width .3s;cursor:pointer}
+.gc-bar-fnc{height:9px;border-radius:3px;background:#0a3d7c;transition:width .3s;cursor:pointer}
 .gc-bar-fnc:hover{filter:brightness(.9)}
 .gc-bar-fac{height:9px;border-radius:3px;background:#EF4444;transition:width .3s}
 .dir-bar.selected{outline:2px solid #0f172a}
@@ -91,15 +91,15 @@ canvas{display:block;width:100%}
 .cal-header-pick{display:flex;justify-content:space-between;align-items:center;cursor:pointer;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px;background:#f8fafc;margin-bottom:8px;transition:background .15s}
 .cal-header-pick:hover{background:#dbeafe}
 .cal-pm{font-size:11px;padding:6px 2px;border-radius:6px;border:1px solid #c7d7f8;background:white;color:#3b5cc4;cursor:pointer;text-align:center;transition:all .15s}
-.cal-pm:hover{background:#dbeafe;border-color:#93c5fd}
-.cal-pm.cal-pm-active{background:#1e40af;color:white;border-color:#1e40af}
+.cal-pm:hover{background:#dbeafe;border-color:#9db8d9}
+.cal-pm.cal-pm-active{background:#0a3d7c;color:white;border-color:#0a3d7c}
 .dir-pill{font-size:10px;padding:3px 10px;border-radius:99px;border:1px solid #e2e8f0;background:white;color:#374151;cursor:pointer;transition:all .15s;white-space:nowrap}
-.dir-pill:hover{border-color:#1e40af;color:#1e40af;background:#eff6ff}
-.dir-pill.active{background:#1e40af;color:white;border-color:#1e40af}
+.dir-pill:hover{border-color:#0a3d7c;color:#0a3d7c;background:#eff6ff}
+.dir-pill.active{background:#0a3d7c;color:white;border-color:#0a3d7c}
 .dir-pill.dept-pill.active{background:#059669;border-color:#059669}
 .dir-pill.svc-pill.active{background:#7c3aed;border-color:#7c3aed}
 .aud-btn{flex:1;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:7px 6px 6px;cursor:pointer;text-align:center;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.aud-btn:hover{border-color:#1e40af;background:#eff6ff;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.aud-btn:hover{border-color:#0a3d7c;background:#eff6ff;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.12)}
 .aud-btn-label{font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
 .aud-btn-val{font-size:20px;font-weight:700;line-height:1}
 .avatar-clickable{cursor:pointer;transition:transform .15s,box-shadow .15s}
@@ -110,7 +110,7 @@ canvas{display:block;width:100%}
 .nsm-overlay.nsm-visible .nsm-card{transform:translateY(0) scale(1)}
 .nsm-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;line-height:1;color:#94a3b8;cursor:pointer;padding:2px 7px;border-radius:6px;transition:background .15s,color .15s}
 .nsm-close:hover{background:#f1f5f9;color:#1e293b}
-.nsm-avatar-lg{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1e40af 0%,#3b82f6 100%);color:white;font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 4px 16px rgba(30,64,175,.35)}
+.nsm-avatar-lg{width:72px;height:72px;border-radius:50%;background:#0a3d7c;color:white;font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 2px 8px rgba(10,61,124,.25)}
 .nsm-name{text-align:center;font-size:17px;font-weight:700;color:#1e293b;margin-bottom:18px;letter-spacing:.2px}
 .nsm-rows{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
 .nsm-row{display:flex;gap:12px;align-items:flex-start}
@@ -122,30 +122,30 @@ canvas{display:block;width:100%}
 
 
 /* ══════════════════════════════════════════════════════════════════
-   COULEUR GLOBALE MODULE — bleu nuit #1a2e5a (remplace mauve Odoo)
+   COULEUR GLOBALE MODULE — bleu GICA #0a3d7c (remplace mauve Odoo)
    ══════════════════════════════════════════════════════════════════ */
 
 /* ── Boutons primaires (oe_highlight / btn-primary) ── */
 .btn-primary,
 .btn-primary:focus,
 .oe_highlight {
-    background-color: #1a2e5a !important;
-    border-color:     #1a2e5a !important;
+    background-color: #0a3d7c !important;
+    border-color:     #0a3d7c !important;
     color: #fff !important;
 }
 .btn-primary:hover,
 .btn-primary:active,
 .oe_highlight:hover,
 .oe_highlight:active {
-    background-color: #253f7a !important;
-    border-color:     #253f7a !important;
+    background-color: #072d5c !important;
+    border-color:     #072d5c !important;
     color: #fff !important;
 }
 
 /* ── Barre d'état (statusbar) ── */
 /* État courant : .btn-primary.disabled = texte mauve → bleu nuit */
 .o_form_statusbar .o_statusbar_status .o_arrow_button.btn-primary.disabled {
-    color: #1a2e5a !important;
+    color: #0a3d7c !important;
     background-color: #f0f4ff !important;
 }
 /* Flèche de l'état courant */
@@ -158,7 +158,7 @@ canvas{display:block;width:100%}
 /* Hover sur les états cliquables */
 .o_form_statusbar .o_statusbar_status .o_arrow_button:not(.disabled):hover,
 .o_form_statusbar .o_statusbar_status .o_arrow_button:not(.disabled):focus {
-    color: #1a2e5a !important;
+    color: #0a3d7c !important;
     background-color: #e8edf5 !important;
 }
 .o_form_statusbar .o_statusbar_status .o_arrow_button:not(.disabled):hover:after,
@@ -166,69 +166,39 @@ canvas{display:block;width:100%}
     border-left-color: #e8edf5 !important;
 }
 
-/* ── Barre de navigation principale (navbar) ── */
-.o_main_navbar {
-    background-color: #1a2e5a !important;
-}
-/* Texte blanc pour contrer la règle globale `a { color: #1a2e5a }` */
-.o_main_navbar a,
-.o_main_navbar a:hover,
-.o_main_navbar a:focus,
-.o_main_navbar .o_menu_sections a,
-.o_main_navbar .o_menu_sections a:hover,
-.o_main_navbar .o_menu_sections a:focus,
-.o_main_navbar > a,
-.o_main_navbar > button {
-    color: #fff !important;
-}
-.o_main_navbar > a:hover,
-.o_main_navbar > a:focus,
-.o_main_navbar > button:hover,
-.o_main_navbar > button:focus,
-.o_main_navbar .open .dropdown-toggle {
-    background-color: #253f7a !important;
+/* ── Barre de navigation principale (navbar) ──
+   Odoo 11 : l'élément réel est #oe_main_menu_navbar.navbar.navbar-inverse
+   (les classes .o_main_navbar / .o_menu_sections n'existent pas dans
+   cette version — ces règles ne s'appliquaient donc jamais). ── */
+#oe_main_menu_navbar.navbar-inverse {
+    background-color: #0a3d7c !important;
+    border-color: #0a3d7c !important;
 }
 
-/* ── Dropdown du menu principal (Plan Action SMI → sous-menus) ── */
-.o_main_navbar .open .dropdown-menu > li > a {
-    background-color: #1a2e5a !important;
-    color: #fff !important;
+/* Liens du menu principal (apps, systray, utilisateur) */
+#oe_main_menu_navbar .navbar-nav > li > a,
+#oe_main_menu_navbar .oe_topbar_name {
+    color: rgba(255, 255, 255, .85) !important;
 }
-.o_main_navbar .open .dropdown-menu > li > a:hover,
-.o_main_navbar .open .dropdown-menu > li > a:focus {
-    background-color: #253f7a !important;
-    color: #fff !important;
-}
-.o_main_navbar .open .dropdown-menu > li > a.dropdown-toggle {
-    background-color: #2a3f6a !important;
-    pointer-events: none;
+#oe_main_menu_navbar .navbar-toggle .icon-bar {
+    background-color: rgba(255, 255, 255, .85);
 }
 
-/* ── Items de menu actifs et hover ── */
-.o_menu_sections > li.active > a,
-.o_menu_sections > li > a:hover,
-.o_menu_sections > li > a:focus,
-.o_menu_sections .o_nav_entry:hover,
-.o_menu_sections .o_nav_entry.active,
-.o_menu_sections .o_menu_entry:hover,
-.o_menu_sections .o_menu_entry.active,
-.o_menu_sections a.active,
-.o_menu_sections a:hover {
+/* Survol, dropdown ouvert, application active */
+#oe_main_menu_navbar .navbar-nav > li > a:hover,
+#oe_main_menu_navbar .navbar-nav > li > a:focus,
+#oe_main_menu_navbar .navbar-nav > li.open > a,
+#oe_main_menu_navbar .navbar-nav > li.active > a,
+#oe_main_menu_navbar .navbar-toggle:hover,
+#oe_main_menu_navbar .navbar-toggle:focus {
+    background-color: #072d5c !important;
     color: #fff !important;
-    background-color: #253f7a !important;
-}
-
-/* ── Extra menu items overflow ── */
-.o_main_navbar .o_extra_menu_items.open > ul > li > a {
-    background-color: #1a2e5a !important;
-    color: #fff !important;
-    border-bottom-color: #253f7a !important;
 }
 
 /* ── Pager ── */
 .o_pager .o_pager_value,
 .o_pager button:hover {
-    color: #1a2e5a !important;
+    color: #0a3d7c !important;
 }
 
 /* ── Liens (hors navbar pour ne pas écraser le blanc d'Odoo) ── */
@@ -237,14 +207,14 @@ canvas{display:block;width:100%}
 .o_control_panel a,
 .o_breadcrumb a,
 .o_content a {
-    color: #1a2e5a !important;
+    color: #0a3d7c !important;
 }
 .o_form_view a:hover, .o_form_view a:focus,
 .o_list_view a:hover, .o_list_view a:focus,
 .o_control_panel a:hover, .o_control_panel a:focus,
 .o_breadcrumb a:hover, .o_breadcrumb a:focus,
 .o_content a:hover, .o_content a:focus {
-    color: #2563eb !important;
+    color: #1f5fa8 !important;
 }
 
 /* ── Focus / outline sur les inputs ── */
@@ -253,8 +223,8 @@ canvas{display:block;width:100%}
 .o_field_widget select:focus,
 input.o_input:focus,
 textarea.o_input:focus {
-    border-color: #1a2e5a !important;
-    box-shadow: 0 0 0 2px rgba(26,46,90,.15) !important;
+    border-color: #0a3d7c !important;
+    box-shadow: 0 0 0 2px rgba(10,61,124,.15) !important;
     outline: none !important;
 }
 
@@ -264,7 +234,7 @@ textarea.o_input:focus {
 .dropdown-menu > li.active > a:focus,
 .dropdown-menu > li > a:hover,
 .dropdown-menu > li > a:focus {
-    background-color: #1a2e5a !important;
+    background-color: #0a3d7c !important;
     color: #fff !important;
 }
 
@@ -272,40 +242,40 @@ textarea.o_input:focus {
 .nav-pills > li.active > a,
 .nav-pills > li.active > a:hover,
 .nav-pills > li.active > a:focus {
-    background-color: #1a2e5a !important;
+    background-color: #0a3d7c !important;
     color: #fff !important;
 }
 
 /* ── Pagination ── */
 .pagination > li.active > a,
 .pagination > li.active > span {
-    background-color: #1a2e5a !important;
-    border-color: #1a2e5a !important;
+    background-color: #0a3d7c !important;
+    border-color: #0a3d7c !important;
     color: #fff !important;
 }
 .pagination > li > a:hover,
 .pagination > li > span:hover {
-    color: #1a2e5a !important;
+    color: #0a3d7c !important;
 }
 
 /* ── Labels Bootstrap ── */
-.label-primary { background-color: #1a2e5a !important; }
+.label-primary { background-color: #0a3d7c !important; }
 
 /* ── Panel primary ── */
 .panel-primary > .panel-heading {
-    background-color: #1a2e5a !important;
-    border-color: #1a2e5a !important;
+    background-color: #0a3d7c !important;
+    border-color: #0a3d7c !important;
 }
-.panel-primary { border-color: #1a2e5a !important; }
+.panel-primary { border-color: #0a3d7c !important; }
 
 /* ── Select2 (champs Many2one) ── */
 .select2-container-active .select2-choice,
 .select2-container-multi.select2-container-active .select2-choices,
 .select2-drop-active {
-    border-color: #1a2e5a !important;
+    border-color: #0a3d7c !important;
 }
 .select2-results .select2-highlighted {
-    background: #1a2e5a !important;
+    background: #0a3d7c !important;
     color: #fff !important;
 }
 
@@ -313,40 +283,40 @@ textarea.o_input:focus {
 .badge.badge-pill,
 .o_field_many2manytags .badge,
 .o_tag {
-    background-color: #1a2e5a !important;
-    border-color:     #1a2e5a !important;
+    background-color: #0a3d7c !important;
+    border-color:     #0a3d7c !important;
     color: #fff !important;
 }
 
 /* ── Cases à cocher Odoo ── */
 .o_field_boolean input[type="checkbox"]:checked + span,
 .o_list_view .o_field_boolean input[type="checkbox"]:checked + span {
-    background-color: #1a2e5a !important;
-    border-color:     #1a2e5a !important;
+    background-color: #0a3d7c !important;
+    border-color:     #0a3d7c !important;
 }
 
 /* ── Progress bar ── */
 .progress-bar,
 .o_progressbar_value {
-    background-color: #1a2e5a !important;
+    background-color: #0a3d7c !important;
 }
 
 /* ── Breadcrumb — élément actif ── */
 .o_control_panel .breadcrumb-item.active,
 .o_control_panel .breadcrumb-item a {
-    color: #1a2e5a !important;
+    color: #0a3d7c !important;
 }
 
 /* ── Sélection de lignes liste ── */
 .o_list_view tbody tr.o_data_row.o_row_handle:hover,
 .o_list_view tbody tr.o_selected_row {
-    background-color: rgba(26,46,90,.06) !important;
+    background-color: rgba(10,61,124,.06) !important;
 }
 
 /* ── En-têtes bleu nuit — FNC, FAC et Plans SMI ── */
 .nc_list_tree thead th,
 .smi_plan_tree thead th {
-    background-color: #1a2e5a !important;
+    background-color: #0a3d7c !important;
     color: #fff !important;
     white-space: nowrap !important;
 }
@@ -368,12 +338,12 @@ textarea.o_input:focus {
 /* Hover : bleu pâle avec trait latéral bleu nuit */
 .nc_list_tree tbody tr.o_data_row:hover {
     background-color: #dce8f8 !important;
-    box-shadow: inset 3px 0 0 #1a2e5a !important;
+    box-shadow: inset 3px 0 0 #0a3d7c !important;
 }
 /* Ligne sélectionnée (édition) */
 .nc_list_tree tbody tr.o_data_row.o_selected_row {
     background-color: #d0e2f5 !important;
-    box-shadow: inset 3px 0 0 #1a2e5a !important;
+    box-shadow: inset 3px 0 0 #0a3d7c !important;
 }
 
 /* ── Colonnes filtrables : curseur pointer au survol ── */
@@ -421,7 +391,7 @@ textarea.o_input:focus {
     appearance: none;
     width: 16px;
     height: 16px;
-    border: 2px solid #1a2e5a;
+    border: 2px solid #0a3d7c;
     border-radius: 3px;
     background: #fff;
     cursor: pointer;
@@ -430,15 +400,15 @@ textarea.o_input:focus {
     position: relative;
 }
 .smi_av_group .o_field_radio input[type="radio"]:checked {
-    background: #1a2e5a;
-    border-color: #1a2e5a;
+    background: #0a3d7c;
+    border-color: #0a3d7c;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolyline points='1.5,5 4,7.5 8.5,2.5' stroke='white' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: center;
     background-size: 10px 10px;
 }
 .smi_av_group .o_field_radio input[type="radio"]:hover:not(:checked) {
-    border-color: #2563eb;
+    border-color: #1f5fa8;
     background: #eff6ff;
 }
 
@@ -448,16 +418,114 @@ textarea.o_input:focus {
 
 /* ── Titres de section dans les formulaires FNC/FAC ─────── */
 .o_horizontal_separator {
-    color: #1a2e5a !important;
+    color: #0a3d7c !important;
 }
 
 /* ── Liens many2one (noms employés, directions…) ────────── */
 .o_form_view .o_form_uri {
-    color: #1a2e5a !important;
+    color: #0a3d7c !important;
 }
 .o_form_view .o_form_uri:hover {
-    color: #2575b8 !important;
+    color: #1f5fa8 !important;
     text-decoration: underline;
 }
 
+/* ============================================================ */
+/* ── Sidebar gauche personnalisée — NC Management ──────────── */
+/* Restyle de la barre latérale Odoo (.o_sub_menu) en boutons   */
+/* de navigation, pour les pages de l'app NC Management.        */
+/* ============================================================ */
+
+/* Titre de groupe "Plan d'Action d'Amélioration SMI" */
+.o_sub_menu_content .oe_secondary_menu_section[data-menu-xmlid="nc_management.menu_plan_smi_root"] {
+    margin: 18px 10px 6px;
+    padding-left: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #0a3d7c !important;
+    text-transform: uppercase;
+}
+.o_sub_menu_content .oe_secondary_menu_section[data-menu-xmlid="nc_management.menu_plan_smi_root"]::before {
+    font-family: 'FontAwesome';
+    content: "\f0ae";
+    margin-right: 8px;
+}
+
+/* Boutons de navigation : pages de premier niveau + sous-pages SMI */
+.o_sub_menu_content .oe_secondary_menu_section[data-menu-xmlid^="nc_management."] > a,
+.o_sub_menu_content .oe_secondary_submenu li > a[data-menu-xmlid^="nc_management."] {
+    display: flex;
+    align-items: center;
+    margin: 2px 8px;
+    padding: 9px 12px !important;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: #334155 !important;
+    transition: background .15s, color .15s;
+}
+.o_sub_menu_content .oe_secondary_menu_section[data-menu-xmlid^="nc_management."] > a:hover,
+.o_sub_menu_content .oe_secondary_submenu li > a[data-menu-xmlid^="nc_management."]:hover {
+    background: #eff6ff;
+    color: #0a3d7c !important;
+}
+
+/* Page active */
+.o_sub_menu_content .oe_secondary_menu_section.active[data-menu-xmlid^="nc_management."] > a,
+.o_sub_menu_content .oe_secondary_submenu li.active > a[data-menu-xmlid^="nc_management."] {
+    background: #0a3d7c !important;
+    color: #fff !important;
+}
+.o_sub_menu_content .oe_secondary_menu_section.active[data-menu-xmlid^="nc_management."] > a .oe_menu_text::before,
+.o_sub_menu_content .oe_secondary_submenu li.active > a[data-menu-xmlid^="nc_management."] .oe_menu_text::before {
+    color: #fff;
+}
+
+/* Libellés : autoriser le retour à la ligne pour les noms longs */
+.o_sub_menu_content a[data-menu-xmlid^="nc_management."] .oe_menu_text {
+    max-width: none;
+    white-space: normal;
+}
+
+/* Icônes des pages */
+.o_sub_menu_content a[data-menu-xmlid^="nc_management."] .oe_menu_text::before {
+    font-family: 'FontAwesome';
+    display: inline-block;
+    width: 18px;
+    margin-right: 8px;
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+}
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_dashboard"] .oe_menu_text::before,
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_user_dashboard"] .oe_menu_text::before {
+    content: "\f0e4"; /* tachometer */
+}
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_nonconformity"] .oe_menu_text::before {
+    content: "\f071"; /* exclamation-triangle */
+}
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_corrective"] .oe_menu_text::before {
+    content: "\f058"; /* check-circle */
+}
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_mes_plans_nc_user"] .oe_menu_text::before,
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_mes_plans_smi"] .oe_menu_text::before {
+    content: "\f0ca"; /* list-ul */
+}
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_plan_global_smi"] .oe_menu_text::before {
+    content: "\f0ac"; /* globe */
+}
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_smi_improvement_plan_recus"] .oe_menu_text::before {
+    content: "\f01c"; /* inbox */
+}
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_plan_smi_analyse"] .oe_menu_text::before {
+    content: "\f080"; /* bar-chart */
+}
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_smi_improvement_plan_user"] .oe_menu_text::before {
+    content: "\f022"; /* list-alt */
+}
+.o_sub_menu_content a[data-menu-xmlid="nc_management.menu_form_template"] .oe_menu_text::before {
+    content: "\f0f6"; /* file-text-o */
+}
 

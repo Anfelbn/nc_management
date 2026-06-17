@@ -677,12 +677,6 @@ class Nonconformity(models.Model):
         ]
         for field in _all:
             if getattr(self, field) and not getattr(self._origin, field, False):
-                if self.name == 'New':
-                    setattr(self, field, False)
-                    return {'warning': {
-                        'title': 'Numéro FNC requis',
-                        'message': "Veuillez d'abord générer le numéro FNC avant de sélectionner le type de non-conformité.",
-                    }}
                 for other in _all:
                     if other != field:
                         setattr(self, other, False)

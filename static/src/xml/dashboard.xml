@@ -309,10 +309,10 @@
             <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
           </t>
           <t t-foreach="widget.stats.mes_fac_en_cours" t-as="fac">
-            <div class="nc-alert orange" style="margin-bottom:5px">
+            <div class="nc-alert green" style="margin-bottom:5px">
               <div style="flex:1">
-                <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fac.name"/> — À valider</div>
-                <div style="font-size:11px;color:#c2410c;margin-top:2px">
+                <div style="font-size:12px;font-weight:600;color:#065f46"><t t-esc="fac.name"/> — À valider</div>
+                <div style="font-size:11px;color:#047857;margin-top:2px">
                   <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · En cours depuis <t t-esc="fac.days"/>j
                 </div>
               </div>
@@ -333,10 +333,10 @@
             <div style="font-size:11px;color:#94a3b8;padding:4px 6px;">Aucune alerte active.</div>
           </t>
           <t t-foreach="widget.stats.fac_recues_en_cours" t-as="fac">
-            <div class="nc-alert orange" style="margin-bottom:5px">
+            <div class="nc-alert blue" style="margin-bottom:5px">
               <div style="flex:1">
-                <div style="font-size:12px;font-weight:600;color:#9a3412"><t t-esc="fac.name"/> — À valider</div>
-                <div style="font-size:11px;color:#c2410c;margin-top:2px">
+                <div style="font-size:12px;font-weight:600;color:#1d4ed8"><t t-esc="fac.name"/> — À valider</div>
+                <div style="font-size:11px;color:#2563eb;margin-top:2px">
                   <t t-if="fac.fnc_name">FNC : <t t-esc="fac.fnc_name"/> · </t><t t-esc="fac.department"/> · Envoyée depuis <t t-esc="fac.days"/>j
                 </div>
               </div>

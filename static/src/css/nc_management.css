@@ -50,6 +50,7 @@
 .nc-alert{display:flex;gap:10px;align-items:center;padding:10px;border-radius:0 8px 8px 0;border:1px solid #fee2e2;border-left:3px solid #EF4444;background:#fef2f2;margin-bottom:7px}
 .nc-alert.orange{border-left-color:#FF9800;border-color:#ffedd5;background:#fff7ed}
 .nc-alert.green{border-left-color:#10B981;border-color:#d1fae5;background:#f0fdf4}
+.nc-alert.blue{border-left-color:#3b82f6;border-color:#dbeafe;background:#eff6ff}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .g4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .cal-wrap{font-size:12px;user-select:none}

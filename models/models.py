@@ -1510,10 +1510,10 @@ class PlanActionSmi(models.Model):
             if t == 0:   return '#d44535'
             return '#cc8800'
 
-        th  = 'padding:10px 14px;text-align:center;white-space:nowrap;'
-        thl = 'padding:10px 14px;text-align:left;'
-        tdc = 'padding:8px 14px;text-align:center;border-bottom:1px solid #ddd;'
-        tdl = 'padding:8px 14px;text-align:left;border-bottom:1px solid #ddd;'
+        th  = 'padding:10px 6px;text-align:center;white-space:nowrap;font-size:12px;'
+        thl = 'padding:10px 6px;text-align:left;'
+        tdc = 'padding:8px 6px;text-align:center;border-bottom:1px solid #ddd;'
+        tdl = 'padding:8px 6px;text-align:left;border-bottom:1px solid #ddd;'
 
         for rec in self:
             children = rec.child_plan_ids
@@ -1787,6 +1787,7 @@ class PlanActionSmi(models.Model):
                     date_ref = _date(*[int(x) for x in date_ref[:10].split('-')])
             else:
                 date_ref = _date.today()
+                vals['mois_reception'] = date_ref.strftime('%Y-%m-%d')
             year = date_ref.year
             # Trouver le plus grand numéro séquentiel existant pour cette année
             existing = self.search([('is_global', '=', True),
@@ -2373,7 +2374,7 @@ class PlanActionSmi(models.Model):
             'view_mode': 'form',
             'view_id': view_id,
             'target': 'current',
-            'flags': {'create': False},
+            'flags': {'create': False, 'sidebar': False},
         }
 
     @api.multi

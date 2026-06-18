@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<record id="view_consolidate_direct_wizard_form" model="ir.ui.view">
+    <field name="name">nc_management.consolidate_direct_wizard.form</field>
+    <field name="model">nc_management.consolidate_direct_wizard</field>
+    <field name="arch" type="xml">
+        <form string="Consolider des Actions d'Amélioration RMQSE">
+            <sheet>
+                <field name="global_plan_id" invisible="1"/>
+                <group>
+                    <p class="oe_grey">
+                        Cochez les actions d'amélioration RMQSE à intégrer dans ce
+                        Plan d'Action d'Amélioration SMI, puis cliquez sur <strong>Consolider</strong>.
+                        Seules les actions non encore intégrées sont affichées.
+                    </p>
+                </group>
+                <field name="line_ids" nolabel="1"
+                       options="{'create': false, 'delete': false}">
+                    <tree editable="bottom" create="false" delete="false"
+                          class="smi_plan_tree">
+                        <field name="selected"          string="✓"/>
+                        <field name="plan_id"           string="Référence"/>
+                        <field name="nature"            string="Nature"/>
+                        <field name="direction_id"      string="Direction"/>
+                        <field name="responsable_ids"   string="Responsable" widget="many2many_tags"/>
+                        <field name="date_realisation"  string="Date de réalisation"/>
+                        <field name="avancement"         string="Avancement %"/>
+                        <field name="etat_avancement"   string="État"/>
+                    </tree>
+                </field>
+            </sheet>
+            <footer>
+                <button name="action_open_new_plan"
+                        string="Ajouter une nouvelle Action"
+                        type="object"/>
+                <button name="action_consolidate"
+                        string="Consolider"
+                        type="object"
+                        class="oe_highlight"/>
+                <button string="Annuler" class="oe_link" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<record id="action_consolidate_direct_wizard" model="ir.actions.act_window">
+    <field name="name">Consolider des Actions d'Amélioration RMQSE</field>
+    <field name="res_model">nc_management.consolidate_direct_wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+</record>
+
+</data>
+</odoo>

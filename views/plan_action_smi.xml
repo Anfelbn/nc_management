@@ -60,7 +60,6 @@
               import="false"
               decoration-muted="submission_state == 'cloture'">
             <field name="name"/>
-            <field name="direction_id"      string="Direction"/>
             <field name="mois_reception"    string="Date création"/>
             <field name="date_maj"          string="Dernière màj"/>
             <field name="nb_plans_integres" string="Nb Plans"/>
@@ -632,6 +631,9 @@
                         string="&#8592; Analyse actuelle"
                         type="object"
                         attrs="{'invisible': [('date_consultation', '=', False)]}"/>
+                <button name="%(nc_management.action_report_analyse_efficacite)d"
+                        string="Imprimer"
+                        type="action"/>
             </header>
             <sheet>
                 <div class="oe_title">
@@ -661,6 +663,7 @@
     <field name="view_mode">form</field>
     <field name="view_id" ref="view_plan_smi_form_analyse"/>
     <field name="target">current</field>
+    <field name="flags">{'create': False, 'sidebar': False}</field>
 </record>
 
 <!-- Analyse d'Efficacité — ouvre directement le formulaire du plan global le plus récent -->

@@ -215,6 +215,7 @@
                            attrs="{'readonly': [('state','not in',['in_progress'])]}"/>
                 </group>
 
+
             </sheet>
         </form>
     </field>
@@ -389,6 +390,7 @@
                     <field name="date_cloture" string="Date"/>
                     <field name="visa_cloture" string="Visa"/>
                 </group>
+
 
             </sheet>
         </form>

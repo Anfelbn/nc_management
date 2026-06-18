@@ -38,5 +38,12 @@
             <field name="code">AE</field>
             <field name="category">type_audit_externe</field>
         </record>
+
+        <!-- Autre -->
+        <record id="nc_type_autre" model="nc_management.nc_type">
+            <field name="name">Autre</field>
+            <field name="code">AUTRE</field>
+            <field name="category">type_autre</field>
+        </record>
     </data>
 </odoo>

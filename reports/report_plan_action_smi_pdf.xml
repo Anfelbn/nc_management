@@ -65,6 +65,11 @@ if records:
         <field name="paperformat_id" ref="paperformat_plan_smi_landscape"/>
     </record>
 
+    <!-- Format paysage pour le rapport Analyse d'Efficacité (défini dans report_plan_global.xml) -->
+    <record id="action_report_analyse_efficacite" model="ir.actions.report">
+        <field name="paperformat_id" ref="paperformat_plan_smi_landscape"/>
+    </record>
+
     <!-- ============================================================ -->
     <!--  TEMPLATE PARTAGÉ — Plan d'Action d'Amélioration SMI         -->
     <!--  (utilisé par le plan individuel ET le plan consolidé)       -->

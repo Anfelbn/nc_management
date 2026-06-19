@@ -86,7 +86,8 @@ class SmiImprovementPlan(models.Model):
 
     # ── Date de création (automatique, non modifiable) ───────────
     date_ouverture = fields.Date(
-        string='Date de création')
+        string='Date de création',
+        default=fields.Date.today)
 
     # ── Consultation historique ───────────────────────────────────
     date_consultation = fields.Date(
@@ -205,6 +206,8 @@ class SmiImprovementPlan(models.Model):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'nc_management.paa_user_improvement_plan') or 'New'
+        if not vals.get('date_ouverture'):
+            vals['date_ouverture'] = fields.Date.today()
         return super(SmiImprovementPlan, self).create(vals)
 
     @api.depends('date_consultation', 'plan_ids')
@@ -539,9 +542,11 @@ class SmiImprovementPlan(models.Model):
     @api.model
     def action_open_my_plan(self):
         """Ouvre (ou crée) le plan d'amélioration du NC utilisateur connecté."""
-        plan = self.search([('create_uid', '=', self.env.uid)], limit=1)
+        plan = self.search([('create_uid', '=', self.env.uid),
+                            ('state', '=', 'brouillon')],
+                           limit=1)
         if not plan:
-            plan = self.create({})
+            plan = self.create({'date_ouverture': fields.Date.today()})
         inner_action = {
             'type': 'ir.actions.act_window',
             'res_model': self._name,

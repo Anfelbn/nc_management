@@ -51,7 +51,7 @@
                 <notebook>
                     <page string="Sections">
                         <field name="section_ids">
-                            <tree editable="bottom">
+                            <tree>
                                 <field name="sequence" widget="handle"/>
                                 <field name="name"/>
                                 <field name="section_layout"/>

@@ -545,6 +545,59 @@ class Nonconformity(models.Model):
             manquants.append("l'impact")
         return manquants
 
+    def _traitement_commence(self):
+        return any([
+            self.trait_reprise, self.trait_declassement, self.trait_retour_fourn,
+            self.trait_recyclage, self.trait_reparation, self.trait_autre,
+            self.action_immediate, self.realise_par_id, self.date_realisation,
+            self.analyse_causes, self.impact, self.assigned_to_id,
+        ])
+
+    def _fiche_complete(self):
+        manquants = []
+        if not self.direction_id:
+            manquants.append("la Direction / Émetteur")
+        has_type = any([
+            self.type_nc_produit, self.type_reclamation, self.type_sst,
+            self.type_environnement, self.type_travaux, self.type_audit,
+            self.type_audit_interne, self.type_audit_externe, self.type_achat,
+            self.type_reception, self.type_dysfonctionnement, self.type_autre,
+        ])
+        if not has_type:
+            manquants.append("un type de non-conformité")
+        if not (self.description and self.description.strip()):
+            manquants.append("la description de la non-conformité")
+        if not self.signale_par_id:
+            manquants.append("la personne qui signale")
+        if not self.date_signalement:
+            manquants.append("la date de signalement")
+        if not self.fonction_visa:
+            manquants.append("la fonction et visa")
+        return manquants
+
+    def _check_envoi_state(self):
+        if self.state == 'draft':
+            manquants = self._fiche_complete()
+            if manquants:
+                raise UserError(
+                    "Veuillez compléter la description de la non-conformité avant de "
+                    "l'envoyer :\n— " + "\n— ".join(manquants)
+                )
+            return
+        # Tant que l'état est 'submitted', on ne bloque l'envoi que si le
+        # traitement a été commencé sans être achevé : un traitement encore
+        # totalement vide reste un simple transfert pour prise en charge.
+        if self.state != 'submitted' or not self._traitement_commence():
+            return
+        manquants = self._traitement_complet()
+        if not self.assigned_to_id:
+            manquants = manquants + ["le responsable de l'action"]
+        if manquants:
+            raise UserError(
+                "Veuillez compléter le traitement de la non-conformité avant de "
+                "l'envoyer pour validation :\n— " + "\n— ".join(manquants)
+            )
+
     @api.onchange('impact', 'action_immediate', 'analyse_causes',
                   'realise_par_id', 'date_realisation',
                   'trait_reprise', 'trait_declassement', 'trait_retour_fourn',
@@ -607,6 +660,7 @@ class Nonconformity(models.Model):
                 "Le numéro FNC doit être généré via le bouton "
                 "\"Générer Numéro FNC\" avant d'enregistrer la fiche."
             )
+        self._check_envoi_state()
         return {
             'type': 'ir.actions.act_window',
             'name': 'Envoyer la FNC',
@@ -998,6 +1052,28 @@ class CorrectiveAction(models.Model):
             'view_id': self.env.ref('nc_management.view_send_fac_wizard').id,
             'target': 'new',
             'context': {'default_fac_id': self.id},
+        }
+
+    @api.multi
+    def action_cloturer_fac(self):
+        self.ensure_one()
+        employee = self.env['hr.employee'].search(
+            [('user_id', '=', self.env.uid)], limit=1)
+        vals = {}
+        if employee and not self.cloture_par_id:
+            vals['cloture_par_id'] = employee.id
+        if not self.date_cloture:
+            vals['date_cloture'] = fields.Date.today()
+        if not self.visa_cloture and employee:
+            vals['visa_cloture'] = employee.visa_no or employee.job_id.name or employee.name
+        self.write(vals)
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'nc_management.corrective_action',
+            'res_id': self.id,
+            'views': [[False, 'form']],
+            'target': 'current',
+            'context': {'form_view_initial_mode': 'view'},
         }
 
     @api.multi
